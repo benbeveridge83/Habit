@@ -1,2764 +1,943 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Habit App (V10)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Habit App Rewrite</title>
   <style>
-    :root{
-      --bg:#f7f8fb;
-      --card:#ffffff;
-      --muted:#5b6472;
-      --text:#0f172a;
-      --line:#e5e7eb;
-
-      --good:#16a34a;
-      --warn:#f59e0b;
-      --bad:#ef4444;
-
-      --accent:#2563eb;
-      --accent2:#7c3aed;
-      --soft:#f1f5f9;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:linear-gradient(180deg,#ffffff,var(--bg));
-      color:var(--text);
-    }
-    header{
-      position:sticky; top:0; z-index:10;
-      background:rgba(255,255,255,.85); backdrop-filter: blur(10px);
-      border-bottom:1px solid var(--line);
-      padding:14px 18px;
-      display:flex; gap:12px; align-items:center; justify-content:space-between;
-    }
-    header h1{font-size:16px; margin:0; letter-spacing:.2px}
-    header .meta{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
-    .pill{
-      padding:6px 10px; border:1px solid var(--line); border-radius:999px;
-      color:var(--muted); font-size:12px; display:flex; gap:8px; align-items:center;
-      background:rgba(255,255,255,.8);
-    }
-    .pill strong{color:var(--text); font-weight:700}
-    main{max-width:1600px; margin:0 auto; padding:18px}
-    .grid{display:grid; grid-template-columns: 1.3fr .7fr; gap:14px}
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
-      box-shadow: 0 12px 30px rgba(2,6,23,.06);
-    }
-    .card h2{font-size:14px; margin:0 0 10px; color:var(--text); letter-spacing:.2px}
-    .sub{font-size:12px; color:var(--muted); margin-top:-6px; margin-bottom:10px}
-
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    button, input, select, textarea{font:inherit}
-    button{
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--text);
-      padding:8px 10px;
-      border-radius:12px;
-      cursor:pointer;
-    }
-    button:hover{border-color:#cbd5e1}
-    button.primary{
-      background:linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.04));
-      border-color:rgba(37,99,235,.35);
-    }
-    button.danger{
-      background:linear-gradient(180deg, rgba(239,68,68,.10), rgba(239,68,68,.04));
-      border-color:rgba(239,68,68,.35);
-    }
-    button.good{
-      background:linear-gradient(180deg, rgba(22,163,74,.10), rgba(22,163,74,.04));
-      border-color:rgba(22,163,74,.35);
-    }
-    input, select, textarea{
-      width:100%;
-      background:#fff;
-      border:1px solid var(--line);
-      color:var(--text);
-      border-radius:12px;
-      padding:10px;
-      outline:none;
-    }
-    input:focus, select:focus, textarea:focus{border-color:rgba(37,99,235,.55); box-shadow:0 0 0 3px rgba(37,99,235,.10)}
-    textarea{min-height:120px; resize:vertical}
-
-    .progress{
-      width:100%;
-      height:10px;
-      background:var(--soft);
-      border:1px solid var(--line);
-      border-radius:999px;
-      overflow:hidden;
-    }
-    .bar{height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent2))}
-    .bar.good{background:linear-gradient(90deg,#22c55e,#16a34a)}
-    .bar.bad{background:linear-gradient(90deg,#fb7185,#ef4444)}
-    .small{font-size:12px; color:var(--muted)}
-    .sep{height:1px; background:var(--line); margin:10px 0}
-
-    .tabs{display:flex; gap:8px; flex-wrap:wrap}
-    .tab{padding:8px 10px; border-radius:999px; border:1px solid var(--line); color:var(--muted); cursor:pointer; user-select:none; background:#fff}
-    .tab.active{color:var(--text); border-color:rgba(37,99,235,.35); background:rgba(37,99,235,.08)}
-    .hidden{display:none}
-
-    .group{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px;
-      background:rgba(241,245,249,.6);
-      margin-bottom:10px;
-    }
-    .groupHeader{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-    }
-    .groupTitle{display:flex; gap:8px; align-items:baseline; flex-wrap:wrap}
-    .groupTitle strong{font-size:13px}
-    .groupTitle span{font-size:12px; color:var(--muted)}
-    .tasks{margin-top:10px; display:grid; gap:8px}
-
-    .task{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding:8px 10px; border:1px solid var(--line); border-radius:12px;
-      background:#fff;
-      transition: border-color .15s ease, box-shadow .15s ease;
-    }
-    .task.weeklyComplete{
-      border-color:rgba(22,163,74,.35);
-      box-shadow: 0 0 0 1px rgba(22,163,74,.08) inset;
-      background:rgba(22,163,74,.04);
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --border: #334155;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #22c55e;
+      --accent-2: #3b82f6;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+      --radius: 16px;
     }
 
-    .taskLeft{display:flex; gap:10px; align-items:center; min-width:0}
-    .taskLeft label{display:flex; gap:8px; align-items:center; cursor:pointer; min-width:0}
-    .taskLeft .name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-
-    .tag{font-size:11px; color:var(--muted); border:1px solid var(--line); padding:2px 8px; border-radius:999px; background:#fff}
-    .tag.good{border-color:rgba(22,163,74,.35); color:#0f5132}
-    .tag.goal{border-color:rgba(37,99,235,.35); color:#1e3a8a}
-    .tag.week{border-color:rgba(37,99,235,.25); color:#1e3a8a}
-    .tag.weekDone{border-color:rgba(22,163,74,.35); color:#0f5132}
-    .mono{font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-    .taskActions{display:flex; gap:6px; align-items:center}
-    .iconBtn{padding:6px 8px; border-radius:10px; font-size:12px}
-
-    .ringWrap{display:flex; gap:14px; align-items:center}
-    .ring{
-      width:74px; height:74px; border-radius:999px;
-      background: conic-gradient(var(--accent) 0deg, var(--soft) 0deg);
-      border:1px solid var(--line);
-      display:grid; place-items:center;
-    }
-    .ringInner{
-      width:58px; height:58px; border-radius:999px;
-      background:#fff;
-      border:1px solid var(--line);
-      display:grid; place-items:center;
-      text-align:center;
-      line-height:1.05;
-    }
-    .ringInner strong{font-size:14px}
-    .ringInner span{font-size:11px; color:var(--muted)}
-
-    .list{display:grid; gap:8px}
-    .entry{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px;
-      background:#fff;
-      cursor:pointer;
-    }
-    .entry:hover{border-color:#cbd5e1}
-    .entry .t{display:flex; justify-content:space-between; gap:10px}
-    .entry .t strong{font-size:13px}
-    .entry .t span{font-size:11px; color:var(--muted)}
-    .entry p{margin:6px 0 0; font-size:12px; color:var(--muted)}
-    .kpi{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    @media (max-width: 520px){ .kpi{grid-template-columns:1fr} }
-
-    .dragItem{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding:10px; border:1px solid var(--line); border-radius:12px;
-      background:#fff;
-    }
-    .dragItem[draggable="true"]{cursor:grab}
-    .dragItem.dragging{opacity:.55}
-    .dragHandle{
-      width:26px; text-align:center; color:var(--muted);
-      border:1px solid var(--line); border-radius:10px; padding:4px 6px;
-      user-select:none;
-      background:rgba(241,245,249,.7);
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+      color: var(--text);
     }
 
-    #toastWrap{
-      position:fixed; right:16px; bottom:16px; z-index:9999;
-      display:grid; gap:8px;
-      max-width:min(420px, calc(100vw - 32px));
-    }
-    .toast{
-      border:1px solid rgba(37,99,235,.25);
-      background:rgba(255,255,255,.92);
-      border-radius:14px;
-      padding:10px 12px;
-      box-shadow: 0 16px 40px rgba(2,6,23,.12);
-    }
-    .toast .title{font-size:13px; margin:0; color:var(--text)}
-    .toast .msg{font-size:12px; margin:4px 0 0; color:var(--muted)}
-
-    .lifeNode{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding:8px 10px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:#fff;
-      margin:6px 0;
-      cursor:pointer;
-    }
-    .lifeNode:hover{border-color:#cbd5e1}
-    .lifeNode.selected{
-      border-color:rgba(37,99,235,.35);
-      background:rgba(37,99,235,.06);
-    }
-    .lifeNodeLeft{display:flex; align-items:center; gap:10px; min-width:0}
-    .lifeNodeTitle{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-    .lifeChildren{margin-left:18px; padding-left:10px; border-left:1px dashed #cbd5e1}
-    .lifeBadge{font-size:11px; color:var(--muted); border:1px solid var(--line); padding:2px 8px; border-radius:999px; background:#fff}
-
-    .gridWrap{
-      border:1px solid var(--line);
-      border-radius:14px;
-      overflow:hidden;
-      background:#fff;
-    }
-    .scrollX{overflow:auto}
-    .taskGridTable{
-      border-collapse:collapse;
-      width:max-content;
-      min-width:100%;
-      font-size:12px;
-    }
-    .taskGridTable th, .taskGridTable td{
-      border-bottom:1px solid var(--line);
-      border-right:1px solid var(--line);
-      padding:6px 8px;
-      white-space:nowrap;
-    }
-    .taskGridTable th{
-      position:sticky; top:0;
-      background:rgba(241,245,249,.95);
-      z-index:2;
-      font-weight:600;
-      color:#0f172a;
-    }
-    .taskGridTable td:first-child, .taskGridTable th:first-child{
-      position:sticky; left:0;
-      background:rgba(255,255,255,.95);
-      z-index:3;
-      min-width:220px;
-      max-width:320px;
-    }
-    .taskGridTable td:first-child{
-      background:rgba(255,255,255,.98);
-    }
-    .taskGridTable tr:hover td{background:rgba(241,245,249,.55)}
-    .dayChip{
-      display:inline-flex; align-items:center; gap:8px;
-      border:1px solid var(--line); border-radius:999px; padding:6px 10px; background:#fff;
+    .app {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: 100vh;
     }
 
-    .field{display:flex; flex-direction:column; gap:6px}
-    .field .lbl{font-size:11px; color:var(--muted)}
-    .taskLeft .name{
-      white-space:normal;
-      overflow:visible;
-      text-overflow:unset;
-      font-size:14px;
-      font-weight:650;
-      line-height:1.2;
-    }
-    .taskLeft{min-width:0; flex:1}
-    .task{align-items:flex-start}
-    .taskActions{flex-wrap:wrap; justify-content:flex-end}
-
-
-    /* Category tags with color */
-    .catTag{
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:2px 8px;
-      font-size:11px;
-      color:var(--text);
-      background:rgba(255,255,255,.9);
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-    }
-    .catDot{
-      width:10px; height:10px; border-radius:999px;
-      border:1px solid rgba(15,23,42,.15);
-      flex:0 0 auto;
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.86);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
     }
 
-    /* Weekly progress pill */
-    .weekPill{
-      border:1px solid rgba(37,99,235,.25);
-      border-radius:999px;
-      overflow:hidden;
-      display:inline-flex;
-      align-items:center;
-      height:22px;
-      background:#fff;
-      position:relative;
-      min-width:130px;
-    }
-    .weekFill{
-      height:100%;
-      background:linear-gradient(90deg,#22c55e,#16a34a);
-      width:0%;
-    }
-    .weekText{
-      padding:0 10px;
-      font-size:11px;
-      color:#0f172a;
-      display:flex;
-      align-items:center;
-      gap:6px;
-      position:absolute;
-      inset:0;
-      justify-content:center;
-      z-index:1;
-      white-space:nowrap;
-    }
-    .weekPill.done{ border-color:rgba(22,163,74,.35); background:rgba(22,163,74,.05); }
-
-    /* Grid group header rows */
-    .groupRow td{
-      background:rgba(37,99,235,.07) !important;
-      font-weight:700;
-      color:#0f172a;
-      border-right:1px solid var(--line);
-    }
-    .groupRow td:first-child{
-      position:sticky; left:0;
-      z-index:4;
-      background:rgba(37,99,235,.10) !important;
+    .main {
+      padding: 20px;
     }
 
-    /* Simple modal */
-    .modalBackdrop{
-      position:fixed; inset:0; z-index:10000;
-      background:rgba(15,23,42,.35);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
-    }
-    .modal{
-      width:min(720px, 100%);
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow: 0 24px 60px rgba(2,6,23,.22);
-      overflow:hidden;
-    }
-    .modalHeader{
-      padding:12px 14px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      border-bottom:1px solid var(--line);
-      background:rgba(241,245,249,.8);
-    }
-    .modalHeader strong{ font-size:13px; }
-    .modalBody{ padding:14px; display:grid; gap:10px; }
-    .modalRow{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px;
-      background:#fff;
-    }
-    .modalRow .left{
-      display:flex; align-items:center; gap:10px; min-width:0;
-      flex:1;
-    }
-    .modalRow .name{ font-weight:650; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .modalRow .actions{ display:flex; gap:8px; align-items:center; }
-    .colorInput{ width:44px; height:32px; padding:0; border-radius:10px; border:1px solid var(--line); background:#fff; }
-
-
-    /* Task editor modal */
-    .formGrid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-    .formGrid .field{min-width:0}
-    .formGrid input, .formGrid select{width:100%}
-    .formGrid .full{grid-column:1/-1}
-    .modalFooter{
-      padding:12px 14px;
-      border-top:1px solid var(--line);
-      background:rgba(241,245,249,.6);
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
+    .panel {
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
 
-
-/* Compact homepage + segmented view buttons */
-.seg{
-  border:1px solid var(--line);
-  background:#fff;
-  border-radius:999px;
-  padding:8px 14px;
-  font-weight:650;
-}
-.seg.active{
-  border-color:rgba(37,99,235,.35);
-  background:rgba(37,99,235,.08);
-}
-#viewBarCard{ position:sticky; top:64px; z-index:50; }
-/* Make task rows more compact */
-.task{ padding:10px 12px; margin:8px 0; }
-.taskLeft .name{ font-size:15px; }
-.taskActions button{ padding:8px 10px; }
-.groupCard{ padding:12px; }
-
-
-    /* Habits home: tasks-first layout */
-    .habitsHome{
-      display:grid;
-      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-      gap:14px;
-      align-items:start;
+    .stack { display: grid; gap: 16px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .space-between { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    .title { margin: 0; font-size: 28px; font-weight: 800; }
+    .subtitle { margin: 0; color: var(--muted); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
     }
-    @media (max-width: 1050px){
-      .habitsHome{ grid-template-columns: 1fr; }
-      .habitsSidebar{ order:2; }
-      .habitsMain{ order:1; }
+
+    button, select, input, textarea {
+      font: inherit;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0b1220;
+      color: var(--text);
+      padding: 10px 12px;
     }
-    .habitsSidebar .card{ margin-bottom:12px; }
-    .habitsSidebar{ margin-top:0; }
-    .habitsMain{ margin-top:0; }
 
+    button {
+      cursor: pointer;
+      background: var(--panel-2);
+      transition: .15s ease;
+    }
 
-    /* Make task rows tighter */
-    .task{ padding:10px 12px; }
-    .task .box{ width:18px; height:18px; }
-    .taskActions .iconBtn{ padding:6px 10px; }
-    .taskLeft .name{ font-size:15px; }
+    button:hover { transform: translateY(-1px); }
+    button.primary { background: var(--accent-2); border-color: transparent; }
+    button.success { background: var(--accent); border-color: transparent; color: #052e16; font-weight: 700; }
+    button.danger { background: var(--danger); border-color: transparent; }
+    button.warn { background: var(--warn); border-color: transparent; color: #111827; font-weight: 700; }
+    button.ghost { background: transparent; }
 
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      padding: 0;
+    }
 
-    .habitsMain .card{ margin-bottom:12px; }
+    .sidebar .panel,
+    .main .panel { padding: 18px; }
 
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
 
-    .habitsHome{ margin-top:0 !important; }
-    .habitsSidebar{ align-self:start; position:sticky; top:90px; } /* keeps sidebar visible; adjust with header */
+    .stat-card {
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
 
+    .stat-label { color: var(--muted); font-size: 12px; }
+    .stat-value { font-size: 28px; font-weight: 800; margin-top: 6px; }
+
+    .toolbar {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr auto auto auto;
+      align-items: center;
+    }
+
+    .task-list { display: grid; gap: 14px; }
+
+    .task-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.8);
+      display: grid;
+      gap: 14px;
+    }
+
+    .task-top {
+      display: grid;
+      grid-template-columns: 1.5fr .9fr .8fr .8fr .9fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .task-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .progress-wrap {
+      display: grid;
+      gap: 6px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #0b1220;
+      border: 1px solid var(--border);
+    }
+
+    .progress-bar > div {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      width: 0%;
+    }
+
+    .grid-2 { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .grid-3 { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0,1fr)); }
+
+    .hidden { display: none !important; }
+
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+    }
+
+    .tag {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .voided {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .form-section h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    label.inline {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .toolbar { grid-template-columns: 1fr; }
+      .task-top { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-<header>
-  <h1>My Habit App <span class="small">(V1)</span></h1>
-  <div class="meta">
-    <div class="pill">Today <strong id="todayLabel"></strong></div>
-    <div class="pill">Level <strong id="levelLabel" class="mono">1</strong> <span class="mono" id="xpLabel">0 XP</span></div>
-    <div class="pill">Best Day <strong id="bestDayLabel" class="mono">0 XP</strong></div>
-    <button class="primary" id="resetTodayBtn" title="Resets checkmarks for today (keeps your data)">Reset Today</button>
-  </div>
-</header>
-
-<main>
-  <div class="grid">
-    <section class="card">
-      <div class="tabs" id="tabs" style="display:none">
-        <div class="tab active" data-tab="habits">Habits</div>
-        <div class="tab" data-tab="todo">To‑Do</div>
-        <div class="tab" data-tab="goals">Goals</div>
-        <div class="tab" data-tab="priorities">Priorities</div>
-        <div class="tab" data-tab="bad">Bad Habit Destroyer</div>
-        <div class="tab" data-tab="journal">Journal</div>
-        <div class="tab" data-tab="life">Life Architecture</div>
-        <div class="tab" data-tab="settings">Settings</div>
+  <div class="app">
+    <aside class="sidebar stack">
+      <div>
+        <h1 class="title">Habit Focus</h1>
+        <p class="subtitle">Fresh rewrite with date-aware tracking, voided days, row percentages, and numeric tasks.</p>
       </div>
 
-      <div id="tab-habits">
-        
-        
+      <section class="panel stack">
+        <div class="space-between">
+          <strong>Date</strong>
+          <span class="pill" id="todayBadge"></span>
+        </div>
+        <div class="row">
+          <button id="prevBtn">◀</button>
+          <button id="todayBtn" class="primary">Today</button>
+          <button id="nextBtn">▶</button>
+        </div>
+        <div class="row">
+          <select id="viewModeSelect">
+            <option value="day">Day View</option>
+            <option value="week">Week View</option>
+            <option value="2week">2 Weeks</option>
+            <option value="month">Month</option>
+            <option value="quarter">Quarter</option>
+            <option value="year">Year</option>
+          </select>
+        </div>
+        <div class="panel" id="selectedDatePanel">
+          <div class="small muted">Current range</div>
+          <div id="viewDateLabel" style="font-weight:800;font-size:20px;margin-top:6px;"></div>
+          <div id="voidBadgeWrap" class="row" style="margin-top:10px;"></div>
+        </div>
+        <div class="footer-actions">
+          <button id="toggleVoidBtn" class="warn">Void Selected Day</button>
+          <button id="exportBtn">Export</button>
+          <button id="importBtn">Import</button>
+          <input id="importFile" type="file" accept="application/json" class="hidden" />
+        </div>
+      </section>
 
-        
-
-      <div class="habitsHome">
-        <div class="habitsMain">
-<div class="card" id="viewBarCard">
-  <div class="row" id="viewBar" style="justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
-    <div class="row" style="gap:8px; align-items:center; flex-wrap:wrap">
-      <button class="seg active" id="btnViewDay" data-view="day">Day</button>
-      <button class="seg" id="btnViewWeek" data-view="week">Week</button>
-      <button class="seg" id="btnViewMonth" data-view="month">Month</button>
-
-      <span class="pill mono" id="viewDateLabel">Today</span>
-      <input id="viewDate" type="date" style="width:170px" />
-      <select id="habitView" style="display:none">
-        <option value="day" selected>Day</option>
-        <option value="week">Week</option>
-        <option value="month">Month</option>
-      </select>
-    </div>
-
-    <div class="row" style="gap:8px; justify-content:flex-end">
-      <button id="menuBtn" title="Menu">☰ Menu</button>
-    </div>
-  </div>
-
-  <div id="menuPanel" style="display:none; margin-top:10px">
-    <div class="sep"></div>
-    <div class="small" style="margin-bottom:8px">Navigation</div>
-    <div class="row" style="gap:8px; flex-wrap:wrap">
-      <button class="navJump" data-tab="habits">Habits</button>
-      <button class="navJump" data-tab="todo">To‑Do</button>
-      <button class="navJump" data-tab="goals">Goals</button>
-      <button class="navJump" data-tab="priorities">Priorities</button>
-      <button class="navJump" data-tab="bad">Bad Habit Destroyer</button>
-      <button class="navJump" data-tab="journal">Journal</button>
-      <button class="navJump" data-tab="life">Life Architecture</button>
-    </div>
-    <div class="row" style="margin-top:10px; justify-content:space-between; flex-wrap:wrap; gap:8px">
-      <div class="small">Extra panels</div>
-      <button id="toggleStatsBtn">Toggle Stats</button>
-    </div>
-  </div>
-</div>
-<div style="height:10px"></div>
-        <div id="habitsDayWrap"></div>
+      <section class="panel stack">
+        <div class="space-between">
+          <strong>Add / Edit Task</strong>
+          <span class="tag" id="formModeLabel">New task</span>
         </div>
 
-      <div class="habitsSidebar">
-        <div class="card" style="margin-bottom:10px">
-          <div class="ringWrap">
-            <div class="ring" id="dailyRing"><div class="ringInner"><strong id="dailyPct">0%</strong><span>today</span></div></div>
-            <div style="min-width:220px; flex:1">
-              <div class="small">Daily completion</div>
-              <div class="progress" style="margin-top:6px"><div class="bar good" id="dailyBar"></div></div>
-              <div class="small" style="margin-top:6px">
-                <span id="doneCount" class="mono">0</span>/<span id="totalCount" class="mono">0</span> tasks completed •
-                <span class="mono" id="todayXP">0</span> XP today
-              </div>
-              <div class="small" style="margin-top:6px" id="weekLabel"></div>
-            </div>
+        <div class="form-section stack">
+          <input id="taskNameInput" placeholder="Task name" />
+          <div class="grid-2">
+            <select id="taskTypeInput">
+              <option value="checkbox">Checkbox</option>
+              <option value="number">Number</option>
+            </select>
+            <input id="taskPointsInput" type="number" min="0" step="0.1" placeholder="Points per day" value="10" />
           </div>
-        </div>
-        <div class="card" style="margin-bottom:10px">
-  <div class="row" style="justify-content:space-between; align-items:center">
-    <div>
-      <h2 style="margin:0">Habits</h2>
-      <div class="sub" style="margin:6px 0 0">Add habits, then track them in Day / Week / Month view.</div>
-    </div>
-    <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end">
-      <button class="primary" id="openQuickAddBtn">+ Add Habit</button>
-      <button id="addGroupBtn">+ Add Group</button>
-      <button id="addTaskCategoryBtn">+ Add Task Category</button>
-      <button id="manageTaskCategoriesBtn">Manage</button>
-    </div>
-  </div>
-</div>
-      </div>
-
-      </div>
-
-        <div id="habitsGridWrap" class="hidden"></div>
-      </div>
-
-      <div id="tab-todo" class="hidden">
-        <h2>To‑Do (linked to Life Architecture)</h2>
-        <div class="sub">Add to‑dos, attach them to a Life branch, and see pending counts per branch.</div>
-
-        <div class="card" style="margin-bottom:10px">
-          <h2>New To‑Do</h2>
-          <div class="row">
-            <div class="field" style="flex:1; min-width:220px">
-              <div class="lbl">To‑Do title</div>
-              <input id="todoTitle" placeholder="e.g., Book dentist appointment" />
-            </div>
-            <div class="field" style="width:260px">
-              <div class="lbl">Life branch</div>
-              <select id="todoLifeSelect" style="width:260px"></select>
-            </div>
-            <div class="field" style="width:220px">
-              <div class="lbl">Category</div>
-              <select id="todoCategorySelect" style="width:220px"></select>
-            </div>
-            <button class="primary" id="addTodoBtn" style="width:120px; height:42px; align-self:flex-end">Add</button>
+          <div class="grid-2" id="numericFields">
+            <input id="taskTargetInput" type="number" min="0" step="0.1" placeholder="Target quantity" value="10" />
+            <label class="inline"><input id="taskPartialInput" type="checkbox" checked /> Allow partial credit</label>
           </div>
-          <div class="row" style="margin-top:10px">
-            <button id="addTodoCategoryBtn">+ Add To‑Do Category</button>
-            <button id="manageTodoCategoriesBtn">Manage</button>
-          </div>
-          <div class="small">Tip: select a branch on the left tree to filter; new items default to that branch.</div>
+          <textarea id="taskNotesInput" rows="3" placeholder="Optional notes"></textarea>
         </div>
 
-        <div class="row" style="align-items:flex-start;">
-          <div class="card" style="flex:1; min-width:280px">
-            <h2>Life Tree (with counts)</h2>
-            <div class="small">Badge shows pending / total (including all descendants).</div>
-            <div id="todoLifeTree" style="margin-top:8px"></div>
-          </div>
-
-          <div class="card" style="flex:1.2; min-width:320px">
-            <div class="row" style="justify-content:space-between">
-              <h2 style="margin:0">To‑Dos</h2>
-              <label class="small" style="display:flex; gap:8px; align-items:center; cursor:pointer">
-                <input type="checkbox" id="showCompletedTodos" />
-                show completed
-              </label>
-            </div>
-            <div class="small" id="todoFilterLabel" style="margin-top:6px"></div>
-            <div class="sep"></div>
-            <div id="todoList" class="list"></div>
-          </div>
+        <div class="footer-actions">
+          <button id="saveTaskBtn" class="success">Save Task</button>
+          <button id="cancelEditBtn" class="ghost hidden">Cancel Edit</button>
         </div>
-      </div>
+      </section>
 
-      <div id="tab-goals" class="hidden">
-        <h2>Goals</h2>
-        <div class="sub">Create goals, and optionally link tasks to them. Completing a linked task will give you a “one step closer” message.</div>
-
-        <div class="card" style="margin-bottom:10px">
-          <h2>New Goal</h2>
-          <div class="row">
-            <input id="goalTitle" placeholder="Goal title (e.g., Run a 5k)" />
-            <button class="primary" id="addGoalBtn" style="width:140px">Add Goal</button>
-          </div>
-          <textarea id="goalDesc" placeholder="Optional description / why it matters..."></textarea>
-        </div>
-
-        <div class="card">
-          <h2>Your Goals</h2>
-          <div id="goalsList" class="list"></div>
-        </div>
-      </div>
-
-      <div id="tab-priorities" class="hidden">
-        <h2>Task Priorities</h2>
-        <div class="sub">Drag tasks to sort most → least important. Higher priority tasks earn more bonus XP (see Settings for max bonus).</div>
-        <div class="card">
-          <h2>Drag to reorder</h2>
-          <div id="priorityList" class="list"></div>
-          <div class="sep"></div>
-          <div class="small">Top tasks get the biggest bonus. Bottom tasks can have 0 bonus.</div>
-        </div>
-      </div>
-
-      <div id="tab-bad" class="hidden">
-        <div class="sub">Track “days clean”, urge logs, and streaks. You can assign a penalty cost to a relapse.</div>
-
-        <div class="kpi">
-          <div class="card">
-            <h2>Clean Streak</h2>
-            <div class="row" style="justify-content:space-between">
-              <div>
-                <div class="small">Days clean</div>
-                <div class="mono" style="font-size:26px; margin-top:4px" id="cleanDays">0</div>
-              </div>
-              <div>
-                <div class="small">Longest</div>
-                <div class="mono" style="font-size:18px; margin-top:4px" id="cleanLongest">0</div>
-              </div>
-            </div>
-            <div class="sep"></div>
-            <div class="small">Penalty on relapse</div>
-            <div class="row" style="margin-top:6px">
-              <div style="width:140px"><input id="relapsePenalty" type="number" min="0" value="50"></div>
-              <button class="danger" id="relapseBtn">Log Relapse</button>
-              <button class="good" id="cleanDayBtn">Mark Today Clean</button>
-            </div>
-          </div>
-
-          <div class="card">
-            <h2>Urge Log</h2>
-            <div class="small">Log urges without failing. You’ll see patterns.</div>
-            <div class="row" style="margin-top:6px">
-              <select id="urgeIntensity" style="width:160px">
-                <option value="1">1 (low)</option>
-                <option value="2">2</option>
-                <option value="3" selected>3 (medium)</option>
-                <option value="4">4</option>
-                <option value="5">5 (high)</option>
-              </select>
-              <input id="urgeTrigger" placeholder="Trigger (optional): stress, boredom, etc." />
-              <button class="primary" id="logUrgeBtn">Log Urge</button>
-            </div>
-            <div class="sep"></div>
-            <div class="small">Recent urges</div>
-            <div id="urgeList" class="list" style="margin-top:8px"></div>
-          </div>
-        </div>
-
-        <div class="sep"></div>
-        <div class="card">
-          <h2>Bad Habits List</h2>
-          <div class="sub">Create multiple “bad habit targets” (ex: sugar, doomscrolling). Track each independently.</div>
-          <div class="row">
-            <input id="badName" placeholder="Bad habit name (e.g., Doomscrolling)" />
-            <button class="primary" id="addBadBtn" style="width:120px">Add</button>
-          </div>
-          <div class="sep"></div>
-          <div id="badTargets" class="list"></div>
-        </div>
-      </div>
-
-      <div id="tab-journal" class="hidden">
-        <div class="row" style="justify-content:space-between; align-items:flex-start;">
-          <div style="flex:1">
-            <h2>New Entry</h2>
-            <div class="row">
-              <div style="flex:1"><input id="journalTitle" placeholder="Title (e.g., Weekly Review - Feb 27)" /></div>
-              <button class="primary" id="saveEntryBtn" style="width:140px">Save</button>
-              <button id="newEntryBtn" style="width:140px">Clear</button>
-            </div>
-            <textarea id="journalBody" placeholder="Write here..."></textarea>
-            <div class="row" style="justify-content:space-between">
-              <div class="small">Click an entry on the right to load/edit it.</div>
-              <button class="danger" id="deleteEntryBtn">Delete Loaded Entry</button>
-            </div>
-          </div>
-
-          <div style="width:360px; max-width:100%">
-            <h2>Entries</h2>
-            <input id="journalSearch" placeholder="Search titles / text..." />
-            <div id="entriesList" class="list" style="margin-top:10px"></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="tab-life" class="hidden">
-        <h2>Life Architecture</h2>
-        <div class="sub">A real hierarchy. Click a node, then add child/sibling or indent/outdent. Saved locally.</div>
-
-        <div class="card" style="margin-bottom:10px">
-          <div class="row" style="justify-content:space-between; align-items:flex-start;">
-            <div style="flex:1; min-width:260px">
-              <div class="small">Selected</div>
-              <div class="row" style="margin-top:6px">
-                <input id="lifeSelectedLabel" placeholder="No node selected" disabled />
-                <button class="primary" id="lifeRenameBtn" style="width:110px">Rename</button>
-                <button class="danger" id="lifeDeleteBtn" style="width:110px">Delete</button>
-              </div>
-
-              <div class="sep"></div>
-
-              <div class="small">Structure</div>
-              <div class="row" style="margin-top:6px">
-                <button class="primary" id="lifeAddChildBtn">+ Child</button>
-                <button id="lifeAddSiblingBtn">+ Sibling</button>
-                <button id="lifeIndentBtn">Indent</button>
-                <button id="lifeOutdentBtn">Outdent</button>
-                <button id="lifeMoveUpBtn">↑</button>
-                <button id="lifeMoveDownBtn">↓</button>
-              </div>
-
-              <div class="sep"></div>
-
-              <div class="row" style="justify-content:space-between">
-                <button class="primary" id="lifeSaveTreeBtn">Save</button>
-                <button id="lifeLoadTemplateBtn">Load Template</button>
-                <button id="lifeExportBtn">Export Outline</button>
-              </div>
-
-              <div class="small" style="margin-top:8px">
-                Tips: Use <span class="mono">Indent</span>/<span class="mono">Outdent</span> to change levels. Export gives a text outline you can copy.
-              </div>
-            </div>
-
-            <div style="flex:1; min-width:280px">
-              <div class="small">Tree</div>
-              <div id="lifeTree" style="margin-top:8px;"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Outline Export (read-only)</h2>
-          <div class="sub">This updates when you press Export Outline.</div>
-          <textarea id="lifeOutlineExport" readonly></textarea>
-        </div>
-      </div>
-
-      <div id="tab-settings" class="hidden">
-        <h2>Settings</h2>
-        <div class="sub">Minimal controls for V1.</div>
-        <div class="card">
-          <h2>Progress & XP</h2>
-          <div class="row">
-            <div style="flex:1">
-              <div class="small">Level curve (XP needed multiplier)</div>
-              <input id="levelCurve" type="number" min="1" step="0.1" value="1.35" />
-            </div>
-            <div style="flex:1">
-              <div class="small">Daily perfect bonus XP</div>
-              <input id="perfectBonus" type="number" min="0" value="25" />
-            </div>
-          </div>
-
-          <div class="sep"></div>
-
-          <div class="row">
-            <div style="flex:1">
-              <div class="small">Max priority bonus XP (top task)</div>
-              <input id="maxPriorityBonus" type="number" min="0" value="10" />
-            </div>
-            <div style="flex:1">
-              <div class="small">Priority curve (higher = steeper drop-off)</div>
-              <input id="priorityCurve" type="number" min="0.5" step="0.1" value="1.2" />
-            </div>
-          </div>
-
-          <div class="sep"></div>
-          <div class="row" style="justify-content:space-between">
-            <button class="primary" id="saveSettingsBtn">Save Settings</button>
-            <button class="danger" id="wipeAllBtn" title="Deletes ALL app data from localStorage">Wipe All Data</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <aside class="card" id="sidePanel" style="display:none">
-      <h2>Dashboard</h2>
-      <div class="sub">Snapshot + quick stats (V1).</div>
-
-      <div class="card" style="margin-bottom:10px">
-        <h2>Today Stats</h2>
-        <div class="small">Streak (perfect days)</div>
-        <div class="row" style="justify-content:space-between">
-          <div class="mono" style="font-size:24px" id="habitStreak">0</div>
-          <div class="small">Longest <span class="mono" id="habitLongest">0</span></div>
-        </div>
-        <div class="sep"></div>
-        <div class="small">Momentum</div>
-        <div class="progress" style="margin-top:6px"><div class="bar" id="momentumBar"></div></div>
-        <div class="small" style="margin-top:6px">Multiplier: <span class="mono" id="multLabel">1.0x</span></div>
-      </div>
-
-      <div class="card">
-        <h2>Group Progress</h2>
-        <div id="groupProgress"></div>
-      </div>
-
-      <div class="sep"></div>
-
-      <div class="row" style="justify-content:space-between">
-        <button id="exportBtn">Export Data</button>
-        <button id="importBtn">Import Data</button>
-      </div>
-      <input id="importFile" type="file" accept="application/json" class="hidden" />
-      <div class="small" style="margin-top:8px">Export/Import uses a JSON file so you can back up.</div>
+      <section class="panel stack">
+        <strong>How scoring works</strong>
+        <div class="small muted">Checkbox tasks earn all points when checked. Number tasks earn points based on progress toward the target. Voided days do not count against percentages.</div>
+      </section>
     </aside>
-  </div>
-</main>
 
-
-<div class="modalBackdrop" id="catModalBackdrop">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="catModalTitle">
-    <div class="modalHeader">
-      <strong id="catModalTitle">Manage Categories</strong>
-      <div class="row" style="justify-content:flex-end">
-        <button id="catModalCloseBtn">Close</button>
-      </div>
-    </div>
-    <div class="modalBody">
-      <div class="small" id="catModalHint"></div>
-      <div id="catModalList"></div>
-      <div class="sep"></div>
-      <div class="small">Delete behavior: items in a deleted category automatically move to <span class="mono">No category</span>.</div>
-    </div>
-  </div>
-</div>
-
-
-<div class="modalBackdrop" id="taskModalBackdrop">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
-    <div class="modalHeader">
-      <strong id="taskModalTitle">Edit Habit</strong>
-      <div class="row" style="justify-content:flex-end">
-        <button id="taskModalCloseBtn">Close</button>
-      </div>
-    </div>
-    <div class="modalBody">
-      <div class="formGrid">
-        <div class="field full">
-          <div class="lbl">Habit name</div>
-          <input id="taskNameInput" placeholder="e.g., Meditate 10 min" />
+    <main class="main stack">
+      <section class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Overall success</div>
+          <div class="stat-value" id="overallSuccessStat">0%</div>
         </div>
-
-        <div class="field">
-          <div class="lbl">Group (umbrella)</div>
-          <select id="taskGroupSelect"></select>
+        <div class="stat-card">
+          <div class="stat-label">Points earned</div>
+          <div class="stat-value" id="pointsEarnedStat">0</div>
         </div>
-
-        <div class="field">
-          <div class="lbl">Category</div>
-          <select id="taskCategorySelect"></select>
+        <div class="stat-card">
+          <div class="stat-label">Points possible</div>
+          <div class="stat-value" id="pointsPossibleStat">0</div>
         </div>
-
-        <div class="field">
-          <div class="lbl">Base XP</div>
-          <input id="taskXPInput" type="number" min="1" value="10" />
+        <div class="stat-card">
+          <div class="stat-label">Voided days in range</div>
+          <div class="stat-value" id="voidedDaysStat">0</div>
         </div>
-
-        <div class="field">
-          <div class="lbl">Times/week</div>
-          <input id="taskWeeklyInput" type="number" min="1" max="7" value="7" />
-        </div>
-
-        <div class="field full">
-          <div class="lbl">Associated goal (optional)</div>
-          <select id="taskGoalSelect"></select>
-          <div class="small" style="margin-top:6px">When you complete this habit, you'll get a “one step closer” message.</div>
-        </div>
-
-        <div class="field full">
-          <label class="small" style="display:flex; align-items:center; gap:8px">
-            <input type="checkbox" id="taskActiveToggle" checked />
-            Active (show in your habit lists)
-          </label>
-        </div>
-      </div>
-    </div>
-    <div class="modalFooter">
-      <div class="small" id="taskModalMeta"></div>
-      <div class="row" style="gap:8px; justify-content:flex-end">
-        <button class="iconBtn danger" id="taskDeleteBtn" style="display:none">Delete</button>
-        <button id="taskCancelBtn">Cancel</button>
-        <button class="primary" id="taskSaveBtn">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="toastWrap"></div>
-
-<script>
-const STORAGE_KEY = "my_habit_app_v2";
-const todayISO = () => new Date().toISOString().slice(0,10);
-const nowISO = () => new Date().toISOString();
-const toLocalDateInput = (d=new Date()) => {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const dd = String(d.getDate()).padStart(2,'0');
-  return `${yyyy}-${mm}-${dd}`;
-};
-function cryptoId(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
-function clampInt(v,min,max){ v = Number(v); if(!Number.isFinite(v)) v = min; v = Math.round(v); return Math.max(min, Math.min(max, v)); }
-function task(name, xp, weeklyTarget=7, groupId="none", categoryId="none"){ return { id: cryptoId(), name, xp: Number(xp)||10, weeklyTarget: clampInt(weeklyTarget,1,7), active: true, goalId: null, groupId, categoryId }; }
-
-function defaultLifeTree(){
-  return { id:"root", title:"Life", children:[
-    { id: cryptoId(), title:"Health", children:[{id:cryptoId(),title:"Sleep",children:[]},{id:cryptoId(),title:"Nutrition",children:[]},{id:cryptoId(),title:"Fitness",children:[]},{id:cryptoId(),title:"Energy",children:[]}]},
-    { id: cryptoId(), title:"Career", children:[{id:cryptoId(),title:"Deep work",children:[]},{id:cryptoId(),title:"Admin",children:[]},{id:cryptoId(),title:"Skill building",children:[]}]},
-    { id: cryptoId(), title:"Family", children:[{id:cryptoId(),title:"Presence",children:[]},{id:cryptoId(),title:"Logistics",children:[]},{id:cryptoId(),title:"Quality time",children:[]}]},
-    { id: cryptoId(), title:"Environment", children:[{id:cryptoId(),title:"Cleanliness",children:[]},{id:cryptoId(),title:"Organization",children:[]}]},
-    { id: cryptoId(), title:"Mind", children:[{id:cryptoId(),title:"Learning",children:[]},{id:cryptoId(),title:"Reading",children:[]},{id:cryptoId(),title:"Reflection",children:[]}]},
-    { id: cryptoId(), title:"Finance", children:[{id:cryptoId(),title:"Budget",children:[]},{id:cryptoId(),title:"Planning",children:[]}]},
-    { id: cryptoId(), title:"Routines", children:[{id:cryptoId(),title:"Morning Routine",children:[]},{id:cryptoId(),title:"Evening Routine",children:[]}]},
-  ]};
-}
-function defaultState(){
-  return {
-    version: 2,
-    settings: { levelCurve: 1.35, perfectBonus: 25, maxPriorityBonus: 10, priorityCurve: 1.2 },
-    ui: { habitView: "day", viewDate: toLocalDateInput(new Date()) },
-    player: { totalXP: 0, bestDayXP: 0, lastDayXPDate: "", dailyXP: {} },
-    goals: { items: [] },
-    habits: {
-      groups: [{ id: cryptoId(), name: "Morning Routine" },{ id: cryptoId(), name: "Evening Routine" }],
-      categories: [{ id: cryptoId(), name: "Health", color:"#22c55e" }, { id: cryptoId(), name: "Work", color:"#2563eb" }, { id: cryptoId(), name: "Home", color:"#f59e0b" }],
-      tasks: [task("Drink water", 5, 7, "none", "none"), task("Plan day (3 min)", 8, 5, "none", "none"), task("Stretch (5 min)", 8, 5, "none", "none")],
-      doneByDate: {},
-      streak: { current: 0, longest: 0 },
-      priorityOrder: []
-    },
-    todo: { categories: [{id: cryptoId(), name:"Errands", color:"#7c3aed"}, {id: cryptoId(), name:"Calls", color:"#2563eb"}, {id: cryptoId(), name:"Admin", color:"#f59e0b"}], items: [], selectedLifeId: "root", showCompleted: false },
-    bad: { relapsePenalty: 50, clean: { current: 0, longest: 0, lastCleanDate: "" }, urges: [], targets: [] },
-    journal: { entries: [], loadedId: null },
-    life: { tree: defaultLifeTree() }
-  };
-}
-let state = load();
-function deepMerge(base, incoming){
-  if(typeof base !== "object" || base === null) return incoming ?? base;
-  const out = Array.isArray(base) ? [...base] : {...base};
-  if(typeof incoming !== "object" || incoming === null) return out;
-  for(const k of Object.keys(incoming)){
-    if(k in base) out[k] = deepMerge(base[k], incoming[k]);
-    else out[k] = incoming[k];
-  }
-  return out;
-}
-function migrateState(s){
-  if(!s.habits) return;
-  if(Array.isArray(s.habits.groups) && s.habits.groups.length && s.habits.groups[0]?.tasks){
-    const oldGroups = s.habits.groups;
-    const newGroups = [];
-    const newTasks = [];
-    oldGroups.forEach(g=>{
-      const gid = g.id || cryptoId();
-      if(g.name) newGroups.push({id: gid, name: g.name});
-      (g.tasks||[]).forEach(t=>{
-        newTasks.push({id:t.id||cryptoId(), name:t.name||"Untitled", xp:Number(t.xp)||10, weeklyTarget: clampInt(t.weeklyTarget ?? 7, 1, 7), active: t.active !== false, goalId: t.goalId ?? null, groupId: gid});
-      });
-    });
-    s.habits.groups = newGroups;
-    s.habits.tasks = newTasks;
-  }
-  if(!Array.isArray(s.habits.groups)) s.habits.groups = [];
-  if(!Array.isArray(s.habits.tasks)) s.habits.tasks = [];
-  if(!Array.isArray(s.habits.priorityOrder)) s.habits.priorityOrder = [];
-  if(!Array.isArray(s.habits.categories)) s.habits.categories = [];
-  s.habits.categories.forEach(c=>{ if(!("color" in c)) c.color = "#2563eb"; });
-  if(!s.todo) s.todo = {categories:[], items:[], selectedLifeId:"root", showCompleted:false};
-  if(!Array.isArray(s.todo.categories)) s.todo.categories = [];
-  s.todo.categories.forEach(c=>{ if(!("color" in c)) c.color = "#7c3aed"; });
-  if(!Array.isArray(s.todo.items)) s.todo.items = [];
-  s.todo.items.forEach(it=>{ if(!("categoryId" in it)) it.categoryId = "none"; });
-  s.habits.tasks.forEach(t=>{
-    if(!("groupId" in t)) t.groupId = "none";
-    if(!("categoryId" in t)) t.categoryId = "none";
-    if(!("weeklyTarget" in t)) t.weeklyTarget = 7;
-    t.weeklyTarget = clampInt(t.weeklyTarget,1,7);
-    if(!("active" in t)) t.active = true;
-  });
-  if(!s.ui) s.ui = {habitView:"day", viewDate: toLocalDateInput(new Date())};
-  if(!s.todo) s.todo = {items:[], selectedLifeId:"root", showCompleted:false};
-}
-function load(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return defaultState();
-    const parsed = JSON.parse(raw);
-    const merged = deepMerge(defaultState(), parsed);
-    migrateState(merged);
-    return merged;
-  }catch(e){
-    console.warn("Load failed, using defaults", e);
-    return defaultState();
-  }
-}
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-
-const toastWrap = document.getElementById("toastWrap");
-const catModalBackdrop = document.getElementById("catModalBackdrop");
-const catModalCloseBtn = document.getElementById("catModalCloseBtn");
-const catModalTitle = document.getElementById("catModalTitle");
-const catModalHint = document.getElementById("catModalHint");
-const catModalList = document.getElementById("catModalList");
-let catModalMode = "task";
-
-// Task editor modal
-const taskModalBackdrop = document.getElementById("taskModalBackdrop");
-const taskModalCloseBtn = document.getElementById("taskModalCloseBtn");
-const taskModalTitle = document.getElementById("taskModalTitle");
-const taskModalMeta = document.getElementById("taskModalMeta");
-const taskNameInput = document.getElementById("taskNameInput");
-const taskGroupSelect = document.getElementById("taskGroupSelect");
-const taskCategorySelect = document.getElementById("taskCategorySelect");
-const taskXPInput = document.getElementById("taskXPInput");
-const taskWeeklyInput = document.getElementById("taskWeeklyInput");
-const taskGoalSelect = document.getElementById("taskGoalSelect");
-const taskActiveToggle = document.getElementById("taskActiveToggle");
-const taskDeleteBtn = document.getElementById("taskDeleteBtn");
-const taskCancelBtn = document.getElementById("taskCancelBtn");
-const taskSaveBtn = document.getElementById("taskSaveBtn");
-const openQuickAddBtn = document.getElementById("openQuickAddBtn");
-let editingTaskId = null;
-function toast(title, msg){
-  const el = document.createElement("div");
-  el.className = "toast";
-  el.innerHTML = `<div class="title">${escapeHtml(title)}</div><div class="msg">${escapeHtml(msg)}</div>`;
-  toastWrap.appendChild(el);
-  setTimeout(()=>{ el.style.opacity = "0"; el.style.transform="translateY(6px)"; }, 2400);
-  setTimeout(()=>{ el.remove(); }, 3000);
-}
-
-const tabButtons = document.querySelectorAll(".tab");
-tabButtons.forEach(btn => btn.addEventListener("click", () => {
-  tabButtons.forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  const name = btn.dataset.tab;
-  ["habits","todo","goals","priorities","bad","journal","life","settings"].forEach(t => {
-    document.getElementById("tab-"+t).classList.toggle("hidden", t !== name);
-  });
-  if(name === "priorities") renderPriorities();
-  if(name === "life") renderLife();
-  if(name === "todo") renderTodo();
-}));
-
-const todayLabel = document.getElementById("todayLabel");
-const weekLabel = document.getElementById("weekLabel");
-const levelLabel = document.getElementById("levelLabel");
-const xpLabel = document.getElementById("xpLabel");
-const bestDayLabel = document.getElementById("bestDayLabel");
-
-const groupProgressEl = document.getElementById("groupProgress");
-
-const dailyBar = document.getElementById("dailyBar");
-const dailyRing = document.getElementById("dailyRing");
-const dailyPct = document.getElementById("dailyPct");
-const doneCountEl = document.getElementById("doneCount");
-const totalCountEl = document.getElementById("totalCount");
-const todayXPEl = document.getElementById("todayXP");
-
-const quickTaskGroup = document.getElementById("quickTaskGroup");
-const quickTaskCategory = document.getElementById("quickTaskCategory");
-const addTaskCategoryBtn = document.getElementById("addTaskCategoryBtn");
-const manageTaskCategoriesBtn = document.getElementById("manageTaskCategoriesBtn");
-const quickTaskName = document.getElementById("quickTaskName");
-const quickTaskXP = document.getElementById("quickTaskXP");
-const quickTaskWeekly = document.getElementById("quickTaskWeekly");
-const quickAddBtn = document.getElementById("quickAddBtn");
-const resetTodayBtn = document.getElementById("resetTodayBtn");
-const addGroupBtn = document.getElementById("addGroupBtn");
-
-const habitViewSel = document.getElementById("habitView");
-const viewDateInput = document.getElementById("viewDate");
-// View bar + menu
-const menuBtn = document.getElementById("menuBtn");
-const menuPanel = document.getElementById("menuPanel");
-const tabsEl = document.getElementById("tabs");
-const sidePanel = document.getElementById("sidePanel");
-const toggleStatsBtn = document.getElementById("toggleStatsBtn");
-const viewDateLabel = document.getElementById("viewDateLabel");
-const btnViewDay = document.getElementById("btnViewDay");
-const btnViewWeek = document.getElementById("btnViewWeek");
-const btnViewMonth = document.getElementById("btnViewMonth");
-
-function setActiveSeg(view){
-  [btnViewDay, btnViewWeek, btnViewMonth].forEach(b=> b && b.classList.remove("active"));
-  if(view==="day" && btnViewDay) btnViewDay.classList.add("active");
-  if(view==="week" && btnViewWeek) btnViewWeek.classList.add("active");
-  if(view==="month" && btnViewMonth) btnViewMonth.classList.add("active");
-}
-
-function updateViewDateLabel(){
-  if(!viewDateLabel) return;
-  const d = parseDate(viewDateInput.value);
-  viewDateLabel.textContent = fmtLong(d);
-}
-
-if(menuBtn && menuPanel){
-  menuBtn.addEventListener("click", ()=>{
-    const open = menuPanel.style.display !== "none";
-    menuPanel.style.display = open ? "none" : "block";
-    // also show/hide the original tab bar inside the menu for power users
-    if(tabsEl) tabsEl.style.display = open ? "none" : "flex";
-  });
-}
-
-if(toggleStatsBtn && sidePanel){
-  toggleStatsBtn.addEventListener("click", ()=>{
-    sidePanel.style.display = (sidePanel.style.display === "none") ? "block" : "none";
-  });
-}
-
-document.querySelectorAll(".navJump").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    const tab = btn.getAttribute("data-tab");
-    if(tab) showTab(tab);
-    if(menuPanel) menuPanel.style.display = "none";
-    if(tabsEl) tabsEl.style.display = "none";
-  });
-});
-
-[btnViewDay, btnViewWeek, btnViewMonth].forEach(b=>{
-  if(!b) return;
-  b.addEventListener("click", ()=>{
-    const v = b.getAttribute("data-view");
-    habitViewSel.value = v;
-    setActiveSeg(v);
-    renderHabits();
-  });
-});
-
-if(viewDateInput){
-  viewDateInput.addEventListener("change", ()=>{ updateViewDateLabel(); renderHabits(); });
-}
-const habitsDayWrap = document.getElementById("habitsDayWrap");
-const habitsGridWrap = document.getElementById("habitsGridWrap");
-
-const habitStreakEl = document.getElementById("habitStreak");
-const habitLongestEl = document.getElementById("habitLongest");
-const momentumBar = document.getElementById("momentumBar");
-const multLabel = document.getElementById("multLabel");
-
-const goalTitle = document.getElementById("goalTitle");
-const goalDesc = document.getElementById("goalDesc");
-const addGoalBtn = document.getElementById("addGoalBtn");
-const goalsList = document.getElementById("goalsList");
-
-const priorityList = document.getElementById("priorityList");
-
-const relapsePenaltyInput = document.getElementById("relapsePenalty");
-const relapseBtn = document.getElementById("relapseBtn");
-const cleanDayBtn = document.getElementById("cleanDayBtn");
-const cleanDaysEl = document.getElementById("cleanDays");
-const cleanLongestEl = document.getElementById("cleanLongest");
-const urgeIntensity = document.getElementById("urgeIntensity");
-const urgeTrigger = document.getElementById("urgeTrigger");
-const logUrgeBtn = document.getElementById("logUrgeBtn");
-const urgeList = document.getElementById("urgeList");
-const badName = document.getElementById("badName");
-const addBadBtn = document.getElementById("addBadBtn");
-const badTargets = document.getElementById("badTargets");
-
-const journalTitle = document.getElementById("journalTitle");
-const journalBody = document.getElementById("journalBody");
-const saveEntryBtn = document.getElementById("saveEntryBtn");
-const newEntryBtn = document.getElementById("newEntryBtn");
-const deleteEntryBtn = document.getElementById("deleteEntryBtn");
-const entriesList = document.getElementById("entriesList");
-const journalSearch = document.getElementById("journalSearch");
-
-const lifeTreeEl = document.getElementById("lifeTree");
-const lifeSelectedLabel = document.getElementById("lifeSelectedLabel");
-const lifeOutlineExport = document.getElementById("lifeOutlineExport");
-const lifeAddChildBtn = document.getElementById("lifeAddChildBtn");
-const lifeAddSiblingBtn = document.getElementById("lifeAddSiblingBtn");
-const lifeIndentBtn = document.getElementById("lifeIndentBtn");
-const lifeOutdentBtn = document.getElementById("lifeOutdentBtn");
-const lifeMoveUpBtn = document.getElementById("lifeMoveUpBtn");
-const lifeMoveDownBtn = document.getElementById("lifeMoveDownBtn");
-const lifeRenameBtn = document.getElementById("lifeRenameBtn");
-const lifeDeleteBtn = document.getElementById("lifeDeleteBtn");
-const lifeSaveTreeBtn = document.getElementById("lifeSaveTreeBtn");
-const lifeLoadTemplateBtn = document.getElementById("lifeLoadTemplateBtn");
-const lifeExportBtn = document.getElementById("lifeExportBtn");
-
-const todoTitle = document.getElementById("todoTitle");
-const todoLifeSelect = document.getElementById("todoLifeSelect");
-const todoCategorySelect = document.getElementById("todoCategorySelect");
-const addTodoCategoryBtn = document.getElementById("addTodoCategoryBtn");
-const manageTodoCategoriesBtn = document.getElementById("manageTodoCategoriesBtn");
-const addTodoBtn = document.getElementById("addTodoBtn");
-const todoLifeTree = document.getElementById("todoLifeTree");
-const todoList = document.getElementById("todoList");
-const todoFilterLabel = document.getElementById("todoFilterLabel");
-const showCompletedTodos = document.getElementById("showCompletedTodos");
-
-const levelCurve = document.getElementById("levelCurve");
-const perfectBonus = document.getElementById("perfectBonus");
-const maxPriorityBonus = document.getElementById("maxPriorityBonus");
-const priorityCurve = document.getElementById("priorityCurve");
-const saveSettingsBtn = document.getElementById("saveSettingsBtn");
-const wipeAllBtn = document.getElementById("wipeAllBtn");
-
-const exportBtn = document.getElementById("exportBtn");
-const importBtn = document.getElementById("importBtn");
-const importFile = document.getElementById("importFile");
-
-function weekStartISO(date = new Date()){
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const day = d.getDay();
-  const diff = (day === 0) ? -6 : (1 - day);
-  d.setDate(d.getDate() + diff);
-  return toLocalDateInput(d);
-}
-function addDaysISO(iso, days){
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate()+days);
-  return toLocalDateInput(d);
-}
-function weekRangeLabel(date=new Date()){
-  const ws = weekStartISO(date);
-  const we = addDaysISO(ws, 6);
-  const a = new Date(ws + "T00:00:00");
-  const b = new Date(we + "T00:00:00");
-  const fmt = (x) => x.toLocaleDateString(undefined, {month:"short", day:"numeric"});
-  return `Week: ${fmt(a)} – ${fmt(b)} (Mon–Sun)`;
-}
-function monthInfo(iso){
-  const d = new Date(iso + "T00:00:00");
-  const y = d.getFullYear(), m = d.getMonth();
-  const first = new Date(y,m,1);
-  const last = new Date(y,m+1,0);
-  const days = last.getDate();
-  const firstIso = toLocalDateInput(first);
-  return {y,m,days,firstIso};
-}
-
-function ensureLifeTree(){ if(!state.life) state.life = {}; if(!state.life.tree) state.life.tree = defaultLifeTree(); }
-function findNodeAndParent(node, id, parent=null){
-  if(node.id === id) return {node, parent};
-  for(const child of (node.children||[])){
-    const found = findNodeAndParent(child, id, node);
-    if(found) return found;
-  }
-  return null;
-}
-function findParentAndIndex(root, childId){
-  function walk(node){
-    for(let i=0;i<(node.children||[]).length;i++){
-      if(node.children[i].id === childId) return {parent: node, index: i};
-    }
-    for(const c of (node.children||[])){
-      const r = walk(c);
-      if(r) return r;
-    }
-    return null;
-  }
-  return walk(root);
-}
-function collectDescendantIds(node){
-  const ids = [node.id];
-  for(const c of (node.children||[])) ids.push(...collectDescendantIds(c));
-  return ids;
-}
-function lifeNodeTitle(id){
-  const found = findNodeAndParent(state.life.tree, id);
-  return found ? found.node.title : "Unknown";
-}
-function lifeFlattenOptions(){
-  const opts = [];
-  function walk(node, depth){
-    opts.push({id: node.id, label: `${"—".repeat(depth)} ${node.title}`});
-    (node.children||[]).forEach(c=>walk(c, depth+1));
-  }
-  walk(state.life.tree, 0);
-  return opts;
-}
-
-function ensureDateMap(iso){ if(!state.habits.doneByDate[iso]) state.habits.doneByDate[iso] = {}; return state.habits.doneByDate[iso]; }
-function isDoneOn(taskId, iso){ return !!(state.habits.doneByDate[iso] && state.habits.doneByDate[iso][taskId]); }
-function setDoneOn(taskId, iso, val){ ensureDateMap(iso)[taskId] = !!val; }
-function activeTasks(){ return state.habits.tasks.filter(t=>t.active); }
-function groupListWithNone(){ return [{id:"none", name:"No group"}, ...state.habits.groups]; }
-function groupName(id){ if(id==="none") return "No group"; return (state.habits.groups.find(g=>g.id===id)?.name) || "Unknown group"; }
-function taskCategoryListWithNone(){ return [{id:"none", name:"No category"}, ...(state.habits.categories||[])]; }
-function taskCategoryName(id){ if(id==="none") return "No category"; return (state.habits.categories||[]).find(c=>c.id===id)?.name || "Unknown category"; }
-function taskCategoryColor(id){ if(id==="none") return "#cbd5e1"; return (state.habits.categories||[]).find(c=>c.id===id)?.color || "#2563eb"; }
-function todoCategoryListWithNone(){ return [{id:"none", name:"No category"}, ...(state.todo.categories||[])]; }
-function todoCategoryName(id){ if(id==="none") return "No category"; return (state.todo.categories||[]).find(c=>c.id===id)?.name || "Unknown category"; }
-function todoCategoryColor(id){ if(id==="none") return "#cbd5e1"; return (state.todo.categories||[]).find(c=>c.id===id)?.color || "#7c3aed"; }
-function tasksByGroup(){
-  const map = new Map();
-  groupListWithNone().forEach(g => map.set(g.id, []));
-  activeTasks().forEach(t => {
-    const gid = t.groupId || "none";
-    if(!map.has(gid)) map.set(gid, []);
-    map.get(gid).push(t);
-  });
-  const ordered = [];
-  for(const g of groupListWithNone()){
-    const arr = map.get(g.id) || [];
-    if(arr.length) ordered.push({group:g, tasks: arr});
-  }
-  return ordered;
-}
-function countTaskThisWeek(taskId, refIso){
-  const ws = weekStartISO(new Date(refIso + "T00:00:00"));
-  let count = 0;
-  for(let i=0;i<7;i++){
-    const iso = addDaysISO(ws, i);
-    if(isDoneOn(taskId, iso)) count++;
-  }
-  return count;
-}
-
-function xpNeededForLevel(level){ const base = 100; return Math.round(base * Math.pow(state.settings.levelCurve, level-1)); }
-function computeLevel(totalXP){
-  let level = 1, remaining = totalXP;
-  while(true){
-    const need = xpNeededForLevel(level);
-    if(remaining >= need){ remaining -= need; level++; if(level>500) break; }
-    else break;
-  }
-  return { level, into: remaining, need: xpNeededForLevel(level) };
-}
-function momentumMultiplier(){
-  const s = state.habits.streak.current;
-  if(s >= 30) return 2.0;
-  if(s >= 14) return 1.6;
-  if(s >= 7) return 1.4;
-  if(s >= 3) return 1.2;
-  return 1.0;
-}
-function syncPriorityOrder(){
-  const ids = activeTasks().map(t=>t.id);
-  const existing = Array.isArray(state.habits.priorityOrder) ? state.habits.priorityOrder : [];
-  const kept = existing.filter(id => ids.includes(id));
-  const missing = ids.filter(id => !kept.includes(id));
-  state.habits.priorityOrder = [...kept, ...missing];
-}
-function priorityBonusFor(taskId){
-  syncPriorityOrder();
-  const order = state.habits.priorityOrder;
-  const n = order.length;
-  if(n <= 1) return 0;
-  const idx = order.indexOf(taskId);
-  if(idx < 0) return 0;
-  const maxB = Number(state.settings.maxPriorityBonus) || 0;
-  const curve = Number(state.settings.priorityCurve) || 1;
-  const t = 1 - (idx / (n - 1));
-  const scaled = Math.pow(t, curve);
-  return Math.round(maxB * scaled);
-}
-function totalTaskXP(task){ return (Number(task.xp)||0) + priorityBonusFor(task.id); }
-function dailyCounts(iso){
-  const tasks = activeTasks();
-  const total = tasks.length;
-  let done = 0;
-  tasks.forEach(t => { if(isDoneOn(t.id, iso)) done++; });
-  return {done, total};
-}
-function dayXP(iso){
-  const mult = momentumMultiplier();
-  let xp = 0;
-  activeTasks().forEach(t => { if(isDoneOn(t.id, iso)) xp += totalTaskXP(t); });
-  const totals = dailyCounts(iso);
-  if(totals.total > 0 && totals.done === totals.total) xp += Number(state.settings.perfectBonus)||0;
-  return Math.round(xp * mult);
-}
-function commitDayXP(iso){
-  if(!state.player.dailyXP) state.player.dailyXP = {};
-  state.player.dailyXP[iso] = dayXP(iso);
-  state.player.totalXP = Object.values(state.player.dailyXP).reduce((a,b)=>a+(Number(b)||0),0);
-}
-function updateStreakIfNeeded(){
-  const activeTaskIds = activeTasks().map(t=>t.id);
-  if(activeTaskIds.length === 0){ state.habits.streak.current = 0; return; }
-  function isPerfect(date){
-    for(const id of activeTaskIds) if(!isDoneOn(id, date)) return false;
-    return true;
-  }
-  const today = todayISO();
-  let cur = 0;
-  for(let i=0; i<5000; i++){
-    const d = new Date(today + "T00:00:00");
-    d.setDate(d.getDate()-i);
-    const iso = toLocalDateInput(d);
-    if(isPerfect(iso)) cur++; else break;
-  }
-  state.habits.streak.current = cur;
-  state.habits.streak.longest = Math.max(state.habits.streak.longest || 0, cur);
-}
-
-function renderHeaderAndStats(){
-  const d = new Date();
-  todayLabel.textContent = d.toLocaleDateString(undefined, { weekday:"short", year:"numeric", month:"short", day:"numeric" });
-  const viewIso = state.ui.viewDate || todayISO();
-  weekLabel.textContent = weekRangeLabel(new Date(viewIso+"T00:00:00"));
-
-  const txp = dayXP(todayISO());
-  todayXPEl.textContent = txp;
-  if(state.player.lastDayXPDate !== todayISO()) state.player.lastDayXPDate = todayISO();
-  if(txp > (state.player.bestDayXP || 0)) state.player.bestDayXP = txp;
-  bestDayLabel.textContent = (state.player.bestDayXP || 0) + " XP";
-
-  const {level} = computeLevel(state.player.totalXP || 0);
-  levelLabel.textContent = level;
-  xpLabel.textContent = `${state.player.totalXP || 0} XP`;
-
-  updateStreakIfNeeded();
-  habitStreakEl.textContent = state.habits.streak.current || 0;
-  habitLongestEl.textContent = state.habits.streak.longest || 0;
-
-  const mult = momentumMultiplier();
-  multLabel.textContent = mult.toFixed(1) + "x";
-  const mp = Math.min(100, Math.round((mult/2.0)*100));
-  momentumBar.style.width = mp + "%";
-}
-function renderGroupProgressSidebar(){
-  groupProgressEl.innerHTML = "";
-  const iso = todayISO();
-  for(const g of groupListWithNone()){
-    const tasks = activeTasks().filter(t => (t.groupId||"none") === g.id);
-    if(tasks.length === 0) continue;
-    const total = tasks.length;
-    const done = tasks.filter(t=>isDoneOn(t.id, iso)).length;
-    const pct = total ? Math.round((done/total)*100) : 0;
-    const box = document.createElement("div");
-    box.style.marginBottom = "10px";
-    box.innerHTML = `
-      <div class="row" style="justify-content:space-between">
-        <div class="small">${escapeHtml(g.name)}</div>
-        <div class="small mono">${done}/${total}</div>
-      </div>
-      <div class="progress" style="margin-top:6px"><div class="bar good" style="width:${pct}%"></div></div>
-    `;
-    groupProgressEl.appendChild(box);
-  }
-}
-function renderDailyProgress(){
-  const iso = todayISO();
-  const {done,total} = dailyCounts(iso);
-  const pct = total ? Math.round((done/total)*100) : 0;
-  doneCountEl.textContent = done;
-  totalCountEl.textContent = total;
-  dailyBar.style.width = pct + "%";
-  dailyPct.textContent = pct + "%";
-  const deg = Math.round((pct/100)*360);
-  dailyRing.style.background = `conic-gradient(var(--accent) ${deg}deg, var(--soft) 0deg)`;
-}
-
-function renderHabitGroupOptions(){
-  if(!quickTaskGroup) return;
-  quickTaskGroup.innerHTML = "";
-  groupListWithNone().forEach(g => {
-    const opt = document.createElement("option");
-    opt.value = g.id;
-    opt.textContent = g.name;
-    quickTaskGroup.appendChild(opt);
-  });
-  if(groupListWithNone().some(g=>g.id===state.ui.lastQuickGroup)) quickTaskGroup.value = state.ui.lastQuickGroup;
-
-  if(quickTaskCategory){
-    quickTaskCategory.innerHTML = "";
-    taskCategoryListWithNone().forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.name;
-      quickTaskCategory.appendChild(opt);
-    });
-    if(taskCategoryListWithNone().some(c=>c.id===state.ui.lastQuickCategory)) quickTaskCategory.value = state.ui.lastQuickCategory;
-  }
-}
-function renderHabitViewControls(){
-  habitViewSel.value = state.ui.habitView || "day";
-  viewDateInput.value = state.ui.viewDate || todayISO();
-}
-
-function goalById(id){ return state.goals.items.find(g=>g.id===id) || null; }
-
-function renderHabitsDay(){
-  habitsDayWrap.innerHTML = "";
-  const iso = state.ui.viewDate || todayISO();
-  const grouped = tasksByGroup();
-
-  grouped.forEach(({group, tasks}) => {
-    const wrap = document.createElement("div");
-    wrap.className = "group";
-    const total = tasks.length;
-    const done = tasks.filter(t => isDoneOn(t.id, iso)).length;
-    const pct = total ? Math.round((done/total)*100) : 0;
-
-    const header = document.createElement("div");
-    header.className = "groupHeader";
-
-    const left = document.createElement("div");
-    left.className = "groupTitle";
-    left.innerHTML = `<strong>${escapeHtml(group.name)}</strong> <span class="mono">${done}/${total}</span> <span>${pct}%</span>`;
-
-    const right = document.createElement("div");
-    right.className = "row";
-    right.style.justifyContent = "flex-end";
-
-    if(group.id !== "none"){
-      const renameBtn = document.createElement("button");
-      renameBtn.className = "iconBtn";
-      renameBtn.textContent = "Rename";
-      renameBtn.onclick = () => {
-        const n = prompt("Rename group:", group.name);
-        if(n && n.trim()){
-          const g = state.habits.groups.find(x=>x.id===group.id);
-          if(g){ g.name = n.trim(); save(); renderAll(true); }
-        }
-      };
-      const delGroupBtn = document.createElement("button");
-      delGroupBtn.className = "iconBtn danger";
-      delGroupBtn.textContent = "Delete";
-      delGroupBtn.onclick = () => {
-        if(!confirm(`Delete group "${group.name}"? Tasks will become ungrouped.`)) return;
-        state.habits.tasks.forEach(t=>{ if((t.groupId||"none")===group.id) t.groupId = "none"; });
-        state.habits.groups = state.habits.groups.filter(x=>x.id!==group.id);
-        save(); renderAll(true);
-      };
-      right.append(renameBtn, delGroupBtn);
-    } else {
-      const tip = document.createElement("span");
-      tip.className = "tag";
-      tip.textContent = "Ungrouped tasks";
-      right.appendChild(tip);
-    }
-    header.append(left, right);
-
-    const prog = document.createElement("div");
-    prog.className = "progress";
-    prog.style.marginTop = "10px";
-    const bar = document.createElement("div");
-    bar.className = "bar good";
-    bar.style.width = pct + "%";
-    prog.appendChild(bar);
-
-    const tasksEl = document.createElement("div");
-    tasksEl.className = "tasks";
-
-    tasks.forEach(t => {
-      const weeklyCount = countTaskThisWeek(t.id, iso);
-      const weeklyTarget = clampInt(t.weeklyTarget,1,7);
-      const weeklyDone = weeklyCount >= weeklyTarget;
-
-      const row = document.createElement("div");
-      row.className = "task" + (weeklyDone ? " weeklyComplete" : "");
-
-      const left = document.createElement("div");
-      left.className = "taskLeft";
-
-      const lab = document.createElement("label");
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = isDoneOn(t.id, iso);
-      cb.onchange = () => {
-        setDoneOn(t.id, iso, cb.checked);
-        commitDayXP(iso);
-        save();
-
-        if(iso === todayISO() && cb.checked){
-          const g = t.goalId ? goalById(t.goalId) : null;
-          if(g && !g.completed) toast("Nice.", `Good job — one step closer towards "${g.title}".`);
-          else toast("Done.", `+${totalTaskXP(t)} XP (incl. priority bonus)`);
-        }
-        renderAll(true);
-      };
-
-      const name = document.createElement("div");
-      name.className = "name";
-      name.textContent = t.name;
-
-      lab.append(cb, name);
-      left.appendChild(lab);
-
-      const right = document.createElement("div");
-      right.className = "taskActions";
-
-      const weekPill = document.createElement("span");
-      weekPill.className = "weekPill" + (weeklyDone ? " done" : "");
-      const fill = document.createElement("span");
-      fill.className = "weekFill";
-      const pct = Math.max(0, Math.min(100, Math.round((weeklyCount/weeklyTarget)*100)));
-      fill.style.width = pct + "%";
-      const txt = document.createElement("span");
-      txt.className = "weekText mono";
-      txt.textContent = weeklyDone ? `Week ✅ ${weeklyCount}/${weeklyTarget}` : `Week ${weeklyCount}/${weeklyTarget}`;
-      weekPill.append(fill, txt);
-      right.appendChild(weekPill);
-
-      if(t.goalId){
-        const g = goalById(t.goalId);
-        if(g){
-          const goalTag = document.createElement("span");
-          goalTag.className = "tag goal";
-          goalTag.textContent = `Goal: ${g.title}`;
-          right.appendChild(goalTag);
-        }
-      }
-
-      if(t.categoryId && t.categoryId !== "none"){
-        const ctag = document.createElement("span");
-        ctag.className = "tag";
-        ctag.textContent = `Cat: ${taskCategoryName(t.categoryId)}`;
-        right.appendChild(ctag);
-      }
-
-      const base = Number(t.xp)||0;
-      const bonus = priorityBonusFor(t.id);
-      const xpTag = document.createElement("span");
-      xpTag.className = "tag mono good";
-      xpTag.textContent = bonus > 0 ? `${base}+${bonus} XP` : `${base} XP`;
-
-      const editBtn = document.createElement("button");
-      editBtn.className = "iconBtn";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = () => editTaskModal(t);
-
-      const hideBtn = document.createElement("button");
-      hideBtn.className = "iconBtn danger";
-      hideBtn.textContent = "Remove";
-      hideBtn.onclick = () => {
-        if(confirm("Remove this task? (It will be deactivated, not deleted)")){
-          t.active = false;
-          save(); renderAll(true);
-        }
-      };
-
-      right.append(xpTag, editBtn, hideBtn);
-      row.append(left, right);
-      tasksEl.appendChild(row);
-    });
-
-    wrap.append(header, prog, tasksEl);
-    habitsDayWrap.appendChild(wrap);
-  });
-}
-
-function renderHabitsGrid(){
-  habitsGridWrap.innerHTML = "";
-  const view = state.ui.habitView || "day";
-  const iso = state.ui.viewDate || todayISO();
-  const tasks = activeTasks();
-  if(tasks.length === 0){
-    habitsGridWrap.innerHTML = `<div class="small">No tasks yet.</div>`;
-    return;
-  }
-
-  let days = [];
-  let label = "";
-  if(view === "week"){
-    const ws = weekStartISO(new Date(iso+"T00:00:00"));
-    days = Array.from({length:7}, (_,i)=>addDaysISO(ws,i));
-    label = `Week of ${ws}`;
-  } else {
-    const mi = monthInfo(iso);
-    days = Array.from({length:mi.days}, (_,i)=>addDaysISO(mi.firstIso,i));
-    const mname = new Date(mi.firstIso+"T00:00:00").toLocaleDateString(undefined,{month:"long", year:"numeric"});
-    label = mname;
-  }
-
-  const top = document.createElement("div");
-  top.className = "row";
-  top.style.justifyContent = "space-between";
-  top.innerHTML = `<div class="small"><strong>${escapeHtml(label)}</strong> — check/uncheck any day</div>
-                   <div class="small">Tip: horizontal scroll for ${view} view</div>`;
-  habitsGridWrap.appendChild(top);
-  habitsGridWrap.appendChild(document.createElement("div")).className="sep";
-
-  const wrap = document.createElement("div");
-  wrap.className = "gridWrap scrollX";
-
-  const table = document.createElement("table");
-  table.className = "taskGridTable";
-
-  const thead = document.createElement("thead");
-  const hr = document.createElement("tr");
-  const h0 = document.createElement("th"); h0.textContent = "Task";
-  hr.appendChild(h0);
-  days.forEach(d=>{
-    const th = document.createElement("th");
-    const dd = new Date(d+"T00:00:00");
-    th.textContent = view==="week"
-      ? dd.toLocaleDateString(undefined,{weekday:"short", month:"short", day:"numeric"})
-      : dd.getDate();
-    hr.appendChild(th);
-  });
-  thead.appendChild(hr);
-  table.appendChild(thead);
-
-  const tbody = document.createElement("tbody");
-  syncPriorityOrder();
-  const order = state.habits.priorityOrder;
-  const orderIdx = new Map(order.map((id,i)=>[id,i]));
-  const tasksSorted = [...tasks].sort((a,b)=>{
-    const ga = (a.groupId||"none"), gb = (b.groupId||"none");
-    if(ga !== gb) return groupName(ga).localeCompare(groupName(gb));
-    return (orderIdx.get(a.id) ?? 9999) - (orderIdx.get(b.id) ?? 9999);
-  });
-
-  let currentGroupLabel = null;
-  tasksSorted.forEach(t=>{
-    const gl = groupName(t.groupId||"none");
-    if(gl !== currentGroupLabel){
-      currentGroupLabel = gl;
-      const gr = document.createElement("tr");
-      gr.className = "groupRow";
-      const td = document.createElement("td");
-      td.colSpan = days.length + 1;
-      td.textContent = `Group: ${gl}`;
-      gr.appendChild(td);
-      tbody.appendChild(gr);
-    }
-    const tr = document.createElement("tr");
-    const td0 = document.createElement("td");
-td0.innerHTML = `<div style="display:flex; flex-direction:column; gap:4px">
-        <div style="font-weight:700">${escapeHtml(t.name)}</div>
-        <div class="small">${escapeHtml(groupName(t.groupId||"none"))}${(t.categoryId&&t.categoryId!=="none")?(" • "+escapeHtml(taskCategoryName(t.categoryId))):""} • <span class="mono">${t.weeklyTarget}x/wk</span></div>
-        ${view==="week" ? `<div class="weekPill ${countTaskThisWeek(t.id, days[0])>=t.weeklyTarget ? "done":""}">
-            <span class="weekFill" style="width:${Math.max(0,Math.min(100,Math.round((countTaskThisWeek(t.id, days[0])/t.weeklyTarget)*100)))}%"></span>
-            <span class="weekText mono">Week ${countTaskThisWeek(t.id, days[0])}/${t.weeklyTarget}</span>
-          </div>` : ""}
-      </div>`;
-    tr.appendChild(td0);
-
-    days.forEach(d=>{
-      const td = document.createElement("td");
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = isDoneOn(t.id, d);
-      cb.onchange = () => {
-        setDoneOn(t.id, d, cb.checked);
-        commitDayXP(d);
-        save();
-        renderAll(true);
-      };
-      td.appendChild(cb);
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-
-  table.appendChild(tbody);
-  wrap.appendChild(table);
-  habitsGridWrap.appendChild(wrap);
-}
-
-function editTaskModal(t){
-  // legacy alias — always use the full editor modal
-  try{ return openTaskModal(t && t.id ? t.id : null); }catch(e){ console.error(e); }
-}
-
-function addGroup(){
-  const name = prompt("New group name (umbrella):", "Afternoon Routine");
-  if(!name || !name.trim()) return;
-  state.habits.groups.push({id: cryptoId(), name: name.trim()});
-  save(); renderAll(true);
-  toast("Group added", name.trim());
-}
-
-function renderGoals(){
-  goalsList.innerHTML = "";
-  const goals = [...state.goals.items].sort((a,b)=> (a.completed===b.completed ? (b.updatedAt||b.createdAt).localeCompare(a.updatedAt||a.createdAt) : (a.completed?1:-1)));
-  if(goals.length === 0){
-    goalsList.innerHTML = `<div class="small">No goals yet. Add one above.</div>`;
-    return;
-  }
-  goals.forEach(g => {
-    const div = document.createElement("div");
-    div.className = "entry";
-    const t = new Date(g.updatedAt || g.createdAt);
-    const linkedCount = activeTasks().filter(x=>x.goalId===g.id).length;
-    div.innerHTML = `
-      <div class="t">
-        <strong>${escapeHtml(g.title)}${g.completed ? " ✅" : ""}</strong>
-        <span class="mono">${t.toLocaleDateString()}</span>
-      </div>
-      <p>${escapeHtml(g.desc || "No description.")}</p>
-      <p class="small">Linked active tasks: <span class="mono">${linkedCount}</span></p>
-    `;
-    div.onclick = () => manageGoal(g.id);
-    goalsList.appendChild(div);
-  });
-}
-function manageGoal(id){
-  const g = goalById(id);
-  if(!g) return;
-  const action = prompt(`Manage Goal: "${g.title}"
-1 = Toggle complete
-2 = Edit title/description
-3 = Delete goal
-Enter 1-3:`);
-  if(!action) return;
-  if(action === "1"){ g.completed = !g.completed; g.updatedAt = nowISO(); }
-  else if(action === "2"){
-    const nt = prompt("Title:", g.title);
-    if(nt && nt.trim()) g.title = nt.trim();
-    const nd = prompt("Description:", g.desc || "");
-    g.desc = (nd || "").trim();
-    g.updatedAt = nowISO();
-  } else if(action === "3"){
-    if(confirm("Delete this goal? Tasks will be unlinked.")){
-      state.habits.tasks.forEach(t => { if(t.goalId===id) t.goalId = null; });
-      state.goals.items = state.goals.items.filter(x=>x.id!==id);
-    }
-  }
-  save(); renderAll(true);
-}
-
-let dragId = null;
-function renderPriorities(){
-  syncPriorityOrder();
-  priorityList.innerHTML = "";
-  const order = state.habits.priorityOrder;
-  if(order.length === 0){
-    priorityList.innerHTML = `<div class="small">No tasks yet.</div>`;
-    return;
-  }
-  order.forEach((taskId, idx) => {
-    const t = state.habits.tasks.find(x=>x.id===taskId);
-    if(!t || !t.active) return;
-    const b = priorityBonusFor(t.id);
-    const total = totalTaskXP(t);
-    const wk = countTaskThisWeek(t.id, todayISO());
-    const div = document.createElement("div");
-    div.className = "dragItem";
-    div.draggable = true;
-    div.dataset.id = t.id;
-    div.innerHTML = `
-      <div class="row" style="flex:1; min-width:0">
-        <div class="dragHandle">↕</div>
-        <div style="min-width:0">
-          <div style="display:flex; gap:8px; align-items:baseline; flex-wrap:wrap">
-            <strong style="font-size:13px">${escapeHtml(t.name)}</strong>
-            <span class="tag mono">${escapeHtml(groupName(t.groupId||"none"))}</span>
+      </section>
+
+      <section class="panel stack">
+        <div class="toolbar">
+          <div>
+            <div class="small muted">Showing tasks for</div>
+            <div id="toolbarDateLabel" style="font-size:24px;font-weight:800;"></div>
           </div>
-          <div class="small">Rank <span class="mono">${idx+1}</span> • XP: <span class="mono">${Number(t.xp)||0}${b>0?(" + "+b):""} = ${total}</span> • Week <span class="mono">${wk}/${t.weeklyTarget}</span></div>
+          <div>
+            <label class="small muted">Row % Window</label><br />
+            <select id="rowPercentWindowSelect">
+              <option value="week">Week %</option>
+              <option value="2week">2 Week %</option>
+              <option value="month">Month %</option>
+              <option value="quarter">Quarter %</option>
+              <option value="year">Year %</option>
+            </select>
+          </div>
+          <div>
+            <label class="small muted">Search</label><br />
+            <input id="searchInput" placeholder="Find a task" />
+          </div>
+          <div>
+            <label class="small muted">Sort</label><br />
+            <select id="sortSelect">
+              <option value="manual">Manual</option>
+              <option value="name">Name</option>
+              <option value="percent_desc">Highest %</option>
+              <option value="percent_asc">Lowest %</option>
+            </select>
+          </div>
         </div>
-      </div>
-      <button class="iconBtn" title="Edit task" onclick="window.__openTaskModal('${t.id}')">Edit</button>
-    `;
-    div.addEventListener("dragstart", (e)=>{ dragId = t.id; div.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
-    div.addEventListener("dragend", ()=>{ div.classList.remove("dragging"); dragId = null; });
-    div.addEventListener("dragover", (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = "move"; });
-    div.addEventListener("drop", (e)=>{
-      e.preventDefault();
-      const targetId = div.dataset.id;
-      if(!dragId || dragId===targetId) return;
-      const arr = state.habits.priorityOrder;
-      const from = arr.indexOf(dragId);
-      const to = arr.indexOf(targetId);
-      if(from<0 || to<0) return;
-      arr.splice(from,1);
-      arr.splice(to,0,dragId);
-      save();
-      renderPriorities();
-      renderAll(true);
-    });
-    priorityList.appendChild(div);
-  });
-}
-window.__editTask = (id) => {
-  const t = state.habits.tasks.find(x=>x.id===id);
-  if(!t) return;
-  editTaskModal(t);
-};
+      </section>
 
-function renderBad(){
-  relapsePenaltyInput.value = state.bad.relapsePenalty ?? 50;
-  cleanDaysEl.textContent = state.bad.clean.current || 0;
-  cleanLongestEl.textContent = state.bad.clean.longest || 0;
+      <section id="taskList" class="task-list"></section>
+    </main>
+  </div>
 
-  urgeList.innerHTML = "";
-  const recent = [...state.bad.urges].slice(-8).reverse();
-  if(recent.length === 0){
-    urgeList.innerHTML = `<div class="small">No urges logged yet.</div>`;
-  } else {
-    recent.forEach(u => {
-      const div = document.createElement("div");
-      div.className = "entry";
-      const t = new Date(u.ts);
-      div.innerHTML = `
-        <div class="t">
-          <strong>Intensity ${u.intensity}</strong>
-          <span class="mono">${t.toLocaleString()}</span>
-        </div>
-        <p>${escapeHtml(u.trigger || "No trigger noted")}</p>
-      `;
-      urgeList.appendChild(div);
-    });
-  }
+  <script>
+    const STORAGE_KEY = 'habitFocusRewrite_v1';
 
-  badTargets.innerHTML = "";
-  const targets = state.bad.targets || [];
-  if(targets.length === 0){
-    badTargets.innerHTML = `<div class="small">Add a bad habit target above (e.g., “Sugar”, “Doomscrolling”).</div>`;
-  } else {
-    targets.forEach(target => {
-      const div = document.createElement("div");
-      div.className = "entry";
-      const cur = target.clean?.current || 0;
-      const lon = target.clean?.longest || 0;
-      div.innerHTML = `
-        <div class="t">
-          <strong>${escapeHtml(target.name)}</strong>
-          <span class="mono">${cur}d clean • best ${lon}</span>
-        </div>
-        <p>Click to manage: log clean day, urge, or relapse.</p>
-      `;
-      div.onclick = () => manageTarget(target.id);
-      badTargets.appendChild(div);
-    });
-  }
-}
-function manageTarget(id){
-  const t = state.bad.targets.find(x=>x.id===id);
-  if(!t) return;
-  const action = prompt(`Manage "${t.name}"
-1 = Mark today clean
-2 = Log urge
-3 = Log relapse
-4 = Rename
-5 = Delete target
-Enter 1-5:`);
-  if(!action) return;
-  if(action === "1"){
-    t.clean = t.clean || {current:0,longest:0,lastCleanDate:""};
-    t.clean.current = (t.clean.current||0) + 1;
-    t.clean.longest = Math.max(t.clean.longest||0, t.clean.current);
-    t.clean.lastCleanDate = todayISO();
-  } else if(action === "2"){
-    const intensity = Number(prompt("Urge intensity 1-5:", "3")) || 3;
-    const trigger = prompt("Trigger (optional):", "") || "";
-    t.urges = t.urges || [];
-    t.urges.push({ts: nowISO(), intensity, trigger});
-  } else if(action === "3"){
-    const penalty = Number(prompt("Penalty XP (optional):", String(state.bad.relapsePenalty||50))) || 0;
-    t.relapses = t.relapses || [];
-    t.relapses.push({ts: nowISO(), penalty});
-    t.clean = t.clean || {current:0,longest:0,lastCleanDate:""};
-    t.clean.current = 0;
-    state.player.totalXP = Math.max(0, (state.player.totalXP||0) - penalty);
-  } else if(action === "4"){
-    const n = prompt("New name:", t.name);
-    if(n && n.trim()) t.name = n.trim();
-  } else if(action === "5"){
-    if(confirm(`Delete target "${t.name}"?`)){
-      state.bad.targets = state.bad.targets.filter(x=>x.id!==id);
-    }
-  }
-  save();
-  renderAll(true);
-}
-
-function renderJournal(){
-  const q = (journalSearch.value || "").trim().toLowerCase();
-  entriesList.innerHTML = "";
-  const list = [...state.journal.entries].sort((a,b)=> (b.updatedAt||b.createdAt).localeCompare(a.updatedAt||a.createdAt));
-  const filtered = q ? list.filter(e => (e.title||"").toLowerCase().includes(q) || (e.body||"").toLowerCase().includes(q)) : list;
-  if(filtered.length === 0){
-    entriesList.innerHTML = `<div class="small">No entries match.</div>`;
-    return;
-  }
-  filtered.forEach(e => {
-    const div = document.createElement("div");
-    div.className = "entry";
-    const t = new Date(e.updatedAt || e.createdAt);
-    div.innerHTML = `
-      <div class="t">
-        <strong>${escapeHtml(e.title || "Untitled")}</strong>
-        <span class="mono">${t.toLocaleDateString()}</span>
-      </div>
-      <p>${escapeHtml((e.body||"").slice(0,90))}${(e.body||"").length>90?"…":""}</p>
-    `;
-    div.onclick = () => loadEntry(e.id);
-    entriesList.appendChild(div);
-  });
-}
-function loadEntry(id){
-  const e = state.journal.entries.find(x=>x.id===id);
-  if(!e) return;
-  state.journal.loadedId = id;
-  journalTitle.value = e.title || "";
-  journalBody.value = e.body || "";
-  save();
-}
-function clearEntryEditor(){
-  state.journal.loadedId = null;
-  journalTitle.value = "";
-  journalBody.value = "";
-  save();
-}
-
-function renderLifeTree(container, selectedId, onSelect, badgeFn){
-  ensureLifeTree();
-  container.innerHTML = "";
-  const root = state.life.tree;
-  function renderNode(node){
-    const wrap = document.createElement("div");
-    const row = document.createElement("div");
-    row.className = "lifeNode" + (node.id === selectedId ? " selected" : "");
-    row.onclick = () => onSelect(node.id);
-    const left = document.createElement("div");
-    left.className = "lifeNodeLeft";
-    const title = document.createElement("div");
-    title.className = "lifeNodeTitle";
-    title.textContent = node.title;
-    const badge = document.createElement("span");
-    badge.className = "lifeBadge mono";
-    badge.textContent = badgeFn ? badgeFn(node) : `${(node.children||[]).length} child`;
-    left.append(title);
-    row.append(left, badge);
-    wrap.appendChild(row);
-    if(node.children && node.children.length){
-      const childrenWrap = document.createElement("div");
-      childrenWrap.className = "lifeChildren";
-      node.children.forEach(ch => childrenWrap.appendChild(renderNode(ch)));
-      wrap.appendChild(childrenWrap);
-    }
-    return wrap;
-  }
-  container.appendChild(renderNode(root));
-}
-
-let lifeSelectedId = "root";
-function selectLifeNode(id){
-  lifeSelectedId = id;
-  lifeSelectedLabel.value = lifeNodeTitle(id);
-  renderLife();
-}
-function renderLife(){
-  ensureLifeTree();
-  if(!lifeSelectedId) lifeSelectedId = state.life.tree.id;
-  lifeSelectedLabel.value = lifeNodeTitle(lifeSelectedId);
-  renderLifeTree(lifeTreeEl, lifeSelectedId, selectLifeNode, null);
-  renderLifeOptionsDropdown();
-}
-function addChild(){
-  if(!lifeSelectedId) lifeSelectedId = state.life.tree.id;
-  const found = findNodeAndParent(state.life.tree, lifeSelectedId);
-  if(!found) return;
-  const name = prompt("Child name:", "New item");
-  if(!name) return;
-  found.node.children = found.node.children || [];
-  found.node.children.push({ id: cryptoId(), title: name.trim(), children: [] });
-  save(); renderAll(true);
-}
-function addSibling(){
-  if(!lifeSelectedId) return alert("Select a node first.");
-  if(lifeSelectedId === state.life.tree.id) return alert("Root cannot have siblings.");
-  const info = findParentAndIndex(state.life.tree, lifeSelectedId);
-  if(!info) return;
-  const name = prompt("Sibling name:", "New item");
-  if(!name) return;
-  info.parent.children.splice(info.index + 1, 0, { id: cryptoId(), title: name.trim(), children: [] });
-  save(); renderAll(true);
-}
-function renameNode(){
-  if(!lifeSelectedId) return alert("Select a node first.");
-  const found = findNodeAndParent(state.life.tree, lifeSelectedId);
-  if(!found) return;
-  const name = prompt("Rename:", found.node.title);
-  if(!name) return;
-  found.node.title = name.trim();
-  save(); renderAll(true);
-}
-function deleteNode(){
-  if(!lifeSelectedId) return alert("Select a node first.");
-  if(lifeSelectedId === state.life.tree.id) return alert("Can't delete the root.");
-  const info = findParentAndIndex(state.life.tree, lifeSelectedId);
-  if(!info) return;
-  if(!confirm("Delete this node and all its children?")) return;
-  const deletedId = lifeSelectedId;
-  info.parent.children.splice(info.index, 1);
-  state.todo.items.forEach(td=>{ if(td.lifeNodeId === deletedId) td.lifeNodeId = "root"; });
-  lifeSelectedId = info.parent.id;
-  save(); renderAll(true);
-}
-function indentNode(){
-  if(!lifeSelectedId) return alert("Select a node first.");
-  if(lifeSelectedId === state.life.tree.id) return;
-  const info = findParentAndIndex(state.life.tree, lifeSelectedId);
-  if(!info) return;
-  if(info.index <= 0) return;
-  const prevSibling = info.parent.children[info.index - 1];
-  const moving = info.parent.children.splice(info.index, 1)[0];
-  prevSibling.children = prevSibling.children || [];
-  prevSibling.children.push(moving);
-  save(); renderAll(true);
-}
-function outdentNode(){
-  if(!lifeSelectedId) return alert("Select a node first.");
-  if(lifeSelectedId === state.life.tree.id) return;
-  const found = findNodeAndParent(state.life.tree, lifeSelectedId);
-  if(!found || !found.parent) return;
-  if(found.parent.id === state.life.tree.id) return;
-  const parentInfo = findParentAndIndex(state.life.tree, found.parent.id);
-  const myInfo = findParentAndIndex(state.life.tree, lifeSelectedId);
-  if(!parentInfo || !myInfo) return;
-  const moving = myInfo.parent.children.splice(myInfo.index, 1)[0];
-  parentInfo.parent.children.splice(parentInfo.index + 1, 0, moving);
-  save(); renderAll(true);
-}
-function moveUp(){
-  if(!lifeSelectedId) return alert("Select a node first.");
-  if(lifeSelectedId === state.life.tree.id) return;
-  const info = findParentAndIndex(state.life.tree, lifeSelectedId);
-  if(!info) return;
-  if(info.index === 0) return;
-  const arr = info.parent.children;
-  [arr[info.index - 1], arr[info.index]] = [arr[info.index], arr[info.index - 1]];
-  save(); renderAll(true);
-}
-function moveDown(){
-  if(!lifeSelectedId) return alert("Select a node first.");
-  if(lifeSelectedId === state.life.tree.id) return;
-  const info = findParentAndIndex(state.life.tree, lifeSelectedId);
-  if(!info) return;
-  const arr = info.parent.children;
-  if(info.index >= arr.length - 1) return;
-  [arr[info.index + 1], arr[info.index]] = [arr[info.index], arr[info.index + 1]];
-  save(); renderAll(true);
-}
-function exportOutline(){
-  function walk(node, depth){
-    const pad = "  ".repeat(depth);
-    let s = `${pad}${node.title}
-`;
-    for(const c of (node.children||[])) s += walk(c, depth + 1);
-    return s;
-  }
-  lifeOutlineExport.value = walk(state.life.tree, 0).trim();
-  toast("Exported", "Outline text updated below.");
-}
-
-function renderLifeOptionsDropdown(){
-  const opts = lifeFlattenOptions();
-  todoLifeSelect.innerHTML = "";
-  opts.forEach(o=>{
-    const opt = document.createElement("option");
-    opt.value = o.id;
-    opt.textContent = o.label;
-    todoLifeSelect.appendChild(opt);
-  });
-  const defaultId = state.todo.selectedLifeId || "root";
-  if(opts.some(o=>o.id===defaultId)) todoLifeSelect.value = defaultId;
-
-  if(todoCategorySelect){
-    todoCategorySelect.innerHTML = "";
-    todoCategoryListWithNone().forEach(c=>{
-      const opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.name;
-      todoCategorySelect.appendChild(opt);
-    });
-    const dc = state.todo.lastCategory || "none";
-    if(todoCategoryListWithNone().some(c=>c.id===dc)) todoCategorySelect.value = dc;
-  }
-}
-function todoCountsForNode(node){
-  const ids = new Set(collectDescendantIds(node));
-  const items = state.todo.items.filter(x=>ids.has(x.lifeNodeId));
-  const pending = items.filter(x=>!x.completedAt).length;
-  return {pending, total: items.length};
-}
-function selectTodoLifeNode(id){
-  state.todo.selectedLifeId = id;
-  save();
-  renderTodo();
-}
-function renderTodo(){
-  ensureLifeTree();
-  renderLifeOptionsDropdown();
-  showCompletedTodos.checked = !!state.todo.showCompleted;
-  renderLifeTree(todoLifeTree, state.todo.selectedLifeId || "root", selectTodoLifeNode, (node)=>{
-    const {pending,total} = todoCountsForNode(node);
-    return `${pending}/${total} pending`;
-  });
-  const selectedId = state.todo.selectedLifeId || "root";
-  const selectedNode = findNodeAndParent(state.life.tree, selectedId)?.node || state.life.tree;
-  const subtreeIds = new Set(collectDescendantIds(selectedNode));
-  todoFilterLabel.textContent = `Showing: ${lifeNodeTitle(selectedId)} (includes descendants)`;
-  todoList.innerHTML = "";
-  const showCompleted = !!state.todo.showCompleted;
-  const list = state.todo.items
-    .filter(x=>subtreeIds.has(x.lifeNodeId))
-    .filter(x=> showCompleted ? true : !x.completedAt)
-    .sort((a,b)=> (a.completedAt?1:0) - (b.completedAt?1:0) || (b.updatedAt||b.createdAt).localeCompare(a.updatedAt||a.createdAt));
-  if(list.length === 0){
-    todoList.innerHTML = `<div class="small">No to‑dos in this branch.</div>`;
-    return;
-  }
-  list.forEach(item=>{
-    const div = document.createElement("div");
-    div.className = "entry";
-    const created = new Date(item.createdAt);
-    div.innerHTML = `
-      <div class="t">
-        <strong>${escapeHtml(item.title)}${item.completedAt ? " ✅" : ""}</strong>
-        <span class="mono">${created.toLocaleDateString()}</span>
-      </div>
-      <p>Life: ${escapeHtml(lifeNodeTitle(item.lifeNodeId))}${(item.categoryId&&item.categoryId!=="none")?(" • Cat: "+escapeHtml(todoCategoryName(item.categoryId))):""}</p>
-      <p class="small">${item.completedAt ? "Completed" : "Pending"} • click to manage</p>
-    `;
-    div.onclick = () => manageTodo(item.id);
-    todoList.appendChild(div);
-  });
-}
-function manageTodo(id){
-  const item = state.todo.items.find(x=>x.id===id);
-  if(!item) return;
-  const action = prompt(`Manage To‑Do: "${item.title}"
-1 = Toggle complete
-2 = Rename
-3 = Move to Life branch
-4 = Change category
-5 = Delete
-Enter 1-5:`);
-  if(!action) return;
-  if(action === "1"){ item.completedAt = item.completedAt ? null : nowISO(); item.updatedAt = nowISO(); }
-  else if(action === "2"){ const n = prompt("Rename:", item.title); if(n && n.trim()){ item.title = n.trim(); item.updatedAt = nowISO(); } }
-  else if(action === "3"){
-    const opts = lifeFlattenOptions().map(o=>`${o.id} :: ${o.label}`).join("\n");
-    const pick = prompt(`Move to which Life branch?\n\n${opts}`, `${item.lifeNodeId} :: ${lifeNodeTitle(item.lifeNodeId)}`);
-    if(pick){ const nid = pick.split("::")[0].trim(); if(findNodeAndParent(state.life.tree, nid)) item.lifeNodeId = nid; item.updatedAt = nowISO(); }
-  } else if(action === "4"){
-    if(confirm("Delete this to‑do?")) state.todo.items = state.todo.items.filter(x=>x.id!==id);
-  }
-  save(); renderTodo();
-}
-
-function renderSettings(){
-  levelCurve.value = state.settings.levelCurve ?? 1.35;
-  perfectBonus.value = state.settings.perfectBonus ?? 25;
-  maxPriorityBonus.value = state.settings.maxPriorityBonus ?? 10;
-  priorityCurve.value = state.settings.priorityCurve ?? 1.2;
-}
-function renderHabits(){
-  const v = state.ui.habitView || "day";
-  const isDay = v === "day";
-  habitsDayWrap.classList.toggle("hidden", !isDay);
-  habitsGridWrap.classList.toggle("hidden", isDay);
-  if(isDay) renderHabitsDay(); else renderHabitsGrid();
-}
-function renderAll(commitXP=false){
-  ensureLifeTree();
-  if(!state.ui.viewDate) state.ui.viewDate = todayISO();
-  if(commitXP) commitDayXP(state.ui.viewDate);
-  commitDayXP(todayISO());
-
-  renderHabitGroupOptions();
-  renderHabitViewControls();
-  renderHabits();
-
-  renderGroupProgressSidebar();
-  renderDailyProgress();
-
-  renderGoals();
-  renderPriorities();
-  renderBad();
-  renderJournal();
-  renderLife();
-  renderTodo();
-  renderSettings();
-  renderHeaderAndStats();
-
-  save();
-}
-
-if(quickAddBtn){
-quickAddBtn.addEventListener("click", () => {
-  const name = (quickTaskName.value || "").trim();
-  const xp = Number(quickTaskXP.value) || 10;
-  const weekly = clampInt(quickTaskWeekly.value, 1, 7);
-  const gid = quickTaskGroup.value || "none";
-  const cid = (quickTaskCategory && quickTaskCategory.value) ? quickTaskCategory.value : "none";
-  if(!name) return alert("Enter a task name.");
-  state.habits.tasks.push(task(name, xp, weekly, gid, cid));
-  state.ui.lastQuickGroup = gid;
-  state.ui.lastQuickCategory = cid;
-  quickTaskName.value = ""; quickTaskXP.value = "10"; quickTaskWeekly.value = "7";
-  save(); renderAll(true);
-  toast("Added", gid==="none" ? "Task added (no group)." : `Task added to "${groupName(gid)}".`);
-});
-}
-resetTodayBtn.addEventListener("click", () => {
-  if(!confirm("Reset all today checkmarks? (Data stays; only today's completion resets)")) return;
-  state.habits.doneByDate[todayISO()] = {};
-  commitDayXP(todayISO());
-  save(); renderAll(true);
-});
-addGroupBtn.addEventListener("click", addGroup);
-if(addTaskCategoryBtn){
-  addTaskCategoryBtn.addEventListener("click", ()=>{
-    const name = prompt("New task category:", "Health");
-    if(!name || !name.trim()) return;
-    state.habits.categories = state.habits.categories || [];
-    state.habits.categories.push({id: cryptoId(), name: name.trim()});
-    save(); renderAll(true);
-    toast("Task category added", name.trim());
-  });
-}
-if(addTodoCategoryBtn){
-  addTodoCategoryBtn.addEventListener("click", ()=>{
-    const name = prompt("New to‑do category:", "Errands");
-    if(!name || !name.trim()) return;
-    state.todo.categories = state.todo.categories || [];
-    state.todo.categories.push({id: cryptoId(), name: name.trim()});
-    save(); renderAll(true);
-    toast("To‑do category added", name.trim());
-  });
-}
-if(manageTaskCategoriesBtn){
-  manageTaskCategoriesBtn.addEventListener("click", ()=> openCategoryModal("task"));
-}
-if(manageTodoCategoriesBtn){
-  manageTodoCategoriesBtn.addEventListener("click", ()=> openCategoryModal("todo"));
-}
-if(catModalCloseBtn){
-  catModalCloseBtn.addEventListener("click", closeCategoryModal);
-}
-if(catModalBackdrop){
-  catModalBackdrop.addEventListener("click", (e)=>{ if(e.target === catModalBackdrop) closeCategoryModal(); });
-}
-document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closeCategoryModal(); });
-if(openQuickAddBtn){
-  openQuickAddBtn.addEventListener("click", ()=> openTaskModal(null));
-}
-if(taskModalCloseBtn) taskModalCloseBtn.addEventListener("click", closeTaskModal);
-if(taskCancelBtn) taskCancelBtn.addEventListener("click", closeTaskModal);
-if(taskSaveBtn) taskSaveBtn.addEventListener("click", saveTaskFromModal);
-if(taskDeleteBtn) taskDeleteBtn.addEventListener("click", deleteTaskFromModal);
-if(taskModalBackdrop){
-  taskModalBackdrop.addEventListener("click", (e)=>{ if(e.target === taskModalBackdrop) closeTaskModal(); });
-}
-
-
-habitViewSel.addEventListener("change", ()=>{ state.ui.habitView = habitViewSel.value; save(); renderAll(true); });
-viewDateInput.addEventListener("change", ()=>{ state.ui.viewDate = viewDateInput.value || todayISO(); save(); renderAll(true); });
-
-addGoalBtn.addEventListener("click", () => {
-  const title = (goalTitle.value || "").trim();
-  const desc = (goalDesc.value || "").trim();
-  if(!title) return alert("Enter a goal title.");
-  state.goals.items.push({ id: cryptoId(), title, desc, createdAt: nowISO(), updatedAt: nowISO(), completed: false });
-  goalTitle.value = ""; goalDesc.value = "";
-  save(); renderAll(true);
-  toast("Goal created", `"${title}" added. Link tasks via Task Edit.`);
-});
-
-relapsePenaltyInput.addEventListener("change", () => { state.bad.relapsePenalty = Number(relapsePenaltyInput.value) || 0; save(); });
-logUrgeBtn.addEventListener("click", () => {
-  const intensity = Number(urgeIntensity.value) || 3;
-  const trigger = (urgeTrigger.value || "").trim();
-  state.bad.urges.push({ ts: nowISO(), intensity, trigger });
-  urgeTrigger.value = "";
-  save(); renderAll(true);
-});
-cleanDayBtn.addEventListener("click", () => {
-  const today = todayISO();
-  if(state.bad.clean.lastCleanDate === today) return alert("Already marked today clean.");
-  const last = state.bad.clean.lastCleanDate;
-  const y = new Date(today + "T00:00:00"); y.setDate(y.getDate()-1);
-  const yesterday = toLocalDateInput(y);
-  if(last === yesterday) state.bad.clean.current = (state.bad.clean.current||0) + 1;
-  else state.bad.clean.current = 1;
-  state.bad.clean.lastCleanDate = today;
-  state.bad.clean.longest = Math.max(state.bad.clean.longest||0, state.bad.clean.current);
-  save(); renderAll(true);
-});
-relapseBtn.addEventListener("click", () => {
-  const penalty = Number(relapsePenaltyInput.value) || 0;
-  if(!confirm(`Log relapse? This will subtract ${penalty} XP and reset clean streak.`)) return;
-  const d = todayISO();
-  if(!state.player.dailyXP) state.player.dailyXP = {};
-  const prev = Number(state.player.dailyXP[d] || 0);
-  state.player.dailyXP[d] = Math.max(0, prev - penalty);
-  state.bad.clean.current = 0;
-  state.bad.clean.lastCleanDate = d;
-  save(); renderAll(true);
-  toast("Logged", `Relapse recorded. -${penalty} XP applied.`);
-});
-addBadBtn.addEventListener("click", () => {
-  const name = (badName.value || "").trim();
-  if(!name) return alert("Enter a bad habit name.");
-  state.bad.targets.push({ id: cryptoId(), name, clean:{current:0,longest:0,lastCleanDate:""}, urges:[], relapses:[] });
-  badName.value = "";
-  save(); renderAll(true);
-});
-
-saveEntryBtn.addEventListener("click", () => {
-  const title = (journalTitle.value || "").trim() || "Untitled";
-  const body = (journalBody.value || "").trim();
-  const ts = nowISO();
-  const id = state.journal.loadedId;
-  if(id){
-    const e = state.journal.entries.find(x=>x.id===id);
-    if(!e) return;
-    e.title = title; e.body = body; e.updatedAt = ts;
-  } else {
-    state.journal.entries.push({ id: cryptoId(), title, body, createdAt: ts, updatedAt: ts });
-    state.journal.loadedId = null;
-  }
-  save(); renderAll(true);
-});
-newEntryBtn.addEventListener("click", () => { clearEntryEditor(); renderAll(true); });
-deleteEntryBtn.addEventListener("click", () => {
-  const id = state.journal.loadedId;
-  if(!id) return alert("No entry loaded.");
-  if(!confirm("Delete this entry?")) return;
-  state.journal.entries = state.journal.entries.filter(e=>e.id!==id);
-  clearEntryEditor();
-  save(); renderAll(true);
-});
-journalSearch.addEventListener("input", () => renderJournal());
-
-lifeAddChildBtn.addEventListener("click", addChild);
-lifeAddSiblingBtn.addEventListener("click", addSibling);
-lifeIndentBtn.addEventListener("click", indentNode);
-lifeOutdentBtn.addEventListener("click", outdentNode);
-lifeMoveUpBtn.addEventListener("click", moveUp);
-lifeMoveDownBtn.addEventListener("click", moveDown);
-lifeRenameBtn.addEventListener("click", renameNode);
-lifeDeleteBtn.addEventListener("click", deleteNode);
-lifeSaveTreeBtn.addEventListener("click", () => { save(); toast("Saved", "Life Architecture saved locally."); });
-lifeLoadTemplateBtn.addEventListener("click", () => {
-  if(!confirm("Replace your Life Architecture with the template?")) return;
-  state.life.tree = defaultLifeTree();
-  lifeSelectedId = state.life.tree.id;
-  save(); renderAll(true);
-  toast("Loaded", "Template loaded.");
-});
-lifeExportBtn.addEventListener("click", exportOutline);
-
-addTodoBtn.addEventListener("click", ()=>{
-  const title = (todoTitle.value||"").trim();
-  if(!title) return alert("Enter a to‑do title.");
-  const nid = todoLifeSelect.value || state.todo.selectedLifeId || "root";
-  const cid = (todoCategorySelect && todoCategorySelect.value) ? todoCategorySelect.value : "none";
-  state.todo.lastCategory = cid;
-  state.todo.items.push({id: cryptoId(), title, lifeNodeId: nid, categoryId: cid, createdAt: nowISO(), updatedAt: nowISO(), completedAt: null});
-  todoTitle.value = "";
-  save(); renderTodo();
-  toast("To‑Do added", `Linked to: ${lifeNodeTitle(nid)}`);
-});
-showCompletedTodos.addEventListener("change", ()=>{ state.todo.showCompleted = !!showCompletedTodos.checked; save(); renderTodo(); });
-
-saveSettingsBtn.addEventListener("click", () => {
-  state.settings.levelCurve = Number(levelCurve.value) || 1.35;
-  state.settings.perfectBonus = Number(perfectBonus.value) || 0;
-  state.settings.maxPriorityBonus = Number(maxPriorityBonus.value) || 0;
-  state.settings.priorityCurve = Number(priorityCurve.value) || 1.2;
-  save(); renderAll(true);
-  toast("Saved", "Settings updated.");
-});
-wipeAllBtn.addEventListener("click", () => {
-  if(!confirm("Wipe ALL data? This cannot be undone.")) return;
-  localStorage.removeItem(STORAGE_KEY);
-  state = defaultState();
-  save(); renderAll(true);
-});
-
-exportBtn.addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `habit_app_backup_${todayISO()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-});
-importBtn.addEventListener("click", () => importFile.click());
-importFile.addEventListener("change", async (ev) => {
-  const f = ev.target.files && ev.target.files[0];
-  if(!f) return;
-  try{
-    const text = await f.text();
-    const obj = JSON.parse(text);
-    state = deepMerge(defaultState(), obj);
-    migrateState(state);
-    save(); renderAll(true);
-    toast("Imported", "Backup loaded successfully.");
-  }catch(e){
-    console.error(e);
-    alert("Import failed: invalid JSON.");
-  }finally{
-    importFile.value = "";
-  }
-});
-
-function openTaskModal(taskId=null){
-  editingTaskId = taskId;
-  const isNew = !taskId;
-  taskModalTitle.textContent = isNew ? "Add Habit" : "Edit Habit";
-  taskDeleteBtn.style.display = isNew ? "none" : "inline-flex";
-
-  // dropdowns
-  taskGroupSelect.innerHTML = "";
-  groupListWithNone().forEach(g=>{
-    const opt = document.createElement("option");
-    opt.value = g.id;
-    opt.textContent = g.name;
-    taskGroupSelect.appendChild(opt);
-  });
-
-  taskCategorySelect.innerHTML = "";
-  taskCategoryListWithNone().forEach(c=>{
-    const opt = document.createElement("option");
-    opt.value = c.id;
-    opt.textContent = c.name;
-    taskCategorySelect.appendChild(opt);
-  });
-
-  taskGoalSelect.innerHTML = "";
-  const optNone = document.createElement("option");
-  optNone.value = "none";
-  optNone.textContent = "No goal";
-  taskGoalSelect.appendChild(optNone);
-  const activeGoals = state.goals.items.filter(g=>!g.completed);
-  activeGoals.forEach(g=>{
-    const opt = document.createElement("option");
-    opt.value = g.id;
-    opt.textContent = g.title;
-    taskGoalSelect.appendChild(opt);
-  });
-
-  if(isNew){
-    taskNameInput.value = "";
-    taskGroupSelect.value = state.ui.lastQuickGroup || "none";
-    taskCategorySelect.value = state.ui.lastQuickCategory || "none";
-    taskXPInput.value = 10;
-    taskWeeklyInput.value = 7;
-    taskGoalSelect.value = "none";
-    taskActiveToggle.checked = true;
-    taskModalMeta.textContent = "New habit";
-  } else {
-    const t = state.habits.tasks.find(x=>x.id===taskId);
-    if(!t){ toast("Not found", "That habit no longer exists."); return; }
-    taskNameInput.value = t.name || "";
-    taskGroupSelect.value = t.groupId || "none";
-    taskCategorySelect.value = t.categoryId || "none";
-    taskXPInput.value = Number(t.xp)||10;
-    taskWeeklyInput.value = clampInt(t.weeklyTarget||7,1,7);
-    taskGoalSelect.value = t.goalId || "none";
-    taskActiveToggle.checked = !!t.active;
-    taskModalMeta.textContent = `ID: ${taskId}`;
-  }
-
-  taskModalBackdrop.style.display = "flex";
-  setTimeout(()=> taskNameInput.focus(), 0);
-}
-function closeTaskModal(){
-  taskModalBackdrop.style.display = "none";
-  editingTaskId = null;
-}
-function saveTaskFromModal(){
-  const name = (taskNameInput.value||"").trim();
-  if(!name){ alert("Please enter a habit name."); taskNameInput.focus(); return; }
-  const gid = taskGroupSelect.value || "none";
-  const cid = taskCategorySelect.value || "none";
-  const xp = clampInt(taskXPInput.value, 1, 9999);
-  const weekly = clampInt(taskWeeklyInput.value, 1, 7);
-  const goalId = (taskGoalSelect.value && taskGoalSelect.value !== "none") ? taskGoalSelect.value : null;
-  const active = !!taskActiveToggle.checked;
-
-  if(!editingTaskId){
-    const t = task(name, xp, weekly, gid, cid);
-    t.goalId = goalId;
-    t.active = active;
-    state.habits.tasks.push(t);
-    state.ui.lastQuickGroup = gid;
-    state.ui.lastQuickCategory = cid;
-    toast("Added", name);
-  } else {
-    const t = state.habits.tasks.find(x=>x.id===editingTaskId);
-    if(!t) return;
-    t.name = name;
-    t.groupId = gid;
-    t.categoryId = cid;
-    t.xp = xp;
-    t.weeklyTarget = weekly;
-    t.goalId = goalId;
-    t.active = active;
-    toast("Saved", name);
-  }
-
-  save();
-  renderAll(true);
-  closeTaskModal();
-}
-function deleteTaskFromModal(){
-  if(!editingTaskId) return;
-  const t = state.habits.tasks.find(x=>x.id===editingTaskId);
-  if(!t) return closeTaskModal();
-  if(!confirm(`Delete "${t.name}"?`)) return;
-  state.habits.tasks = state.habits.tasks.filter(x=>x.id!==editingTaskId);
-  state.habits.priorityOrder = (state.habits.priorityOrder||[]).filter(id=>id!==editingTaskId);
-  save();
-  renderAll(true);
-  toast("Deleted", t.name);
-  closeTaskModal();
-}
-
-function openCategoryModal(mode){
-  catModalMode = mode; // "task" or "todo"
-  if(!catModalBackdrop) return;
-  catModalTitle.textContent = mode === "task" ? "Manage Task Categories" : "Manage To‑Do Categories";
-  catModalHint.textContent = mode === "task"
-    ? "These categories are optional labels for habits."
-    : "These categories are optional labels for to‑do items.";
-  renderCategoryModal();
-  catModalBackdrop.style.display = "flex";
-}
-function closeCategoryModal(){
-  if(!catModalBackdrop) return;
-  catModalBackdrop.style.display = "none";
-}
-function renderCategoryModal(){
-  if(!catModalList) return;
-  const list = (catModalMode === "task") ? (state.habits.categories||[]) : (state.todo.categories||[]);
-  catModalList.innerHTML = "";
-  if(list.length === 0){
-    catModalList.innerHTML = `<div class="small">No categories yet. Use the “+ Add … Category” button to create one.</div>`;
-    return;
-  }
-  list.forEach(cat=>{
-    const row = document.createElement("div");
-    row.className = "modalRow";
-    const left = document.createElement("div");
-    left.className = "left";
-    const dot = document.createElement("span");
-    dot.className = "catDot";
-    dot.style.background = cat.color || (catModalMode==="task" ? "#2563eb" : "#7c3aed");
-    const name = document.createElement("div");
-    name.className = "name";
-    name.textContent = cat.name;
-    left.append(dot, name);
-
-    const actions = document.createElement("div");
-    actions.className = "actions";
-
-    const color = document.createElement("input");
-    color.type = "color";
-    color.className = "colorInput";
-    color.value = cat.color || (catModalMode==="task" ? "#2563eb" : "#7c3aed");
-    color.oninput = ()=>{
-      cat.color = color.value;
-      save();
-      renderAll(true);
-      renderCategoryModal();
+    const defaultData = {
+      selectedDate: '',
+      viewMode: 'day',
+      rowPercentWindow: 'week',
+      tasks: [],
+      entries: {},
+      daySettings: {}
     };
 
-    const rename = document.createElement("button");
-    rename.className = "iconBtn";
-    rename.textContent = "Rename";
-    rename.onclick = ()=>{
-      const n = prompt("Rename category:", cat.name);
-      if(n && n.trim()){
-        cat.name = n.trim();
-        save();
-        renderAll(true);
-        renderCategoryModal();
+    let appData = loadData();
+    let editingTaskId = null;
+
+    function startOfDay(date = new Date()) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseDate(dateStr) {
+      if (!dateStr) return startOfDay(new Date());
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function getTodayKey() {
+      return formatDateKey(startOfDay(new Date()));
+    }
+
+    function addDays(date, days) {
+      const copy = new Date(date);
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+
+    function addMonths(date, months) {
+      return new Date(date.getFullYear(), date.getMonth() + months, date.getDate());
+    }
+
+    function addYears(date, years) {
+      return new Date(date.getFullYear() + years, date.getMonth(), date.getDate());
+    }
+
+    function getStartOfWeek(date) {
+      const copy = startOfDay(date);
+      const day = copy.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      return addDays(copy, diff);
+    }
+
+    function getRangeForView(dateKey, mode) {
+      const base = parseDate(dateKey);
+      let start = startOfDay(base);
+      let end = addDays(start, 1);
+
+      switch (mode) {
+        case 'day':
+          start = startOfDay(base);
+          end = addDays(start, 1);
+          break;
+        case 'week':
+          start = getStartOfWeek(base);
+          end = addDays(start, 7);
+          break;
+        case '2week':
+          start = getStartOfWeek(base);
+          end = addDays(start, 14);
+          break;
+        case 'month':
+          start = new Date(base.getFullYear(), base.getMonth(), 1);
+          end = new Date(base.getFullYear(), base.getMonth() + 1, 1);
+          break;
+        case 'quarter': {
+          const quarterStartMonth = Math.floor(base.getMonth() / 3) * 3;
+          start = new Date(base.getFullYear(), quarterStartMonth, 1);
+          end = new Date(base.getFullYear(), quarterStartMonth + 3, 1);
+          break;
+        }
+        case 'year':
+          start = new Date(base.getFullYear(), 0, 1);
+          end = new Date(base.getFullYear() + 1, 0, 1);
+          break;
       }
-    };
 
-    const del = document.createElement("button");
-    del.className = "iconBtn danger";
-    del.textContent = "Delete";
-    del.onclick = ()=>{
-      if(!confirm(`Delete category "${cat.name}"? Items in it will move to "No category".`)) return;
-      if(catModalMode === "task"){
-        state.habits.tasks.forEach(t=>{ if(t.categoryId===cat.id) t.categoryId="none"; });
-        state.habits.categories = (state.habits.categories||[]).filter(c=>c.id!==cat.id);
+      return { start, end };
+    }
+
+    function getDateKeysInRange(start, end) {
+      const keys = [];
+      let current = new Date(start);
+      while (current < end) {
+        keys.push(formatDateKey(current));
+        current = addDays(current, 1);
+      }
+      return keys;
+    }
+
+    function formatDisplayDate(date) {
+      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function updateViewDateLabel() {
+      const { start, end } = getRangeForView(appData.selectedDate, appData.viewMode);
+      const label = appData.viewMode === 'day'
+        ? formatDisplayDate(start)
+        : `${formatDisplayDate(start)} - ${formatDisplayDate(addDays(end, -1))}`;
+
+      document.getElementById('viewDateLabel').textContent = label;
+      document.getElementById('toolbarDateLabel').textContent = label;
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return { ...defaultData, selectedDate: getTodayKey() };
+        }
+        const parsed = JSON.parse(raw);
+        return {
+          ...defaultData,
+          ...parsed,
+          selectedDate: parsed.selectedDate || getTodayKey()
+        };
+      } catch {
+        return { ...defaultData, selectedDate: getTodayKey() };
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    }
+
+    function generateId() {
+      return 'task_' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function isDayVoided(dateKey) {
+      return !!appData.daySettings?.[dateKey]?.voided;
+    }
+
+    function setDayVoided(dateKey, voided, reason = '') {
+      appData.daySettings[dateKey] = { voided, reason };
+      saveData();
+      render();
+    }
+
+    function ensureEntry(dateKey, taskId) {
+      if (!appData.entries[dateKey]) appData.entries[dateKey] = {};
+      if (!appData.entries[dateKey][taskId]) appData.entries[dateKey][taskId] = { value: null };
+      return appData.entries[dateKey][taskId];
+    }
+
+    function getTaskEntryValue(task, dateKey) {
+      const entry = appData.entries?.[dateKey]?.[task.id];
+      if (!entry) return task.type === 'checkbox' ? false : '';
+      return entry.value;
+    }
+
+    function calculateEntryPoints(task, entryValue) {
+      const points = Number(task.pointsPerDay) || 0;
+      if (task.type === 'checkbox') return entryValue ? points : 0;
+
+      const actual = Number(entryValue) || 0;
+      const target = Math.max(Number(task.targetValue) || 0, 0);
+      if (target <= 0) return 0;
+
+      if (task.allowPartialCredit) {
+        const ratio = Math.min(actual / target, 1);
+        return ratio * points;
+      }
+
+      return actual >= target ? points : 0;
+    }
+
+    function calculateTaskPercentage(task, baseDateKey, mode) {
+      const { start, end } = getRangeForView(baseDateKey, mode);
+      const keys = getDateKeysInRange(start, end);
+      let earned = 0;
+      let possible = 0;
+
+      for (const key of keys) {
+        if (isDayVoided(key)) continue;
+        possible += Number(task.pointsPerDay) || 0;
+        const value = getTaskEntryValue(task, key);
+        earned += calculateEntryPoints(task, value);
+      }
+
+      return possible > 0 ? (earned / possible) * 100 : 0;
+    }
+
+    function calculateOverallStats() {
+      const { start, end } = getRangeForView(appData.selectedDate, appData.viewMode);
+      const keys = getDateKeysInRange(start, end);
+      let earned = 0;
+      let possible = 0;
+      let voidedDays = 0;
+
+      for (const key of keys) {
+        if (isDayVoided(key)) {
+          voidedDays += 1;
+          continue;
+        }
+        for (const task of appData.tasks) {
+          possible += Number(task.pointsPerDay) || 0;
+          earned += calculateEntryPoints(task, getTaskEntryValue(task, key));
+        }
+      }
+
+      return {
+        earned,
+        possible,
+        percent: possible > 0 ? (earned / possible) * 100 : 0,
+        voidedDays
+      };
+    }
+
+    function setSelectedDate(dateKey) {
+      appData.selectedDate = dateKey;
+      saveData();
+      render();
+    }
+
+    function moveDate(direction) {
+      const base = parseDate(appData.selectedDate);
+      let next = base;
+      switch (appData.viewMode) {
+        case 'day': next = addDays(base, direction); break;
+        case 'week': next = addDays(base, direction * 7); break;
+        case '2week': next = addDays(base, direction * 14); break;
+        case 'month': next = addMonths(base, direction); break;
+        case 'quarter': next = addMonths(base, direction * 3); break;
+        case 'year': next = addYears(base, direction); break;
+      }
+      setSelectedDate(formatDateKey(next));
+    }
+
+    function clearTaskForm() {
+      editingTaskId = null;
+      document.getElementById('formModeLabel').textContent = 'New task';
+      document.getElementById('taskNameInput').value = '';
+      document.getElementById('taskTypeInput').value = 'checkbox';
+      document.getElementById('taskPointsInput').value = 10;
+      document.getElementById('taskTargetInput').value = 10;
+      document.getElementById('taskPartialInput').checked = true;
+      document.getElementById('taskNotesInput').value = '';
+      document.getElementById('cancelEditBtn').classList.add('hidden');
+      updateNumericFieldsVisibility();
+    }
+
+    function populateTaskForm(task) {
+      editingTaskId = task.id;
+      document.getElementById('formModeLabel').textContent = 'Editing';
+      document.getElementById('taskNameInput').value = task.name;
+      document.getElementById('taskTypeInput').value = task.type;
+      document.getElementById('taskPointsInput').value = task.pointsPerDay;
+      document.getElementById('taskTargetInput').value = task.targetValue ?? 10;
+      document.getElementById('taskPartialInput').checked = !!task.allowPartialCredit;
+      document.getElementById('taskNotesInput').value = task.notes || '';
+      document.getElementById('cancelEditBtn').classList.remove('hidden');
+      updateNumericFieldsVisibility();
+    }
+
+    function updateNumericFieldsVisibility() {
+      const type = document.getElementById('taskTypeInput').value;
+      document.getElementById('numericFields').classList.toggle('hidden', type !== 'number');
+    }
+
+    function saveTaskFromForm() {
+      const name = document.getElementById('taskNameInput').value.trim();
+      const type = document.getElementById('taskTypeInput').value;
+      const pointsPerDay = Number(document.getElementById('taskPointsInput').value) || 0;
+      const targetValue = Number(document.getElementById('taskTargetInput').value) || 0;
+      const allowPartialCredit = document.getElementById('taskPartialInput').checked;
+      const notes = document.getElementById('taskNotesInput').value.trim();
+
+      if (!name) {
+        alert('Please enter a task name.');
+        return;
+      }
+
+      const payload = {
+        id: editingTaskId || generateId(),
+        name,
+        type,
+        pointsPerDay,
+        targetValue: type === 'number' ? targetValue : null,
+        allowPartialCredit: type === 'number' ? allowPartialCredit : false,
+        notes,
+        createdAt: editingTaskId ? (appData.tasks.find(t => t.id === editingTaskId)?.createdAt || Date.now()) : Date.now()
+      };
+
+      if (editingTaskId) {
+        appData.tasks = appData.tasks.map(task => task.id === editingTaskId ? payload : task);
       } else {
-        state.todo.items.forEach(it=>{ if(it.categoryId===cat.id) it.categoryId="none"; });
-        state.todo.categories = (state.todo.categories||[]).filter(c=>c.id!==cat.id);
+        appData.tasks.push(payload);
       }
-      save();
-      renderAll(true);
-      renderCategoryModal();
-    };
 
-    actions.append(color, rename, del);
-    row.append(left, actions);
-    catModalList.appendChild(row);
-  });
-}
+      saveData();
+      clearTaskForm();
+      render();
+    }
 
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
-}
+    function deleteTask(taskId) {
+      if (!confirm('Delete this task?')) return;
+      appData.tasks = appData.tasks.filter(task => task.id !== taskId);
+      for (const dateKey of Object.keys(appData.entries)) {
+        delete appData.entries[dateKey][taskId];
+      }
+      saveData();
+      if (editingTaskId === taskId) clearTaskForm();
+      render();
+    }
 
-state.ui.viewDate = state.ui.viewDate || todayISO();
-renderAll(true);
-setActiveSeg(habitViewSel.value||'day');
-updateViewDateLabel();
+    function updateTaskEntry(taskId, rawValue) {
+      const task = appData.tasks.find(t => t.id === taskId);
+      if (!task) return;
+      const entry = ensureEntry(appData.selectedDate, taskId);
+      entry.value = task.type === 'checkbox' ? !!rawValue : rawValue === '' ? '' : Number(rawValue);
+      saveData();
+      renderStatsOnly();
+      renderTaskList();
+    }
 
-// Safety: force any legacy editTask calls to use the modal
-window.editTask = (id)=>{ try{ return openTaskModal(id); }catch(e){ console.error(e); } };
+    function renderVoidStatus() {
+      const wrap = document.getElementById('voidBadgeWrap');
+      wrap.innerHTML = '';
+      if (isDayVoided(appData.selectedDate)) {
+        const badge = document.createElement('span');
+        badge.className = 'pill';
+        badge.textContent = 'Selected day is voided';
+        wrap.appendChild(badge);
+      }
+    }
 
-</script>
+    function renderStatsOnly() {
+      updateViewDateLabel();
+      renderVoidStatus();
+      const stats = calculateOverallStats();
+      document.getElementById('overallSuccessStat').textContent = `${stats.percent.toFixed(1)}%`;
+      document.getElementById('pointsEarnedStat').textContent = stats.earned.toFixed(1);
+      document.getElementById('pointsPossibleStat').textContent = stats.possible.toFixed(1);
+      document.getElementById('voidedDaysStat').textContent = String(stats.voidedDays);
+      document.getElementById('todayBadge').textContent = `Today: ${formatDisplayDate(parseDate(getTodayKey()))}`;
+      document.getElementById('toggleVoidBtn').textContent = isDayVoided(appData.selectedDate) ? 'Unvoid Selected Day' : 'Void Selected Day';
+    }
+
+    function getFilteredSortedTasks() {
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+      const sort = document.getElementById('sortSelect').value;
+      let tasks = [...appData.tasks];
+
+      if (search) {
+        tasks = tasks.filter(task => task.name.toLowerCase().includes(search) || (task.notes || '').toLowerCase().includes(search));
+      }
+
+      if (sort === 'name') {
+        tasks.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sort === 'percent_desc') {
+        tasks.sort((a, b) => calculateTaskPercentage(b, appData.selectedDate, appData.rowPercentWindow) - calculateTaskPercentage(a, appData.selectedDate, appData.rowPercentWindow));
+      } else if (sort === 'percent_asc') {
+        tasks.sort((a, b) => calculateTaskPercentage(a, appData.selectedDate, appData.rowPercentWindow) - calculateTaskPercentage(b, appData.selectedDate, appData.rowPercentWindow));
+      } else {
+        tasks.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      }
+
+      return tasks;
+    }
+
+    function renderTaskList() {
+      const list = document.getElementById('taskList');
+      const tasks = getFilteredSortedTasks();
+      list.innerHTML = '';
+
+      if (tasks.length === 0) {
+        list.innerHTML = '<div class="empty">No tasks yet. Add one from the left panel.</div>';
+        return;
+      }
+
+      const selectedDayVoided = isDayVoided(appData.selectedDate);
+
+      for (const task of tasks) {
+        const card = document.createElement('section');
+        card.className = 'task-card' + (selectedDayVoided ? ' voided' : '');
+
+        const percent = calculateTaskPercentage(task, appData.selectedDate, appData.rowPercentWindow);
+        const selectedValue = getTaskEntryValue(task, appData.selectedDate);
+        const earnedToday = selectedDayVoided ? 0 : calculateEntryPoints(task, selectedValue);
+        const possibleToday = selectedDayVoided ? 0 : Number(task.pointsPerDay) || 0;
+
+        const top = document.createElement('div');
+        top.className = 'task-top';
+        top.innerHTML = `
+          <div>
+            <div class="row" style="justify-content:flex-start;">
+              <h3 class="task-name">${escapeHtml(task.name)}</h3>
+              <span class="tag">${task.type}</span>
+            </div>
+            <div class="small muted">${escapeHtml(task.notes || 'No notes')}</div>
+          </div>
+          <div>
+            <div class="small muted">Daily points</div>
+            <div><strong>${Number(task.pointsPerDay).toFixed(1)}</strong></div>
+          </div>
+          <div>
+            <div class="small muted">Today</div>
+            <div><strong>${earnedToday.toFixed(1)} / ${possibleToday.toFixed(1)}</strong></div>
+          </div>
+          <div>
+            <div class="small muted">Window %</div>
+            <div><strong>${percent.toFixed(1)}%</strong></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="small muted">Progress</div>
+            <div class="progress-bar"><div style="width:${Math.max(0, Math.min(percent, 100))}%;"></div></div>
+          </div>
+          <div class="row" style="justify-content:flex-end;">
+            <button data-edit="${task.id}">Edit</button>
+            <button data-delete="${task.id}" class="danger">Delete</button>
+          </div>
+        `;
+
+        const controls = document.createElement('div');
+        controls.className = 'grid-3';
+
+        const inputBox = document.createElement('div');
+        inputBox.className = 'panel';
+        inputBox.style.padding = '12px';
+
+        if (task.type === 'checkbox') {
+          inputBox.innerHTML = `
+            <div class="small muted">Completion</div>
+            <label class="inline" style="margin-top:8px;">
+              <input type="checkbox" ${selectedValue ? 'checked' : ''} ${selectedDayVoided ? 'disabled' : ''} data-check="${task.id}" />
+              Mark complete
+            </label>
+          `;
+        } else {
+          inputBox.innerHTML = `
+            <div class="small muted">Quantity for selected day</div>
+            <div class="row" style="margin-top:8px;">
+              <input type="number" step="0.1" min="0" value="${selectedValue === '' ? '' : selectedValue}" ${selectedDayVoided ? 'disabled' : ''} data-number="${task.id}" style="width:140px;" />
+              <span class="pill">Target: ${Number(task.targetValue || 0).toFixed(1)}</span>
+              <span class="pill">${task.allowPartialCredit ? 'Partial credit' : 'All-or-nothing'}</span>
+            </div>
+          `;
+        }
+
+        const infoBox = document.createElement('div');
+        infoBox.className = 'panel';
+        infoBox.style.padding = '12px';
+        infoBox.innerHTML = `
+          <div class="small muted">Selected day status</div>
+          <div style="margin-top:8px;font-weight:700;">${selectedDayVoided ? 'Voided — not counted' : 'Active day'}</div>
+        `;
+
+        const scoreBox = document.createElement('div');
+        scoreBox.className = 'panel';
+        scoreBox.style.padding = '12px';
+        scoreBox.innerHTML = `
+          <div class="small muted">Scoring</div>
+          <div style="margin-top:8px;">${task.type === 'checkbox' ? 'Checked = full points' : (task.allowPartialCredit ? 'Proportional to quantity / target' : 'Full points only when target is met')}</div>
+        `;
+
+        controls.appendChild(inputBox);
+        controls.appendChild(infoBox);
+        controls.appendChild(scoreBox);
+
+        card.appendChild(top);
+        card.appendChild(controls);
+        list.appendChild(card);
+      }
+
+      list.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => {
+        const task = appData.tasks.find(t => t.id === btn.dataset.edit);
+        if (task) populateTaskForm(task);
+      }));
+
+      list.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteTask(btn.dataset.delete)));
+      list.querySelectorAll('[data-check]').forEach(input => input.addEventListener('change', e => updateTaskEntry(e.target.dataset.check, e.target.checked)));
+      list.querySelectorAll('[data-number]').forEach(input => input.addEventListener('input', e => updateTaskEntry(e.target.dataset.number, e.target.value)));
+    }
+
+    function render() {
+      document.getElementById('viewModeSelect').value = appData.viewMode;
+      document.getElementById('rowPercentWindowSelect').value = appData.rowPercentWindow;
+      renderStatsOnly();
+      renderTaskList();
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `habit-focus-export-${getTodayKey()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importData(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          appData = {
+            ...defaultData,
+            ...parsed,
+            selectedDate: parsed.selectedDate || getTodayKey()
+          };
+          saveData();
+          clearTaskForm();
+          render();
+          alert('Import complete.');
+        } catch {
+          alert('That file could not be imported.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function scheduleMidnightRefresh() {
+      const now = new Date();
+      const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2);
+      const delay = nextMidnight.getTime() - now.getTime();
+      setTimeout(() => {
+        if (appData.selectedDate === getTodayKey() || appData.selectedDate === formatDateKey(startOfDay(now))) {
+          appData.selectedDate = getTodayKey();
+          saveData();
+          render();
+        }
+        scheduleMidnightRefresh();
+      }, delay);
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => moveDate(-1));
+    document.getElementById('nextBtn').addEventListener('click', () => moveDate(1));
+    document.getElementById('todayBtn').addEventListener('click', () => setSelectedDate(getTodayKey()));
+    document.getElementById('viewModeSelect').addEventListener('change', e => {
+      appData.viewMode = e.target.value;
+      saveData();
+      render();
+    });
+    document.getElementById('rowPercentWindowSelect').addEventListener('change', e => {
+      appData.rowPercentWindow = e.target.value;
+      saveData();
+      renderTaskList();
+    });
+    document.getElementById('searchInput').addEventListener('input', renderTaskList);
+    document.getElementById('sortSelect').addEventListener('change', renderTaskList);
+    document.getElementById('taskTypeInput').addEventListener('change', updateNumericFieldsVisibility);
+    document.getElementById('saveTaskBtn').addEventListener('click', saveTaskFromForm);
+    document.getElementById('cancelEditBtn').addEventListener('click', clearTaskForm);
+    document.getElementById('toggleVoidBtn').addEventListener('click', () => setDayVoided(appData.selectedDate, !isDayVoided(appData.selectedDate), isDayVoided(appData.selectedDate) ? '' : 'Voided by user'));
+    document.getElementById('exportBtn').addEventListener('click', exportData);
+    document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+    document.getElementById('importFile').addEventListener('change', e => {
+      const file = e.target.files?.[0];
+      if (file) importData(file);
+      e.target.value = '';
+    });
+
+    clearTaskForm();
+    render();
+    scheduleMidnightRefresh();
+  </script>
 </body>
 </html>
