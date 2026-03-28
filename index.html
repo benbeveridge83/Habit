@@ -1797,6 +1797,7 @@ function renderHabitsDay(){
         qty.style.width = "84px";
         qty.value = String(Number(getTaskValueOn(t.id, iso))||0);
         qty.disabled = isVoidedDay(iso);
+        qty.addEventListener("click", (ev)=>ev.stopPropagation());
         qty.onchange = () => {
           setNumberOn(t.id, iso, qty.value);
           commitDayXP(iso); save(); renderAll(true);
@@ -1807,6 +1808,7 @@ function renderHabitsDay(){
         cb.type = "checkbox";
         cb.checked = isDoneOn(t.id, iso);
         cb.disabled = isVoidedDay(iso);
+        cb.addEventListener("click", (ev)=>ev.stopPropagation());
         cb.onchange = () => {
           setDoneOn(t.id, iso, cb.checked);
           commitDayXP(iso);
@@ -1821,6 +1823,7 @@ function renderHabitsDay(){
         lab.append(cb, name);
       }
       left.appendChild(lab);
+      wireHabitEditorClick(row, t.id);
 
       const right = document.createElement("div");
       right.className = "taskActions";
@@ -1983,6 +1986,7 @@ td0.innerHTML = `<div style="display:flex; flex-direction:column; gap:4px">
             <span class="weekText mono">Week ${countTaskThisWeek(t.id, days[0])}/${t.weeklyTarget}</span>
           </div>` : ""}
       </div>`;
+    wireHabitEditorClick(td0, t.id);
     tr.appendChild(td0);
 
     days.forEach(d=>{
@@ -2026,6 +2030,16 @@ td0.innerHTML = `<div style="display:flex; flex-direction:column; gap:4px">
   table.appendChild(tbody);
   wrap.appendChild(table);
   habitsGridWrap.appendChild(wrap);
+}
+
+function wireHabitEditorClick(el, taskId){
+  if(!el || !taskId) return;
+  el.style.cursor = "pointer";
+  el.title = "Click to edit this habit";
+  el.addEventListener("click", (ev) => {
+    if(ev.target.closest("button, input, select, textarea, label, a")) return;
+    openTaskModal(taskId);
+  });
 }
 
 function editTaskModal(t){
