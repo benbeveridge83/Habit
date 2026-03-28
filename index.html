@@ -462,7 +462,12 @@
     .habitsHome{ margin-top:0 !important; }
     .habitsSidebar{ align-self:start; position:sticky; top:90px; } /* keeps sidebar visible; adjust with header */
 
-  </style>
+  
+.weekdayChecks{display:flex; flex-wrap:wrap; gap:10px 14px; margin-top:4px}
+.weekdayChecks label{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink)}
+.unavailableCell{opacity:.45; background:#f8fafc}
+.unavailableNote{color:var(--muted); font-style:italic}
+</style>
 </head>
 <body>
 <header>
@@ -926,6 +931,20 @@
           <input id="taskWeeklyInput" type="number" min="1" max="7" value="7" />
         </div>
 
+        <div class="field full">
+          <div class="lbl">Available on these days</div>
+          <div id="taskDaysWrap" class="weekdayChecks">
+            <label><input type="checkbox" value="1" /> Mon</label>
+            <label><input type="checkbox" value="2" /> Tue</label>
+            <label><input type="checkbox" value="3" /> Wed</label>
+            <label><input type="checkbox" value="4" /> Thu</label>
+            <label><input type="checkbox" value="5" /> Fri</label>
+            <label><input type="checkbox" value="6" /> Sat</label>
+            <label><input type="checkbox" value="0" /> Sun</label>
+          </div>
+          <div class="small">Unchecked days show as unavailable in Day / Week / Month view.</div>
+        </div>
+
         <div class="field">
           <div class="lbl">Tracking type</div>
           <select id="taskTypeSelect">
@@ -985,7 +1004,7 @@ const toLocalDateInput = (d=new Date()) => {
 };
 function cryptoId(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
 function clampInt(v,min,max){ v = Number(v); if(!Number.isFinite(v)) v = min; v = Math.round(v); return Math.max(min, Math.min(max, v)); }
-function task(name, xp, weeklyTarget=7, groupId="none", categoryId="none", type="checkbox", targetValue=1, allowPartial=true){ return { id: cryptoId(), name, xp: Number(xp)||10, weeklyTarget: clampInt(weeklyTarget,1,7), active: true, goalId: null, groupId, categoryId, type, targetValue: Number(targetValue)||1, allowPartial: allowPartial !== false }; }
+function task(name, xp, weeklyTarget=7, groupId="none", categoryId="none", type="checkbox", targetValue=1, allowPartial=true, availableDays=null){ return { id: cryptoId(), name, xp: Number(xp)||10, weeklyTarget: clampInt(weeklyTarget,1,7), active: true, goalId: null, groupId, categoryId, type, targetValue: Number(targetValue)||1, allowPartial: allowPartial !== false, availableDays: normalizeAvailableDays(availableDays) }; }
 
 function defaultLifeTree(){
   return { id:"root", title:"Life", children:[
@@ -1041,7 +1060,7 @@ function migrateState(s){
       const gid = g.id || cryptoId();
       if(g.name) newGroups.push({id: gid, name: g.name});
       (g.tasks||[]).forEach(t=>{
-        newTasks.push({id:t.id||cryptoId(), name:t.name||"Untitled", xp:Number(t.xp)||10, weeklyTarget: clampInt(t.weeklyTarget ?? 7, 1, 7), active: t.active !== false, goalId: t.goalId ?? null, groupId: gid});
+        newTasks.push({id:t.id||cryptoId(), name:t.name||"Untitled", xp:Number(t.xp)||10, weeklyTarget: clampInt(t.weeklyTarget ?? 7, 1, 7), active: t.active !== false, goalId: t.goalId ?? null, groupId: gid, availableDays: normalizeAvailableDays(t.availableDays)});
       });
     });
     s.habits.groups = newGroups;
@@ -1062,6 +1081,7 @@ function migrateState(s){
     if(!("categoryId" in t)) t.categoryId = "none";
     if(!("weeklyTarget" in t)) t.weeklyTarget = 7;
     t.weeklyTarget = clampInt(t.weeklyTarget,1,7);
+    t.availableDays = normalizeAvailableDays(t.availableDays);
     if(!("active" in t)) t.active = true;
     if(!("type" in t)) t.type = "checkbox";
     if(!("targetValue" in t)) t.targetValue = 1;
@@ -1105,6 +1125,7 @@ const taskGroupSelect = document.getElementById("taskGroupSelect");
 const taskCategorySelect = document.getElementById("taskCategorySelect");
 const taskXPInput = document.getElementById("taskXPInput");
 const taskWeeklyInput = document.getElementById("taskWeeklyInput");
+const taskDaysWrap = document.getElementById("taskDaysWrap");
 const taskTypeSelect = document.getElementById("taskTypeSelect");
 const taskTargetInput = document.getElementById("taskTargetInput");
 const taskPartialToggle = document.getElementById("taskPartialToggle");
@@ -1470,6 +1491,23 @@ function groupName(id){ if(id==="none") return "No group"; return (state.habits.
 function taskCategoryListWithNone(){ return [{id:"none", name:"No category"}, ...(state.habits.categories||[])]; }
 function taskCategoryName(id){ if(id==="none") return "No category"; return (state.habits.categories||[]).find(c=>c.id===id)?.name || "Unknown category"; }
 function taskCategoryColor(id){ if(id==="none") return "#cbd5e1"; return (state.habits.categories||[]).find(c=>c.id===id)?.color || "#2563eb"; }
+function normalizeAvailableDays(days){
+  if(!Array.isArray(days) || !days.length) return [1,2,3,4,5,6,0];
+  const out = [...new Set(days.map(d=>Number(d)).filter(d=>Number.isInteger(d) && d>=0 && d<=6))];
+  return out.length ? out : [1,2,3,4,5,6,0];
+}
+function isTaskAvailableOn(task, iso){
+  const days = normalizeAvailableDays(task && task.availableDays);
+  const dow = new Date(iso + "T00:00:00").getDay();
+  return days.includes(dow);
+}
+function availableDaysLabel(days){
+  const norm = normalizeAvailableDays(days);
+  const all = [1,2,3,4,5,6,0];
+  if(norm.length === 7 && all.every(d=>norm.includes(d))) return "Every day";
+  const labels = {0:"Sun",1:"Mon",2:"Tue",3:"Wed",4:"Thu",5:"Fri",6:"Sat"};
+  return norm.map(d=>labels[d]).join("/");
+}
 function todoCategoryListWithNone(){ return [{id:"none", name:"No category"}, ...(state.todo.categories||[])]; }
 function todoCategoryName(id){ if(id==="none") return "No category"; return (state.todo.categories||[]).find(c=>c.id===id)?.name || "Unknown category"; }
 function todoCategoryColor(id){ if(id==="none") return "#cbd5e1"; return (state.todo.categories||[]).find(c=>c.id===id)?.color || "#7c3aed"; }
@@ -1777,9 +1815,10 @@ function renderHabitsDay(){
       const weeklyTarget = clampInt(t.weeklyTarget,1,7);
       const weeklyDone = weeklyCount >= weeklyTarget;
       const rowPct = taskWindowPercent(t, iso, state.ui.rowPctWindow || "month");
+      const availableToday = isTaskAvailableOn(t, iso);
 
       const row = document.createElement("div");
-      row.className = "task" + (weeklyDone ? " weeklyComplete" : "") + (isVoidedDay(iso) ? " hiddenVoid" : "");
+      row.className = "task" + (weeklyDone ? " weeklyComplete" : "") + (isVoidedDay(iso) ? " hiddenVoid" : "") + (!availableToday ? " unavailableCell" : "");
 
       const left = document.createElement("div");
       left.className = "taskLeft";
@@ -1796,7 +1835,7 @@ function renderHabitsDay(){
         qty.step = "0.1";
         qty.style.width = "84px";
         qty.value = String(Number(getTaskValueOn(t.id, iso))||0);
-        qty.disabled = isVoidedDay(iso);
+        qty.disabled = isVoidedDay(iso) || !availableToday;
         qty.addEventListener("click", (ev)=>ev.stopPropagation());
         qty.onchange = () => {
           setNumberOn(t.id, iso, qty.value);
@@ -1807,7 +1846,7 @@ function renderHabitsDay(){
         const cb = document.createElement("input");
         cb.type = "checkbox";
         cb.checked = isDoneOn(t.id, iso);
-        cb.disabled = isVoidedDay(iso);
+        cb.disabled = isVoidedDay(iso) || !availableToday;
         cb.addEventListener("click", (ev)=>ev.stopPropagation());
         cb.onchange = () => {
           setDoneOn(t.id, iso, cb.checked);
@@ -1823,6 +1862,10 @@ function renderHabitsDay(){
         lab.append(cb, name);
       }
       left.appendChild(lab);
+      const scheduleNote = document.createElement("div");
+      scheduleNote.className = "small " + (availableToday ? "" : "unavailableNote");
+      scheduleNote.textContent = availableToday ? availableDaysLabel(t.availableDays) : `Not scheduled today • ${availableDaysLabel(t.availableDays)}`;
+      left.appendChild(scheduleNote);
       wireHabitEditorClick(row, t.id);
 
       const right = document.createElement("div");
@@ -1991,6 +2034,12 @@ td0.innerHTML = `<div style="display:flex; flex-direction:column; gap:4px">
 
     days.forEach(d=>{
       const td = document.createElement("td");
+      if(!isTaskAvailableOn(t, d)){
+        td.className = "unavailableCell";
+        td.innerHTML = '<span class="small mono">—</span>';
+        tr.appendChild(td);
+        return;
+      }
       if(isVoidedDay(d)){
         td.innerHTML = '<span class="small mono">VOID</span>';
         tr.appendChild(td);
@@ -2832,6 +2881,7 @@ function openTaskModal(taskId=null){
     taskCategorySelect.value = state.ui.lastQuickCategory || "none";
     taskXPInput.value = 10;
     taskWeeklyInput.value = 7;
+    [...taskDaysWrap.querySelectorAll('input[type="checkbox"]')].forEach(cb=>cb.checked = true);
     taskTypeSelect.value = "checkbox";
     taskTargetInput.value = 1;
     taskPartialToggle.checked = true;
@@ -2846,6 +2896,8 @@ function openTaskModal(taskId=null){
     taskCategorySelect.value = t.categoryId || "none";
     taskXPInput.value = Number(t.xp)||10;
     taskWeeklyInput.value = clampInt(t.weeklyTarget||7,1,7);
+    const chosenDays = normalizeAvailableDays(t.availableDays);
+    [...taskDaysWrap.querySelectorAll('input[type="checkbox"]')].forEach(cb=>cb.checked = chosenDays.includes(Number(cb.value)));
     taskTypeSelect.value = t.type || "checkbox";
     taskTargetInput.value = Number(t.targetValue||1);
     taskPartialToggle.checked = t.allowPartial !== false;
@@ -2868,6 +2920,8 @@ function saveTaskFromModal(){
   const cid = taskCategorySelect.value || "none";
   const xp = clampInt(taskXPInput.value, 1, 9999);
   const weekly = clampInt(taskWeeklyInput.value, 1, 7);
+  const availableDays = [...taskDaysWrap.querySelectorAll('input[type="checkbox"]:checked')].map(cb=>Number(cb.value));
+  if(!availableDays.length){ alert("Select at least one available day."); return; }
   const type = taskTypeSelect.value || "checkbox";
   const targetValue = Math.max(0, Number(taskTargetInput.value)||1);
   const allowPartial = !!taskPartialToggle.checked;
@@ -2875,7 +2929,7 @@ function saveTaskFromModal(){
   const active = !!taskActiveToggle.checked;
 
   if(!editingTaskId){
-    const t = task(name, xp, weekly, gid, cid, type, targetValue, allowPartial);
+    const t = task(name, xp, weekly, gid, cid, type, targetValue, allowPartial, availableDays);
     t.goalId = goalId;
     t.active = active;
     state.habits.tasks.push(t);
@@ -2891,6 +2945,7 @@ function saveTaskFromModal(){
     t.xp = xp;
     t.weeklyTarget = weekly;
     t.type = type;
+    t.availableDays = normalizeAvailableDays(availableDays);
     t.targetValue = targetValue;
     t.allowPartial = allowPartial;
     t.goalId = goalId;
