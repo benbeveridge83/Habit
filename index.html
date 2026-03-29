@@ -138,7 +138,7 @@
     }
 
     .taskLeft{display:flex; gap:10px; align-items:center; min-width:0}
-    .taskLeft label{display:flex; gap:8px; align-items:center; cursor:pointer; min-width:0}
+    .taskLeft label{display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; align-items:start; cursor:pointer; min-width:0; width:100%}
     .taskLeft .name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 
     .tag{font-size:11px; color:var(--muted); border:1px solid var(--line); padding:2px 8px; border-radius:999px; background:#fff}
@@ -286,7 +286,7 @@
     }
     .taskLeft{min-width:0; flex:1}
     .task{align-items:flex-start}
-    .taskActions{flex-wrap:wrap; justify-content:flex-end}
+    .taskActions{flex-wrap:wrap; justify-content:flex-end; align-self:center}
 
 
     /* Category tags with color */
@@ -467,6 +467,13 @@
 .weekdayChecks label{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink)}
 .unavailableCell{opacity:.45; background:#f8fafc}
 .unavailableNote{color:var(--muted); font-style:italic}
+.showAllActive{
+  border-color:rgba(37,99,235,.35) !important;
+  background:rgba(37,99,235,.08) !important;
+}
+.taskLeft .small{line-height:1.15}
+.task .taskLeft{padding-top:2px}
+
 </style>
 </head>
 <body>
@@ -528,6 +535,7 @@
     </div>
 
     <div class="row" style="gap:8px; justify-content:flex-end">
+      <button id="toggleShowAllBtn" title="Show completed and otherwise hidden tasks">Show All Tasks: Off</button>
       <button id="menuBtn" title="Menu">☰ Menu</button>
     </div>
   </div>
@@ -1021,7 +1029,7 @@ function defaultState(){
   return {
     version: 3,
     settings: { levelCurve: 1.35, perfectBonus: 25, maxPriorityBonus: 10, priorityCurve: 1.2 },
-    ui: { habitView: "day", viewDate: toLocalDateInput(new Date()), rowPctWindow: "month" },
+    ui: { habitView: "day", viewDate: toLocalDateInput(new Date()), rowPctWindow: "month", showAllTasks: false },
     player: { totalXP: 0, bestDayXP: 0, lastDayXPDate: "", dailyXP: {} },
     goals: { items: [] },
     habits: {
@@ -1088,8 +1096,9 @@ function migrateState(s){
     if(!("allowPartial" in t)) t.allowPartial = true;
   });
   if(!s.habits.voidDays || typeof s.habits.voidDays !== "object") s.habits.voidDays = {};
-  if(!s.ui) s.ui = {habitView:"day", viewDate: toLocalDateInput(new Date()), rowPctWindow:"month"};
+  if(!s.ui) s.ui = {habitView:"day", viewDate: toLocalDateInput(new Date()), rowPctWindow:"month", showAllTasks:false};
   if(!("rowPctWindow" in s.ui)) s.ui.rowPctWindow = "month";
+  if(!("showAllTasks" in s.ui)) s.ui.showAllTasks = false;
   if(!s.todo) s.todo = {items:[], selectedLifeId:"root", showCompleted:false};
 }
 function load(){
@@ -1190,6 +1199,7 @@ const jumpTodayBtn = document.getElementById("jumpTodayBtn");
 const voidDayBtn = document.getElementById("voidDayBtn");
 const rowPctWindowSel = document.getElementById("rowPctWindow");
 // View bar + menu
+const toggleShowAllBtn = document.getElementById("toggleShowAllBtn");
 const menuBtn = document.getElementById("menuBtn");
 const menuPanel = document.getElementById("menuPanel");
 const tabsEl = document.getElementById("tabs");
@@ -1278,6 +1288,14 @@ if(menuBtn && menuPanel){
 if(toggleStatsBtn && sidePanel){
   toggleStatsBtn.addEventListener("click", ()=>{
     sidePanel.style.display = (sidePanel.style.display === "none") ? "block" : "none";
+  });
+}
+
+if(toggleShowAllBtn){
+  toggleShowAllBtn.addEventListener("click", ()=>{
+    state.ui.showAllTasks = !state.ui.showAllTasks;
+    save();
+    renderAll(true);
   });
 }
 
@@ -1703,6 +1721,11 @@ function renderHabitViewControls(){
     voidDayBtn.textContent = voided ? "Unvoid Day" : "Void Day";
     voidDayBtn.classList.toggle("warn", !voided);
   }
+  if(toggleShowAllBtn){
+    const on = !!state.ui.showAllTasks;
+    toggleShowAllBtn.textContent = `Show All Tasks: ${on ? "On" : "Off"}`;
+    toggleShowAllBtn.classList.toggle("showAllActive", on);
+  }
   try{ setActiveSeg(habitViewSel.value); }catch(e){}
   try{ updateViewDateLabel(); }catch(e){}
 }
@@ -1744,6 +1767,26 @@ function taskWindowPercent(task, baseIso, mode){
   days.forEach(d=>{ earned += taskProgressForValue(task, getTaskValueOn(task.id, d)); });
   return Math.round((earned / days.length) * 100);
 }
+function shouldHideTaskInCurrentView(task, view, iso){
+  if(state.ui.showAllTasks) return false;
+  if(!task || task.active === false) return true;
+  const refIso = iso || state.ui.viewDate || todayISO();
+  const refView = view || state.ui.habitView || "day";
+  if(isDoneOn(task.id, refIso)) return true;
+  if(refView === "day"){
+    if(!isTaskAvailableOn(task, refIso)) return true;
+  }
+  if(refView === "week"){
+    if(countTaskThisWeek(task.id, refIso) >= clampInt(task.weeklyTarget,1,7)) return true;
+  }
+  if(refView === "month"){
+    if(taskWindowPercent(task, refIso, "month") >= 100) return true;
+  }
+  return false;
+}
+function visibleTasksForView(tasks, view, iso){
+  return (tasks||[]).filter(t => !shouldHideTaskInCurrentView(t, view, iso));
+}
 
 function goalById(id){ return state.goals.items.find(g=>g.id===id) || null; }
 
@@ -1753,10 +1796,12 @@ function renderHabitsDay(){
   const grouped = tasksByGroup();
 
   grouped.forEach(({group, tasks}) => {
+    const visibleTasks = visibleTasksForView(tasks, "day", iso);
+    if(visibleTasks.length === 0) return;
     const wrap = document.createElement("div");
     wrap.className = "group";
-    const total = tasks.length;
-    const done = tasks.filter(t => isDoneOn(t.id, iso)).length;
+    const total = visibleTasks.length;
+    const done = visibleTasks.filter(t => isDoneOn(t.id, iso)).length;
     const pct = total ? Math.round((done/total)*100) : 0;
 
     const header = document.createElement("div");
@@ -1810,7 +1855,7 @@ function renderHabitsDay(){
     const tasksEl = document.createElement("div");
     tasksEl.className = "tasks";
 
-    tasks.forEach(t => {
+    visibleTasks.forEach(t => {
       const weeklyCount = countTaskThisWeek(t.id, iso);
       const weeklyTarget = clampInt(t.weeklyTarget,1,7);
       const weeklyDone = weeklyCount >= weeklyTarget;
@@ -1941,15 +1986,18 @@ function renderHabitsDay(){
     wrap.append(header, prog, tasksEl);
     habitsDayWrap.appendChild(wrap);
   });
+  if(!habitsDayWrap.children.length){
+    habitsDayWrap.innerHTML = `<div class="small">No visible tasks for this day. Use "Show All Tasks" to reveal completed, unavailable, or fully finished items.</div>`;
+  }
 }
 
 function renderHabitsGrid(){
   habitsGridWrap.innerHTML = "";
   const view = state.ui.habitView || "day";
   const iso = state.ui.viewDate || todayISO();
-  const tasks = activeTasks();
+  const tasks = visibleTasksForView(activeTasks(), view, iso);
   if(tasks.length === 0){
-    habitsGridWrap.innerHTML = `<div class="small">No tasks yet.</div>`;
+    habitsGridWrap.innerHTML = `<div class="small">No visible tasks for this view. Use "Show All Tasks" to reveal completed or hidden items.</div>`;
     return;
   }
 
