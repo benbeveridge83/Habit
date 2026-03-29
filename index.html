@@ -1772,10 +1772,15 @@ function shouldHideTaskInCurrentView(task, view, iso){
   if(!task || task.active === false) return true;
   const refIso = iso || state.ui.viewDate || todayISO();
   const refView = view || state.ui.habitView || "day";
+
+  // Always hide tasks that are not scheduled for the currently selected date,
+  // even in week/month views. The user can still reveal them with Show All.
+  if(!isTaskAvailableOn(task, refIso)) return true;
+
+  // If the task is already checked/completed on the selected date, hide it.
   if(isDoneOn(task.id, refIso)) return true;
-  if(refView === "day"){
-    if(!isTaskAvailableOn(task, refIso)) return true;
-  }
+
+  // In week and month views, also hide rows that are fully complete for that period.
   if(refView === "week"){
     if(countTaskThisWeek(task.id, refIso) >= clampInt(task.weeklyTarget,1,7)) return true;
   }
