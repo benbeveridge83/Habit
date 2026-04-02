@@ -1745,12 +1745,40 @@ function priorityBonusFor(taskId){
   return Math.round(maxB * scaled);
 }
 function totalTaskXP(task){ return (Number(task.xp)||0) + priorityBonusFor(task.id); }
-function dailyCounts(iso){
-  const tasks = activeTasks();
+function dailyCounts(iso, opts={}){
+  const tasks = (opts.tasks || activeTasks()).filter(t => opts.includeHidden ? true : !shouldHideHabitTask(t, state.ui.habitView || "day", iso));
   const total = tasks.length;
   let done = 0;
   tasks.forEach(t => { if(isDoneOn(t.id, iso)) done++; });
   return {done, total};
+}
+function visibleHabitTasksForView(view, iso){
+  return activeTasks().filter(t => !shouldHideHabitTask(t, view || (state.ui.habitView || "day"), iso));
+}
+function taskHasCompletionInRange(task, days){
+  return days.some(d => isDoneOn(task.id, d));
+}
+function visibleRangeDays(view, iso){
+  const baseIso = iso || todayISO();
+  if(view === "week"){
+    const ws = weekStartISO(new Date(baseIso + "T00:00:00"));
+    return Array.from({length:7}, (_,i)=>addDaysISO(ws,i));
+  }
+  if(view === "month"){
+    const mi = monthInfo(baseIso);
+    return Array.from({length:mi.days}, (_,i)=>addDaysISO(mi.firstIso,i));
+  }
+  return [baseIso];
+}
+function completionSummaryForView(view, iso){
+  const baseIso = iso || todayISO();
+  const tasks = activeTasks();
+  if(view === "week" || view === "month"){
+    const days = visibleRangeDays(view, baseIso);
+    const complete = tasks.filter(t => taskHasCompletionInRange(t, days)).length;
+    return {complete, total: tasks.length};
+  }
+  return dailyCounts(baseIso, {includeHidden:true});
 }
 function dayXP(iso){
   const mult = momentumMultiplier();
@@ -1831,11 +1859,14 @@ function renderGroupProgressSidebar(){
   }
 }
 function renderDailyProgress(){
-  const iso = todayISO();
-  const {done,total} = dailyCounts(iso);
-  const pct = total ? Math.round((done/total)*100) : 0;
-  doneCountEl.textContent = done;
-  totalCountEl.textContent = total;
+  const view = state.ui.habitView || "day";
+  const iso = state.ui.viewDate || todayISO();
+  const ringLabel = dailyRing.querySelector(".ringInner span");
+  if(ringLabel) ringLabel.textContent = view === "day" ? "selected day" : (view === "week" ? "selected week" : "selected month");
+  const summary = completionSummaryForView(view, iso);
+  const pct = summary.total ? Math.round((summary.complete/summary.total)*100) : 0;
+  doneCountEl.textContent = summary.complete;
+  totalCountEl.textContent = summary.total;
   dailyBar.style.width = pct + "%";
   dailyPct.textContent = pct + "%";
   const deg = Math.round((pct/100)*360);
@@ -1928,8 +1959,16 @@ function shouldHideHabitTask(task, view, baseIso){
   const iso = baseIso || todayISO();
   if(!isTaskAvailableOn(task, iso)) return true;
   if(isDoneOn(task.id, iso)) return true;
-  if(view === "week") return countTaskThisWeek(task.id, iso) >= clampInt(task.weeklyTarget,1,7);
-  if(view === "month") return isTaskCompleteForMonth(task, iso);
+  if(view === "week"){
+    const days = visibleRangeDays("week", iso);
+    if(taskHasCompletionInRange(task, days)) return true;
+    return countTaskThisWeek(task.id, iso) >= clampInt(task.weeklyTarget,1,7);
+  }
+  if(view === "month"){
+    const days = visibleRangeDays("month", iso);
+    if(taskHasCompletionInRange(task, days)) return true;
+    return isTaskCompleteForMonth(task, iso);
+  }
   return false;
 }
 
@@ -1939,12 +1978,14 @@ function renderHabitsDay(){
   habitsDayWrap.innerHTML = "";
   const iso = state.ui.viewDate || todayISO();
   const grouped = tasksByGroup();
+  let renderedGroups = 0;
 
   grouped.forEach(({group, tasks}) => {
     const wrap = document.createElement("div");
     wrap.className = "group";
     const visibleTasks = tasks.filter(t => !shouldHideHabitTask(t, "day", iso));
     if(!visibleTasks.length) return;
+    renderedGroups++;
     const total = visibleTasks.length;
     const done = visibleTasks.filter(t => isDoneOn(t.id, iso)).length;
     const pct = total ? Math.round((done/total)*100) : 0;
@@ -2131,6 +2172,10 @@ function renderHabitsDay(){
     wrap.append(header, prog, tasksEl);
     habitsDayWrap.appendChild(wrap);
   });
+
+  if(!renderedGroups){
+    habitsDayWrap.innerHTML = `<div class="small">No tasks to show. Turn on "Show All Tasks" to reveal hidden rows.</div>`;
+  }
 }
 
 function renderHabitsGrid(){
@@ -2139,7 +2184,7 @@ function renderHabitsGrid(){
   const iso = state.ui.viewDate || todayISO();
   const tasks = activeTasks().filter(t => !shouldHideHabitTask(t, view, iso));
   if(tasks.length === 0){
-    habitsGridWrap.innerHTML = `<div class="small">No tasks yet.</div>`;
+    habitsGridWrap.innerHTML = `<div class="small">No tasks to show. Turn on "Show All Tasks" to reveal hidden rows.</div>`;
     return;
   }
 
@@ -2159,7 +2204,10 @@ function renderHabitsGrid(){
   const top = document.createElement("div");
   top.className = "row";
   top.style.justifyContent = "space-between";
-  top.innerHTML = `<div class="small"><strong>${escapeHtml(label)}</strong> — check/uncheck any day</div>
+  const summary = completionSummaryForView(view, iso);
+  const visibleCount = tasks.length;
+  const totalCount = activeTasks().length;
+  top.innerHTML = `<div class="small"><strong>${escapeHtml(label)}</strong> — <span class="mono">${summary.complete}/${summary.total}</span> complete • <span class="mono">${visibleCount}/${totalCount}</span> rows shown</div>
                    <div class="small">Tip: horizontal scroll for ${view} view</div>`;
   habitsGridWrap.appendChild(top);
   habitsGridWrap.appendChild(document.createElement("div")).className="sep";
