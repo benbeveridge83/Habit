@@ -1758,6 +1758,16 @@ function visibleHabitTasksForView(view, iso){
 function taskHasCompletionInRange(task, days){
   return days.some(d => isDoneOn(task.id, d));
 }
+function taskProgressInRange(task, days){
+  let earned = 0;
+  let available = 0;
+  days.forEach(d => {
+    if(isVoidedDay(d) || !isTaskAvailableOn(task, d)) return;
+    available += 1;
+    earned += taskProgressForValue(task, getTaskValueOn(task.id, d));
+  });
+  return {earned, available};
+}
 function visibleRangeDays(view, iso){
   const baseIso = iso || todayISO();
   if(view === "week"){
@@ -1779,6 +1789,16 @@ function completionSummaryForView(view, iso){
     return {complete, total: tasks.length};
   }
   return dailyCounts(baseIso, {includeHidden:true});
+}
+function visibleHabitSummaryForView(view, iso){
+  const baseIso = iso || todayISO();
+  const visibleTasks = visibleHabitTasksForView(view, baseIso);
+  if(view === "week" || view === "month"){
+    const days = visibleRangeDays(view, baseIso);
+    const complete = visibleTasks.filter(t => taskHasCompletionInRange(t, days)).length;
+    return {complete, total: visibleTasks.length};
+  }
+  return {complete: visibleTasks.filter(t => isDoneOn(t.id, baseIso)).length, total: visibleTasks.length};
 }
 function dayXP(iso){
   const mult = momentumMultiplier();
@@ -1863,14 +1883,19 @@ function renderDailyProgress(){
   const iso = state.ui.viewDate || todayISO();
   const ringLabel = dailyRing.querySelector(".ringInner span");
   if(ringLabel) ringLabel.textContent = view === "day" ? "selected day" : (view === "week" ? "selected week" : "selected month");
-  const summary = completionSummaryForView(view, iso);
-  const pct = summary.total ? Math.round((summary.complete/summary.total)*100) : 0;
-  doneCountEl.textContent = summary.complete;
-  totalCountEl.textContent = summary.total;
+  const visibleSummary = visibleHabitSummaryForView(view, iso);
+  const overallSummary = completionSummaryForView(view, iso);
+  const pct = overallSummary.total ? Math.round((overallSummary.complete/overallSummary.total)*100) : 0;
+  doneCountEl.textContent = overallSummary.complete;
+  totalCountEl.textContent = overallSummary.total;
   dailyBar.style.width = pct + "%";
   dailyPct.textContent = pct + "%";
   const deg = Math.round((pct/100)*360);
   dailyRing.style.background = `conic-gradient(var(--accent) ${deg}deg, var(--soft) 0deg)`;
+  if(view !== "day"){
+    doneCountEl.textContent = overallSummary.complete;
+    totalCountEl.textContent = overallSummary.total;
+  }
 }
 
 function renderHabitGroupOptions(){
@@ -1962,11 +1987,15 @@ function shouldHideHabitTask(task, view, baseIso){
   if(view === "week"){
     const days = visibleRangeDays("week", iso);
     if(taskHasCompletionInRange(task, days)) return true;
+    const weekProgress = taskProgressInRange(task, days);
+    if(weekProgress.available > 0 && weekProgress.earned >= weekProgress.available) return true;
     return countTaskThisWeek(task.id, iso) >= clampInt(task.weeklyTarget,1,7);
   }
   if(view === "month"){
     const days = visibleRangeDays("month", iso);
     if(taskHasCompletionInRange(task, days)) return true;
+    const monthProgress = taskProgressInRange(task, days);
+    if(monthProgress.available > 0 && monthProgress.earned >= monthProgress.available) return true;
     return isTaskCompleteForMonth(task, iso);
   }
   return false;
@@ -2207,7 +2236,7 @@ function renderHabitsGrid(){
   const summary = completionSummaryForView(view, iso);
   const visibleCount = tasks.length;
   const totalCount = activeTasks().length;
-  top.innerHTML = `<div class="small"><strong>${escapeHtml(label)}</strong> — <span class="mono">${summary.complete}/${summary.total}</span> complete • <span class="mono">${visibleCount}/${totalCount}</span> rows shown</div>
+  top.innerHTML = `<div class="small"><strong>${escapeHtml(label)}</strong> — <span class="mono">${summary.complete}/${summary.total}</span> complete • <span class="mono">${visibleCount}/${totalCount}</span> rows shown • <span class="mono">Show All Tasks: ${state.ui.showAllHabits ? 'On' : 'Off'}</span></div>
                    <div class="small">Tip: horizontal scroll for ${view} view</div>`;
   habitsGridWrap.appendChild(top);
   habitsGridWrap.appendChild(document.createElement("div")).className="sep";
