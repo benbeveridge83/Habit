@@ -1131,6 +1131,7 @@ function migrateState(s){
   if(!s.ui) s.ui = {habitView:"day", viewDate: toLocalDateInput(new Date()), rowPctWindow:"month", showAllHabits:false};
   if(!("rowPctWindow" in s.ui)) s.ui.rowPctWindow = "month";
   if(!("showAllHabits" in s.ui)) s.ui.showAllHabits = false;
+  if(!("showAllHabits" in s.ui)) s.ui.showAllHabits = false;
   if(!s.todo) s.todo = {items:[], selectedLifeId:"root", showCompleted:false};
 }
 function load(){
@@ -1746,7 +1747,8 @@ function priorityBonusFor(taskId){
 }
 function totalTaskXP(task){ return (Number(task.xp)||0) + priorityBonusFor(task.id); }
 function dailyCounts(iso, opts={}){
-  const tasks = (opts.tasks || activeTasks()).filter(t => opts.includeHidden ? true : !shouldHideHabitTask(t, state.ui.habitView || "day", iso));
+  const view = opts.view || state.ui.habitView || "day";
+  const tasks = (opts.tasks || activeTasks()).filter(t => opts.includeHidden ? true : !shouldHideHabitTask(t, view, iso));
   const total = tasks.length;
   let done = 0;
   tasks.forEach(t => { if(isDoneOn(t.id, iso)) done++; });
@@ -1780,31 +1782,29 @@ function visibleRangeDays(view, iso){
   }
   return [baseIso];
 }
+function isTaskCompleteForView(task, view, baseIso){
+  const iso = baseIso || todayISO();
+  if(view === "week") return countTaskThisWeek(task.id, iso) >= clampInt(task.weeklyTarget,1,7);
+  if(view === "month") return isTaskCompleteForMonth(task, iso);
+  return isDoneOn(task.id, iso);
+}
 function completionSummaryForView(view, iso){
   const baseIso = iso || todayISO();
   const tasks = activeTasks();
-  if(view === "week" || view === "month"){
-    const days = visibleRangeDays(view, baseIso);
-    const complete = tasks.filter(t => taskHasCompletionInRange(t, days)).length;
-    return {complete, total: tasks.length};
-  }
-  return dailyCounts(baseIso, {includeHidden:true});
+  const complete = tasks.filter(t => isTaskCompleteForView(t, view, baseIso)).length;
+  return {complete, total: tasks.length};
 }
 function visibleHabitSummaryForView(view, iso){
   const baseIso = iso || todayISO();
   const visibleTasks = visibleHabitTasksForView(view, baseIso);
-  if(view === "week" || view === "month"){
-    const days = visibleRangeDays(view, baseIso);
-    const complete = visibleTasks.filter(t => taskHasCompletionInRange(t, days)).length;
-    return {complete, total: visibleTasks.length};
-  }
-  return {complete: visibleTasks.filter(t => isDoneOn(t.id, baseIso)).length, total: visibleTasks.length};
+  const complete = visibleTasks.filter(t => isTaskCompleteForView(t, view, baseIso)).length;
+  return {complete, total: visibleTasks.length};
 }
 function dayXP(iso){
   const mult = momentumMultiplier();
   let xp = 0;
   activeTasks().forEach(t => { if(isDoneOn(t.id, iso)) xp += totalTaskXP(t); });
-  const totals = dailyCounts(iso);
+  const totals = dailyCounts(iso, {includeHidden:true, view:"day"});
   if(totals.total > 0 && totals.done === totals.total) xp += Number(state.settings.perfectBonus)||0;
   return Math.round(xp * mult);
 }
@@ -1985,17 +1985,9 @@ function shouldHideHabitTask(task, view, baseIso){
   if(!isTaskAvailableOn(task, iso)) return true;
   if(isDoneOn(task.id, iso)) return true;
   if(view === "week"){
-    const days = visibleRangeDays("week", iso);
-    if(taskHasCompletionInRange(task, days)) return true;
-    const weekProgress = taskProgressInRange(task, days);
-    if(weekProgress.available > 0 && weekProgress.earned >= weekProgress.available) return true;
     return countTaskThisWeek(task.id, iso) >= clampInt(task.weeklyTarget,1,7);
   }
   if(view === "month"){
-    const days = visibleRangeDays("month", iso);
-    if(taskHasCompletionInRange(task, days)) return true;
-    const monthProgress = taskProgressInRange(task, days);
-    if(monthProgress.available > 0 && monthProgress.earned >= monthProgress.available) return true;
     return isTaskCompleteForMonth(task, iso);
   }
   return false;
@@ -2235,7 +2227,7 @@ function renderHabitsGrid(){
   top.style.justifyContent = "space-between";
   const summary = completionSummaryForView(view, iso);
   const visibleCount = tasks.length;
-  const totalCount = activeTasks().length;
+  const totalCount = activeTasks().filter(t => state.ui.showAllHabits ? true : isTaskAvailableOn(t, iso)).length;
   top.innerHTML = `<div class="small"><strong>${escapeHtml(label)}</strong> — <span class="mono">${summary.complete}/${summary.total}</span> complete • <span class="mono">${visibleCount}/${totalCount}</span> rows shown • <span class="mono">Show All Tasks: ${state.ui.showAllHabits ? 'On' : 'Off'}</span></div>
                    <div class="small">Tip: horizontal scroll for ${view} view</div>`;
   habitsGridWrap.appendChild(top);
