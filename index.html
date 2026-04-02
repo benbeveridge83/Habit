@@ -138,7 +138,7 @@
     }
 
     .taskLeft{display:flex; gap:10px; align-items:center; min-width:0}
-    .taskLeft label{display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; align-items:start; cursor:pointer; min-width:0; width:100%}
+    .taskLeft label{display:flex; gap:8px; align-items:center; cursor:pointer; min-width:0}
     .taskLeft .name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 
     .tag{font-size:11px; color:var(--muted); border:1px solid var(--line); padding:2px 8px; border-radius:999px; background:#fff}
@@ -286,7 +286,7 @@
     }
     .taskLeft{min-width:0; flex:1}
     .task{align-items:flex-start}
-    .taskActions{flex-wrap:wrap; justify-content:flex-end; align-self:center}
+    .taskActions{flex-wrap:wrap; justify-content:flex-end}
 
 
     /* Category tags with color */
@@ -467,12 +467,27 @@
 .weekdayChecks label{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink)}
 .unavailableCell{opacity:.45; background:#f8fafc}
 .unavailableNote{color:var(--muted); font-style:italic}
-.showAllActive{
-  border-color:rgba(37,99,235,.35) !important;
-  background:rgba(37,99,235,.08) !important;
+
+
+/* Todo category trees */
+.checkTreeBox{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px;
+  background:#fff;
+  max-height:260px;
+  overflow:auto;
 }
-.taskLeft .small{line-height:1.15}
-.task .taskLeft{padding-top:2px}
+.checkTreeEmpty{font-size:12px;color:var(--muted)}
+.checkTreeNode{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 0}
+.checkTreeLabel{display:flex; align-items:center; gap:8px; min-width:0; font-size:13px}
+.checkTreeChildren{margin-left:22px; padding-left:10px; border-left:1px dashed #cbd5e1}
+.catSwatch{width:10px; height:10px; border-radius:999px; border:1px solid rgba(15,23,42,.12); flex:0 0 auto}
+.todoFilterBar{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+.todoTags{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
+.todoTag{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); background:#fff; font-size:11px; color:var(--text)}
+.catManageTools{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px}
+.inheritNote{font-size:11px; color:var(--muted)}
 
 </style>
 </head>
@@ -535,7 +550,7 @@
     </div>
 
     <div class="row" style="gap:8px; justify-content:flex-end">
-      <button id="toggleShowAllBtn" title="Show completed and otherwise hidden tasks">Show All Tasks: Off</button>
+      <button id="showAllHabitsBtn" title="Toggle hidden completed / not-due habits">Show All Tasks: Off</button>
       <button id="menuBtn" title="Menu">☰ Menu</button>
     </div>
   </div>
@@ -613,9 +628,9 @@
               <div class="lbl">Life branch</div>
               <select id="todoLifeSelect" style="width:260px"></select>
             </div>
-            <div class="field" style="width:220px">
-              <div class="lbl">Category</div>
-              <select id="todoCategorySelect" style="width:220px"></select>
+            <div class="field" style="flex:1; min-width:280px">
+              <div class="lbl">Categories</div>
+              <div id="todoCategorySelect" class="checkTreeBox"></div>
             </div>
             <button class="primary" id="addTodoBtn" style="width:120px; height:42px; align-self:flex-end">Add</button>
           </div>
@@ -642,6 +657,12 @@
               </label>
             </div>
             <div class="small" id="todoFilterLabel" style="margin-top:6px"></div>
+            <div class="todoFilterBar">
+              <button id="todoFilterShowAllBtn">Show All Categories</button>
+              <button id="todoFilterNoCategoryBtn">Only No Category</button>
+            </div>
+            <div class="small" style="margin-top:8px">Category filter (check some to show only those):</div>
+            <div id="todoCategoryFilterWrap" class="checkTreeBox" style="margin-top:8px"></div>
             <div class="sep"></div>
             <div id="todoList" class="list"></div>
           </div>
@@ -1029,7 +1050,7 @@ function defaultState(){
   return {
     version: 3,
     settings: { levelCurve: 1.35, perfectBonus: 25, maxPriorityBonus: 10, priorityCurve: 1.2 },
-    ui: { habitView: "day", viewDate: toLocalDateInput(new Date()), rowPctWindow: "month", showAllTasks: false },
+    ui: { habitView: "day", viewDate: toLocalDateInput(new Date()), rowPctWindow: "month", showAllHabits: false },
     player: { totalXP: 0, bestDayXP: 0, lastDayXPDate: "", dailyXP: {} },
     goals: { items: [] },
     habits: {
@@ -1041,7 +1062,7 @@ function defaultState(){
       priorityOrder: [],
       voidDays: {}
     },
-    todo: { categories: [{id: cryptoId(), name:"Errands", color:"#7c3aed"}, {id: cryptoId(), name:"Calls", color:"#2563eb"}, {id: cryptoId(), name:"Admin", color:"#f59e0b"}], items: [], selectedLifeId: "root", showCompleted: false },
+    todo: { categories: [{id: cryptoId(), name:"Errands", parentId:null, color:"#7c3aed"}, {id: cryptoId(), name:"Calls", parentId:null, color:"#2563eb"}, {id: cryptoId(), name:"Admin", parentId:null, color:"#f59e0b"}], items: [], selectedLifeId: "root", showCompleted: false, lastCategoryIds: [], filterCategoryIds: [], filterNoCategoryOnly: false },
     bad: { relapsePenalty: 50, clean: { current: 0, longest: 0, lastCleanDate: "" }, urges: [], targets: [] },
     journal: { entries: [], loadedId: null },
     life: { tree: defaultLifeTree() }
@@ -1081,9 +1102,20 @@ function migrateState(s){
   s.habits.categories.forEach(c=>{ if(!("color" in c)) c.color = "#2563eb"; });
   if(!s.todo) s.todo = {categories:[], items:[], selectedLifeId:"root", showCompleted:false};
   if(!Array.isArray(s.todo.categories)) s.todo.categories = [];
-  s.todo.categories.forEach(c=>{ if(!("color" in c)) c.color = "#7c3aed"; });
+  s.todo.categories.forEach(c=>{
+    if(!("color" in c)) c.color = "#7c3aed";
+    if(!("parentId" in c)) c.parentId = null;
+  });
   if(!Array.isArray(s.todo.items)) s.todo.items = [];
-  s.todo.items.forEach(it=>{ if(!("categoryId" in it)) it.categoryId = "none"; });
+  s.todo.items.forEach(it=>{
+    if(Array.isArray(it.categoryIds)) it.categoryIds = [...new Set(it.categoryIds.filter(Boolean).filter(id=>id!=="none"))];
+    else if(it.categoryId && it.categoryId !== "none") it.categoryIds = [it.categoryId];
+    else it.categoryIds = [];
+    if(!("categoryId" in it)) it.categoryId = it.categoryIds[0] || "none";
+  });
+  if(!Array.isArray(s.todo.lastCategoryIds)) s.todo.lastCategoryIds = s.todo.lastCategory ? [s.todo.lastCategory].filter(x=>x && x!=="none") : [];
+  if(!Array.isArray(s.todo.filterCategoryIds)) s.todo.filterCategoryIds = [];
+  if(!("filterNoCategoryOnly" in s.todo)) s.todo.filterNoCategoryOnly = false;
   s.habits.tasks.forEach(t=>{
     if(!("groupId" in t)) t.groupId = "none";
     if(!("categoryId" in t)) t.categoryId = "none";
@@ -1096,9 +1128,9 @@ function migrateState(s){
     if(!("allowPartial" in t)) t.allowPartial = true;
   });
   if(!s.habits.voidDays || typeof s.habits.voidDays !== "object") s.habits.voidDays = {};
-  if(!s.ui) s.ui = {habitView:"day", viewDate: toLocalDateInput(new Date()), rowPctWindow:"month", showAllTasks:false};
+  if(!s.ui) s.ui = {habitView:"day", viewDate: toLocalDateInput(new Date()), rowPctWindow:"month", showAllHabits:false};
   if(!("rowPctWindow" in s.ui)) s.ui.rowPctWindow = "month";
-  if(!("showAllTasks" in s.ui)) s.ui.showAllTasks = false;
+  if(!("showAllHabits" in s.ui)) s.ui.showAllHabits = false;
   if(!s.todo) s.todo = {items:[], selectedLifeId:"root", showCompleted:false};
 }
 function load(){
@@ -1199,7 +1231,7 @@ const jumpTodayBtn = document.getElementById("jumpTodayBtn");
 const voidDayBtn = document.getElementById("voidDayBtn");
 const rowPctWindowSel = document.getElementById("rowPctWindow");
 // View bar + menu
-const toggleShowAllBtn = document.getElementById("toggleShowAllBtn");
+const showAllHabitsBtn = document.getElementById("showAllHabitsBtn");
 const menuBtn = document.getElementById("menuBtn");
 const menuPanel = document.getElementById("menuPanel");
 const tabsEl = document.getElementById("tabs");
@@ -1291,14 +1323,6 @@ if(toggleStatsBtn && sidePanel){
   });
 }
 
-if(toggleShowAllBtn){
-  toggleShowAllBtn.addEventListener("click", ()=>{
-    state.ui.showAllTasks = !state.ui.showAllTasks;
-    save();
-    renderAll(true);
-  });
-}
-
 document.querySelectorAll(".navJump").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     const tab = btn.getAttribute("data-tab");
@@ -1366,6 +1390,9 @@ const lifeExportBtn = document.getElementById("lifeExportBtn");
 const todoTitle = document.getElementById("todoTitle");
 const todoLifeSelect = document.getElementById("todoLifeSelect");
 const todoCategorySelect = document.getElementById("todoCategorySelect");
+const todoCategoryFilterWrap = document.getElementById("todoCategoryFilterWrap");
+const todoFilterShowAllBtn = document.getElementById("todoFilterShowAllBtn");
+const todoFilterNoCategoryBtn = document.getElementById("todoFilterNoCategoryBtn");
 const addTodoCategoryBtn = document.getElementById("addTodoCategoryBtn");
 const manageTodoCategoriesBtn = document.getElementById("manageTodoCategoriesBtn");
 const addTodoBtn = document.getElementById("addTodoBtn");
@@ -1526,9 +1553,104 @@ function availableDaysLabel(days){
   const labels = {0:"Sun",1:"Mon",2:"Tue",3:"Wed",4:"Thu",5:"Fri",6:"Sat"};
   return norm.map(d=>labels[d]).join("/");
 }
-function todoCategoryListWithNone(){ return [{id:"none", name:"No category"}, ...(state.todo.categories||[])]; }
-function todoCategoryName(id){ if(id==="none") return "No category"; return (state.todo.categories||[]).find(c=>c.id===id)?.name || "Unknown category"; }
-function todoCategoryColor(id){ if(id==="none") return "#cbd5e1"; return (state.todo.categories||[]).find(c=>c.id===id)?.color || "#7c3aed"; }
+function todoCategories(){ return Array.isArray(state.todo.categories) ? state.todo.categories : []; }
+function todoCategoryNode(id){ return todoCategories().find(c=>c.id===id) || null; }
+function todoCategoryRoots(){ return todoCategories().filter(c=>!c.parentId); }
+function todoCategoryChildren(parentId){ return todoCategories().filter(c=>(c.parentId||null)===(parentId||null)); }
+function todoCategoryDescendantIds(id){
+  const out = [];
+  function walk(pid){ todoCategoryChildren(pid).forEach(ch=>{ out.push(ch.id); walk(ch.id); }); }
+  walk(id);
+  return out;
+}
+function todoCategoryInheritedColor(id){
+  let node = todoCategoryNode(id);
+  while(node){ if(node.color) return node.color; node = node.parentId ? todoCategoryNode(node.parentId) : null; }
+  return "#7c3aed";
+}
+function todoCategoryName(id){ if(id==="none") return "No category"; return todoCategoryNode(id)?.name || "Unknown category"; }
+function todoCategoryColor(id){ if(id==="none") return "#cbd5e1"; return todoCategoryInheritedColor(id); }
+function todoCategoryDepth(id){ let depth = 0, node = todoCategoryNode(id); while(node && node.parentId){ depth++; node = todoCategoryNode(node.parentId); } return depth; }
+function todoCategoryLineage(id){
+  const names = [];
+  let node = todoCategoryNode(id);
+  while(node){ names.unshift(node.name); node = node.parentId ? todoCategoryNode(node.parentId) : null; }
+  return names.join(" / ");
+}
+function normalizeTodoItemCategoryIds(item){
+  if(!item) return [];
+  if(Array.isArray(item.categoryIds)) return [...new Set(item.categoryIds.filter(Boolean).filter(id=>id!=="none"))];
+  if(item.categoryId && item.categoryId !== "none") return [item.categoryId];
+  return [];
+}
+function setTodoItemCategoryIds(item, ids){
+  const clean = [...new Set((ids||[]).filter(Boolean).filter(id=>id!=="none"))];
+  item.categoryIds = clean;
+  item.categoryId = clean[0] || "none";
+}
+function todoItemHasNoCategory(item){ return normalizeTodoItemCategoryIds(item).length === 0; }
+function todoCategorySelectionWithDescendants(ids){
+  const set = new Set((ids||[]).filter(Boolean));
+  [...set].forEach(id=> todoCategoryDescendantIds(id).forEach(cid=>set.add(cid)));
+  return set;
+}
+function toggleTodoCategorySelection(sourceIds, id, checked){
+  const set = new Set((sourceIds||[]).filter(Boolean));
+  const all = [id, ...todoCategoryDescendantIds(id)];
+  all.forEach(cid=> checked ? set.add(cid) : set.delete(cid));
+  let node = todoCategoryNode(id);
+  while(node && node.parentId){
+    const sibs = todoCategoryChildren(node.parentId);
+    const parent = todoCategoryNode(node.parentId);
+    if(parent){
+      const allSelected = sibs.length>0 && sibs.every(s=>set.has(s.id));
+      if(allSelected) set.add(parent.id);
+      else set.delete(parent.id);
+    }
+    node = parent;
+  }
+  return [...set];
+}
+function todoCategoryListWithNone(){ return [{id:"none", name:"No category"}, ...todoCategories()]; }
+function renderTodoCategoryTree(container, selectedIds, onChange){
+  if(!container) return;
+  const roots = todoCategoryRoots();
+  if(!roots.length){ container.innerHTML = '<div class="checkTreeEmpty">No categories yet.</div>'; return; }
+  const selected = new Set((selectedIds||[]).filter(Boolean));
+  function buildNode(cat){
+    const kids = todoCategoryChildren(cat.id);
+    const wrap = document.createElement('div');
+    const row = document.createElement('div');
+    row.className = 'checkTreeNode';
+    const label = document.createElement('label');
+    label.className = 'checkTreeLabel';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = selected.has(cat.id);
+    const desc = todoCategoryDescendantIds(cat.id);
+    const pickedDesc = desc.filter(id=>selected.has(id)).length;
+    if(!cb.checked && pickedDesc > 0) cb.indeterminate = true;
+    cb.onchange = ()=> onChange(toggleTodoCategorySelection([...selected], cat.id, cb.checked));
+    const sw = document.createElement('span'); sw.className = 'catSwatch'; sw.style.background = todoCategoryColor(cat.id);
+    const txt = document.createElement('span'); txt.textContent = cat.name;
+    label.append(cb, sw, txt);
+    row.appendChild(label);
+    if(cat.parentId){
+      const note = document.createElement('span'); note.className = 'inheritNote'; note.textContent = 'inherits';
+      row.appendChild(note);
+    }
+    wrap.appendChild(row);
+    if(kids.length){
+      const childWrap = document.createElement('div');
+      childWrap.className = 'checkTreeChildren';
+      kids.forEach(k=> childWrap.appendChild(buildNode(k)));
+      wrap.appendChild(childWrap);
+    }
+    return wrap;
+  }
+  container.innerHTML = '';
+  roots.forEach(root=> container.appendChild(buildNode(root)));
+}
 function tasksByGroup(){
   const map = new Map();
   groupListWithNone().forEach(g => map.set(g.id, []));
@@ -1721,11 +1843,7 @@ function renderHabitViewControls(){
     voidDayBtn.textContent = voided ? "Unvoid Day" : "Void Day";
     voidDayBtn.classList.toggle("warn", !voided);
   }
-  if(toggleShowAllBtn){
-    const on = !!state.ui.showAllTasks;
-    toggleShowAllBtn.textContent = `Show All Tasks: ${on ? "On" : "Off"}`;
-    toggleShowAllBtn.classList.toggle("showAllActive", on);
-  }
+  if(showAllHabitsBtn) showAllHabitsBtn.textContent = `Show All Tasks: ${state.ui.showAllHabits ? "On" : "Off"}`;
   try{ setActiveSeg(habitViewSel.value); }catch(e){}
   try{ updateViewDateLabel(); }catch(e){}
 }
@@ -1767,30 +1885,22 @@ function taskWindowPercent(task, baseIso, mode){
   days.forEach(d=>{ earned += taskProgressForValue(task, getTaskValueOn(task.id, d)); });
   return Math.round((earned / days.length) * 100);
 }
-function shouldHideTaskInCurrentView(task, view, iso){
-  if(state.ui.showAllTasks) return false;
-  if(!task || task.active === false) return true;
-  const refIso = iso || state.ui.viewDate || todayISO();
-  const refView = view || state.ui.habitView || "day";
-
-  // Always hide tasks that are not scheduled for the currently selected date,
-  // even in week/month views. The user can still reveal them with Show All.
-  if(!isTaskAvailableOn(task, refIso)) return true;
-
-  // If the task is already checked/completed on the selected date, hide it.
-  if(isDoneOn(task.id, refIso)) return true;
-
-  // In week and month views, also hide rows that are fully complete for that period.
-  if(refView === "week"){
-    if(countTaskThisWeek(task.id, refIso) >= clampInt(task.weeklyTarget,1,7)) return true;
-  }
-  if(refView === "month"){
-    if(taskWindowPercent(task, refIso, "month") >= 100) return true;
-  }
-  return false;
+function isTaskCompleteForMonth(task, baseIso){
+  const mi = monthInfo(baseIso||todayISO());
+  const days = Array.from({length: mi.days}, (_,i)=>addDaysISO(mi.firstIso, i)).filter(d=>!isVoidedDay(d) && isTaskAvailableOn(task, d));
+  if(!days.length) return false;
+  let earned = 0;
+  days.forEach(d=>{ earned += taskProgressForValue(task, getTaskValueOn(task.id, d)); });
+  return earned >= days.length;
 }
-function visibleTasksForView(tasks, view, iso){
-  return (tasks||[]).filter(t => !shouldHideTaskInCurrentView(t, view, iso));
+function shouldHideHabitTask(task, view, baseIso){
+  if(state.ui.showAllHabits) return false;
+  const iso = baseIso || todayISO();
+  if(!isTaskAvailableOn(task, iso)) return true;
+  if(isDoneOn(task.id, iso)) return true;
+  if(view === "week") return countTaskThisWeek(task.id, iso) >= clampInt(task.weeklyTarget,1,7);
+  if(view === "month") return isTaskCompleteForMonth(task, iso);
+  return false;
 }
 
 function goalById(id){ return state.goals.items.find(g=>g.id===id) || null; }
@@ -1801,10 +1911,10 @@ function renderHabitsDay(){
   const grouped = tasksByGroup();
 
   grouped.forEach(({group, tasks}) => {
-    const visibleTasks = visibleTasksForView(tasks, "day", iso);
-    if(visibleTasks.length === 0) return;
     const wrap = document.createElement("div");
     wrap.className = "group";
+    const visibleTasks = tasks.filter(t => !shouldHideHabitTask(t, "day", iso));
+    if(!visibleTasks.length) return;
     const total = visibleTasks.length;
     const done = visibleTasks.filter(t => isDoneOn(t.id, iso)).length;
     const pct = total ? Math.round((done/total)*100) : 0;
@@ -1991,18 +2101,15 @@ function renderHabitsDay(){
     wrap.append(header, prog, tasksEl);
     habitsDayWrap.appendChild(wrap);
   });
-  if(!habitsDayWrap.children.length){
-    habitsDayWrap.innerHTML = `<div class="small">No visible tasks for this day. Use "Show All Tasks" to reveal completed, unavailable, or fully finished items.</div>`;
-  }
 }
 
 function renderHabitsGrid(){
   habitsGridWrap.innerHTML = "";
   const view = state.ui.habitView || "day";
   const iso = state.ui.viewDate || todayISO();
-  const tasks = visibleTasksForView(activeTasks(), view, iso);
+  const tasks = activeTasks().filter(t => !shouldHideHabitTask(t, view, iso));
   if(tasks.length === 0){
-    habitsGridWrap.innerHTML = `<div class="small">No visible tasks for this view. Use "Show All Tasks" to reveal completed or hidden items.</div>`;
+    habitsGridWrap.innerHTML = `<div class="small">No tasks yet.</div>`;
     return;
   }
 
@@ -2545,15 +2652,12 @@ function renderLifeOptionsDropdown(){
   if(opts.some(o=>o.id===defaultId)) todoLifeSelect.value = defaultId;
 
   if(todoCategorySelect){
-    todoCategorySelect.innerHTML = "";
-    todoCategoryListWithNone().forEach(c=>{
-      const opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.name;
-      todoCategorySelect.appendChild(opt);
+    const selected = Array.isArray(state.todo.lastCategoryIds) ? state.todo.lastCategoryIds : [];
+    renderTodoCategoryTree(todoCategorySelect, selected, (ids)=>{
+      state.todo.lastCategoryIds = ids;
+      save();
+      renderLifeOptionsDropdown();
     });
-    const dc = state.todo.lastCategory || "none";
-    if(todoCategoryListWithNone().some(c=>c.id===dc)) todoCategorySelect.value = dc;
   }
 }
 function todoCountsForNode(node){
@@ -2575,15 +2679,31 @@ function renderTodo(){
     const {pending,total} = todoCountsForNode(node);
     return `${pending}/${total} pending`;
   });
+  if(todoCategoryFilterWrap){
+    renderTodoCategoryTree(todoCategoryFilterWrap, state.todo.filterCategoryIds || [], (ids)=>{
+      state.todo.filterCategoryIds = ids;
+      state.todo.filterNoCategoryOnly = false;
+      save();
+      renderTodo();
+    });
+  }
+  if(todoFilterNoCategoryBtn) todoFilterNoCategoryBtn.classList.toggle('primary', !!state.todo.filterNoCategoryOnly);
   const selectedId = state.todo.selectedLifeId || "root";
   const selectedNode = findNodeAndParent(state.life.tree, selectedId)?.node || state.life.tree;
   const subtreeIds = new Set(collectDescendantIds(selectedNode));
-  todoFilterLabel.textContent = `Showing: ${lifeNodeTitle(selectedId)} (includes descendants)`;
-  todoList.innerHTML = "";
+  const filterIds = todoCategorySelectionWithDescendants(state.todo.filterCategoryIds || []);
   const showCompleted = !!state.todo.showCompleted;
+  todoFilterLabel.textContent = `Showing: ${lifeNodeTitle(selectedId)} (includes descendants)${state.todo.filterNoCategoryOnly ? ' • Only no category' : (filterIds.size ? ' • Filtered categories' : ' • All categories')}`;
+  todoList.innerHTML = "";
   const list = state.todo.items
     .filter(x=>subtreeIds.has(x.lifeNodeId))
     .filter(x=> showCompleted ? true : !x.completedAt)
+    .filter(x=>{
+      const ids = normalizeTodoItemCategoryIds(x);
+      if(state.todo.filterNoCategoryOnly) return ids.length === 0;
+      if(!filterIds.size) return true;
+      return ids.some(id=>filterIds.has(id));
+    })
     .sort((a,b)=> (a.completedAt?1:0) - (b.completedAt?1:0) || (b.updatedAt||b.createdAt).localeCompare(a.updatedAt||a.createdAt));
   if(list.length === 0){
     todoList.innerHTML = `<div class="small">No to‑dos in this branch.</div>`;
@@ -2593,12 +2713,14 @@ function renderTodo(){
     const div = document.createElement("div");
     div.className = "entry";
     const created = new Date(item.createdAt);
+    const tags = normalizeTodoItemCategoryIds(item).map(id=>`<span class="todoTag"><span class="catSwatch" style="background:${escapeHtml(todoCategoryColor(id))}"></span>${escapeHtml(todoCategoryLineage(id))}</span>`).join('');
     div.innerHTML = `
       <div class="t">
         <strong>${escapeHtml(item.title)}${item.completedAt ? " ✅" : ""}</strong>
         <span class="mono">${created.toLocaleDateString()}</span>
       </div>
-      <p>Life: ${escapeHtml(lifeNodeTitle(item.lifeNodeId))}${(item.categoryId&&item.categoryId!=="none")?(" • Cat: "+escapeHtml(todoCategoryName(item.categoryId))):""}</p>
+      <p>Life: ${escapeHtml(lifeNodeTitle(item.lifeNodeId))}</p>
+      <div class="todoTags">${tags || '<span class="todoTag">No category</span>'}</div>
       <p class="small">${item.completedAt ? "Completed" : "Pending"} • click to manage</p>
     `;
     div.onclick = () => manageTodo(item.id);
@@ -2623,6 +2745,17 @@ Enter 1-5:`);
     const pick = prompt(`Move to which Life branch?\n\n${opts}`, `${item.lifeNodeId} :: ${lifeNodeTitle(item.lifeNodeId)}`);
     if(pick){ const nid = pick.split("::")[0].trim(); if(findNodeAndParent(state.life.tree, nid)) item.lifeNodeId = nid; item.updatedAt = nowISO(); }
   } else if(action === "4"){
+    const flat = todoCategories().map(c=>`${c.id} :: ${todoCategoryLineage(c.id)}`).join("\n");
+    const current = normalizeTodoItemCategoryIds(item).join(", ");
+    const pick = prompt(`Enter category ids separated by commas (blank for no category):
+
+${flat}`, current);
+    if(pick !== null){
+      const ids = pick.split(',').map(x=>x.trim()).filter(Boolean).filter(id=>todoCategoryNode(id));
+      setTodoItemCategoryIds(item, ids);
+      item.updatedAt = nowISO();
+    }
+  } else if(action === "5"){
     if(confirm("Delete this to‑do?")) state.todo.items = state.todo.items.filter(x=>x.id!==id);
   }
   save(); renderTodo();
@@ -2701,10 +2834,10 @@ if(addTaskCategoryBtn){
 }
 if(addTodoCategoryBtn){
   addTodoCategoryBtn.addEventListener("click", ()=>{
-    const name = prompt("New to‑do category:", "Errands");
+    const name = prompt("New parent to‑do category:", "Priority");
     if(!name || !name.trim()) return;
     state.todo.categories = state.todo.categories || [];
-    state.todo.categories.push({id: cryptoId(), name: name.trim()});
+    state.todo.categories.push({id: cryptoId(), name: name.trim(), parentId: null, color: "#7c3aed"});
     save(); renderAll(true);
     toast("To‑do category added", name.trim());
   });
@@ -2838,14 +2971,16 @@ addTodoBtn.addEventListener("click", ()=>{
   const title = (todoTitle.value||"").trim();
   if(!title) return alert("Enter a to‑do title.");
   const nid = todoLifeSelect.value || state.todo.selectedLifeId || "root";
-  const cid = (todoCategorySelect && todoCategorySelect.value) ? todoCategorySelect.value : "none";
-  state.todo.lastCategory = cid;
-  state.todo.items.push({id: cryptoId(), title, lifeNodeId: nid, categoryId: cid, createdAt: nowISO(), updatedAt: nowISO(), completedAt: null});
+  const cids = Array.isArray(state.todo.lastCategoryIds) ? state.todo.lastCategoryIds : [];
+  state.todo.items.push({id: cryptoId(), title, lifeNodeId: nid, categoryId: cids[0] || "none", categoryIds: [...cids], createdAt: nowISO(), updatedAt: nowISO(), completedAt: null});
   todoTitle.value = "";
   save(); renderTodo();
   toast("To‑Do added", `Linked to: ${lifeNodeTitle(nid)}`);
 });
 showCompletedTodos.addEventListener("change", ()=>{ state.todo.showCompleted = !!showCompletedTodos.checked; save(); renderTodo(); });
+if(showAllHabitsBtn) showAllHabitsBtn.addEventListener("click", ()=>{ state.ui.showAllHabits = !state.ui.showAllHabits; save(); renderAll(true); });
+if(todoFilterShowAllBtn) todoFilterShowAllBtn.addEventListener("click", ()=>{ state.todo.filterCategoryIds = []; state.todo.filterNoCategoryOnly = false; save(); renderTodo(); });
+if(todoFilterNoCategoryBtn) todoFilterNoCategoryBtn.addEventListener("click", ()=>{ state.todo.filterNoCategoryOnly = !state.todo.filterNoCategoryOnly; if(state.todo.filterNoCategoryOnly) state.todo.filterCategoryIds = []; save(); renderTodo(); });
 
 saveSettingsBtn.addEventListener("click", () => {
   state.settings.levelCurve = Number(levelCurve.value) || 1.35;
@@ -3029,7 +3164,7 @@ function openCategoryModal(mode){
   catModalTitle.textContent = mode === "task" ? "Manage Task Categories" : "Manage To‑Do Categories";
   catModalHint.textContent = mode === "task"
     ? "These categories are optional labels for habits."
-    : "These categories are optional labels for to‑do items.";
+    : "Create parent categories and subcategories for to‑dos. Parent colors flow down to children.";
   renderCategoryModal();
   catModalBackdrop.style.display = "flex";
 }
@@ -3041,71 +3176,101 @@ function renderCategoryModal(){
   if(!catModalList) return;
   const list = (catModalMode === "task") ? (state.habits.categories||[]) : (state.todo.categories||[]);
   catModalList.innerHTML = "";
+  if(catModalMode === "todo"){
+    const tools = document.createElement('div');
+    tools.className = 'catManageTools';
+    const addParent = document.createElement('button');
+    addParent.textContent = '+ Add Parent';
+    addParent.onclick = ()=>{
+      const name = prompt('Parent category name:', 'Priority');
+      if(!name || !name.trim()) return;
+      state.todo.categories.push({id: cryptoId(), name: name.trim(), parentId: null, color: '#7c3aed'});
+      save(); renderAll(true); renderCategoryModal();
+    };
+    tools.appendChild(addParent);
+    catModalList.appendChild(tools);
+  }
   if(list.length === 0){
-    catModalList.innerHTML = `<div class="small">No categories yet. Use the “+ Add … Category” button to create one.</div>`;
+    catModalList.innerHTML += `<div class="small">No categories yet. Use the “+ Add … Category” button to create one.</div>`;
     return;
   }
-  list.forEach(cat=>{
+  const todoDeleteIds = (id)=> [id, ...todoCategoryDescendantIds(id)];
+  const renderTodoRow = (cat)=>{
     const row = document.createElement("div");
     row.className = "modalRow";
+    row.style.marginLeft = `${todoCategoryDepth(cat.id) * 18}px`;
     const left = document.createElement("div");
     left.className = "left";
     const dot = document.createElement("span");
     dot.className = "catDot";
-    dot.style.background = cat.color || (catModalMode==="task" ? "#2563eb" : "#7c3aed");
+    dot.style.background = catModalMode==="task" ? (cat.color || '#2563eb') : todoCategoryColor(cat.id);
     const name = document.createElement("div");
     name.className = "name";
     name.textContent = cat.name;
     left.append(dot, name);
-
     const actions = document.createElement("div");
     actions.className = "actions";
-
-    const color = document.createElement("input");
-    color.type = "color";
-    color.className = "colorInput";
-    color.value = cat.color || (catModalMode==="task" ? "#2563eb" : "#7c3aed");
-    color.oninput = ()=>{
-      cat.color = color.value;
-      save();
-      renderAll(true);
-      renderCategoryModal();
-    };
-
+    if(catModalMode === "task" || !cat.parentId){
+      const color = document.createElement("input");
+      color.type = "color";
+      color.className = "colorInput";
+      color.value = cat.color || (catModalMode==="task" ? "#2563eb" : "#7c3aed");
+      color.oninput = ()=>{ cat.color = color.value; save(); renderAll(true); renderCategoryModal(); };
+      actions.appendChild(color);
+    } else {
+      const note = document.createElement('span');
+      note.className = 'inheritNote';
+      note.textContent = 'inherits color';
+      actions.appendChild(note);
+    }
     const rename = document.createElement("button");
     rename.className = "iconBtn";
     rename.textContent = "Rename";
     rename.onclick = ()=>{
       const n = prompt("Rename category:", cat.name);
-      if(n && n.trim()){
-        cat.name = n.trim();
-        save();
-        renderAll(true);
-        renderCategoryModal();
-      }
+      if(n && n.trim()){ cat.name = n.trim(); save(); renderAll(true); renderCategoryModal(); }
     };
-
+    actions.appendChild(rename);
+    if(catModalMode === 'todo'){
+      const addChild = document.createElement('button');
+      addChild.className = 'iconBtn';
+      addChild.textContent = '+ Child';
+      addChild.onclick = ()=>{
+        const n = prompt(`Subcategory under "${cat.name}":`, 'Repair');
+        if(!n || !n.trim()) return;
+        state.todo.categories.push({id: cryptoId(), name: n.trim(), parentId: cat.id});
+        save(); renderAll(true); renderCategoryModal();
+      };
+      actions.appendChild(addChild);
+    }
     const del = document.createElement("button");
     del.className = "iconBtn danger";
     del.textContent = "Delete";
     del.onclick = ()=>{
-      if(!confirm(`Delete category "${cat.name}"? Items in it will move to "No category".`)) return;
       if(catModalMode === "task"){
+        if(!confirm(`Delete category "${cat.name}"? Items in it will move to "No category".`)) return;
         state.habits.tasks.forEach(t=>{ if(t.categoryId===cat.id) t.categoryId="none"; });
         state.habits.categories = (state.habits.categories||[]).filter(c=>c.id!==cat.id);
       } else {
-        state.todo.items.forEach(it=>{ if(it.categoryId===cat.id) it.categoryId="none"; });
-        state.todo.categories = (state.todo.categories||[]).filter(c=>c.id!==cat.id);
+        const ids = new Set(todoDeleteIds(cat.id));
+        if(!confirm(`Delete category "${cat.name}" and its subcategories?`)) return;
+        state.todo.items.forEach(it=> setTodoItemCategoryIds(it, normalizeTodoItemCategoryIds(it).filter(id=>!ids.has(id))));
+        state.todo.filterCategoryIds = (state.todo.filterCategoryIds||[]).filter(id=>!ids.has(id));
+        state.todo.lastCategoryIds = (state.todo.lastCategoryIds||[]).filter(id=>!ids.has(id));
+        state.todo.categories = (state.todo.categories||[]).filter(c=>!ids.has(c.id));
       }
-      save();
-      renderAll(true);
-      renderCategoryModal();
+      save(); renderAll(true); renderCategoryModal();
     };
-
-    actions.append(color, rename, del);
+    actions.appendChild(del);
     row.append(left, actions);
     catModalList.appendChild(row);
-  });
+    if(catModalMode === 'todo') todoCategoryChildren(cat.id).forEach(renderTodoRow);
+  };
+  if(catModalMode === 'task'){
+    list.forEach(cat=> renderTodoRow(cat));
+  } else {
+    todoCategoryRoots().forEach(renderTodoRow);
+  }
 }
 
 function escapeHtml(str){
