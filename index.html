@@ -3306,7 +3306,7 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
 }
 
-state.ui.viewDate = todayISO();
+if(!state.ui.viewDate) state.ui.viewDate = todayISO();
 renderAll(true);
 setActiveSeg(habitViewSel.value||'day');
 updateViewDateLabel();
