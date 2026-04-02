@@ -1146,7 +1146,37 @@ function load(){
     return defaultState();
   }
 }
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let saveErrorShown = false;
+function buildSaveState(){
+  const clone = JSON.parse(JSON.stringify(state));
+  if(clone && clone.todo){
+    delete clone.todo.lastCategory;
+    if(Array.isArray(clone.todo.items)){
+      clone.todo.items.forEach(it=>{ if(it && typeof it === "object") delete it.categoryId; });
+    }
+  }
+  return clone;
+}
+function save(){
+  try{
+    const payload = JSON.stringify(buildSaveState());
+    localStorage.setItem(STORAGE_KEY, payload);
+    saveErrorShown = false;
+    return true;
+  }catch(e){
+    console.warn("Save failed", e);
+    if(e && e.name === "QuotaExceededError"){
+      if(!saveErrorShown){
+        saveErrorShown = true;
+        setTimeout(()=>{
+          try{ toast("Storage full", "Changes could not be saved because browser local storage is full. Your page should still work, but free up storage or import a smaller backup before relying on new changes."); }catch(_e){}
+        }, 0);
+      }
+      return false;
+    }
+    throw e;
+  }
+}
 
 const toastWrap = document.getElementById("toastWrap");
 const catModalBackdrop = document.getElementById("catModalBackdrop");
@@ -2796,7 +2826,6 @@ function renderAll(commitXP=false){
   renderSettings();
   renderHeaderAndStats();
 
-  save();
 }
 
 if(quickAddBtn){
