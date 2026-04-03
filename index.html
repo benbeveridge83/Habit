@@ -468,6 +468,12 @@
 .unavailableCell{opacity:.45; background:#f8fafc}
 .unavailableNote{color:var(--muted); font-style:italic}
 
+.today-highlight{
+  outline:2px solid #22c55e;
+  outline-offset:-2px;
+  background:rgba(34,197,94,.08) !important;
+}
+
 
 /* Todo category trees */
 .checkTreeBox{
@@ -1307,6 +1313,13 @@ function parseDate(str){
   return isNaN(t.getTime()) ? new Date() : t;
 }
 
+function isSameDate(a, b){
+  return parseDate(a).toDateString() === parseDate(b).toDateString();
+}
+function isTodayIso(iso){
+  return isSameDate(iso, todayISO());
+}
+
 function fmtLong(d){
   const dt = (d instanceof Date) ? d : new Date(d);
   return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric", year:"numeric" });
@@ -1930,6 +1943,9 @@ function renderHabitViewControls(){
     voidDayBtn.classList.toggle("warn", !voided);
   }
   if(showAllHabitsBtn) showAllHabitsBtn.textContent = `Show All Tasks: ${state.ui.showAllHabits ? "On" : "Off"}`;
+  const shouldHighlightCurrentDate = ["day","month"].includes(state.ui.habitView || "day") && isTodayIso(state.ui.viewDate || todayISO());
+  if(viewDateLabel) viewDateLabel.classList.toggle("today-highlight", shouldHighlightCurrentDate);
+  if(viewDateInput) viewDateInput.classList.toggle("today-highlight", shouldHighlightCurrentDate);
   try{ setActiveSeg(habitViewSel.value); }catch(e){}
   try{ updateViewDateLabel(); }catch(e){}
 }
@@ -2249,6 +2265,7 @@ function renderHabitsGrid(){
     th.textContent = view==="week"
       ? dd.toLocaleDateString(undefined,{weekday:"short", month:"short", day:"numeric"})
       : dd.getDate();
+    if(view === "month" && isTodayIso(d)) th.classList.add("today-highlight");
     hr.appendChild(th);
   });
   thead.appendChild(hr);
@@ -2293,8 +2310,9 @@ td0.innerHTML = `<div style="display:flex; flex-direction:column; gap:4px">
 
     days.forEach(d=>{
       const td = document.createElement("td");
+      if(view === "month" && isTodayIso(d)) td.classList.add("today-highlight");
       if(!isTaskAvailableOn(t, d)){
-        td.className = "unavailableCell";
+        td.className = (td.className ? td.className + " " : "") + "unavailableCell";
         td.innerHTML = '<span class="small mono">—</span>';
         tr.appendChild(td);
         return;
