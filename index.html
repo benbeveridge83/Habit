@@ -2002,9 +2002,18 @@ function isTaskCompleteForMonth(task, baseIso){
   days.forEach(d=>{ earned += taskProgressForValue(task, getTaskValueOn(task.id, d)); });
   return earned >= days.length;
 }
+function focusIsoForHabitVisibility(view, baseIso){
+  const iso = baseIso || todayISO();
+  const today = todayISO();
+  if(view === "week" || view === "month"){
+    const days = visibleRangeDays(view, iso);
+    if(days.includes(today)) return today;
+  }
+  return iso;
+}
 function shouldHideHabitTask(task, view, baseIso){
   if(state.ui.showAllHabits) return false;
-  const iso = baseIso || todayISO();
+  const iso = focusIsoForHabitVisibility(view, baseIso);
   if(!isTaskAvailableOn(task, iso)) return true;
   if(isDoneOn(task.id, iso)) return true;
   if(view === "week"){
