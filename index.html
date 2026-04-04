@@ -1036,7 +1036,7 @@
 
 <script>
 const STORAGE_KEY = "my_habit_app_v2";
-const todayISO = () => new Date().toISOString().slice(0,10);
+const todayISO = () => toLocalDateInput(new Date());
 const nowISO = () => new Date().toISOString();
 const toLocalDateInput = (d=new Date()) => {
   const yyyy = d.getFullYear();
