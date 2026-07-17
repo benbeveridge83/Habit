@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Habit App (V10)</title>
+  <title>My Habit App (V11)</title>
   <style>
     :root{
       --bg:#f7f8fb;
@@ -502,15 +502,54 @@
 .catManageTools{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px}
 .inheritNote{font-size:11px; color:var(--muted)}
 
+
+/* V11 account and cloud-sync UI */
+.authScreen{
+  position:fixed; inset:0; z-index:20000;
+  display:grid; place-items:center; padding:20px;
+  background:linear-gradient(160deg,#eef2ff,#ffffff 48%,#f5f3ff);
+}
+.authCard{width:min(460px,100%); background:#fff; border:1px solid var(--line); border-radius:22px; padding:22px; box-shadow:0 28px 80px rgba(15,23,42,.16)}
+.authCard h1{margin:0 0 6px; font-size:24px}
+.authCard .authFields{display:grid; gap:10px; margin-top:16px}
+.authActions{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
+.authActions button{flex:1; min-width:130px}
+.authMessage{min-height:20px; margin-top:10px; font-size:12px; color:var(--muted)}
+.authMessage.error{color:var(--bad)}
+.authMessage.good{color:var(--good)}
+.accountPill{max-width:290px}
+.accountPill strong{max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+#appShell.authPending{visibility:hidden}
+
 </style>
 </head>
 <body>
+<div id="authScreen" class="authScreen">
+  <div class="authCard">
+    <h1>My Habit App <span class="small">(V11)</span></h1>
+    <div class="sub" style="margin:0">Sign in so your habits are private and available on your other devices.</div>
+    <div class="authFields">
+      <input id="authEmail" type="email" autocomplete="email" placeholder="Email address" />
+      <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password (at least 6 characters)" />
+    </div>
+    <div class="authActions">
+      <button class="primary" id="signInBtn">Sign In</button>
+      <button id="signUpBtn">Create Account</button>
+    </div>
+    <div id="authMessage" class="authMessage"></div>
+  </div>
+</div>
+<div id="appShell" class="authPending">
+
 <header>
-  <h1>My Habit App <span class="small">(V10)</span></h1>
+  <h1>My Habit App <span class="small">(V11)</span></h1>
   <div class="meta">
     <div class="pill">Today <strong id="todayLabel"></strong></div>
     <div class="pill">Level <strong id="levelLabel" class="mono">1</strong> <span class="mono" id="xpLabel">0 XP</span></div>
     <div class="pill">Best Day <strong id="bestDayLabel" class="mono">0 XP</strong></div>
+    <div class="pill accountPill">Account <strong id="accountEmail">Not signed in</strong></div>
+    <div class="pill">Cloud <strong id="cloudStatus">Waiting</strong></div>
+    <button id="signOutBtn">Sign Out</button>
     <button class="primary" id="resetTodayBtn" title="Resets checkmarks for today (keeps your data)">Reset Today</button>
   </div>
 </header>
@@ -887,7 +926,7 @@
 
     <aside class="card" id="sidePanel" style="display:none">
       <h2>Dashboard</h2>
-      <div class="sub">Snapshot + quick stats (V10).</div>
+      <div class="sub">Snapshot + quick stats (V11).</div>
 
       <div class="card" style="margin-bottom:10px">
         <h2>Today Stats</h2>
@@ -1033,12 +1072,19 @@
 </div>
 
 <div id="toastWrap"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = "https://dmpvolgxgbrjbfolxoxv.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XzQ05GHpdXrlv1JyddvKAQ_hsNCWbPa";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const CLOUD_TABLE = "habit_app_data";
+let currentUser = null;
+let cloudSaveTimer = null;
+let cloudSaveInFlight = false;
+let cloudSaveQueued = false;
+let authReady = false;
 
 const STORAGE_KEY = "my_habit_app_v2";
 const todayISO = () => toLocalDateInput(new Date());
@@ -1181,6 +1227,7 @@ function save(){
     const payload = JSON.stringify(buildSaveState());
     localStorage.setItem(STORAGE_KEY, payload);
     saveErrorShown = false;
+    scheduleCloudSave();
     return true;
   }catch(e){
     console.warn("Save failed", e);
@@ -1195,6 +1242,132 @@ function save(){
     }
     throw e;
   }
+}
+
+function setCloudStatus(text, kind=""){
+  const el = document.getElementById("cloudStatus");
+  if(!el) return;
+  el.textContent = text;
+  el.style.color = kind === "error" ? "var(--bad)" : (kind === "good" ? "var(--good)" : "");
+}
+function setAuthMessage(message, kind=""){
+  const el = document.getElementById("authMessage");
+  if(!el) return;
+  el.textContent = message || "";
+  el.className = "authMessage" + (kind ? " " + kind : "");
+}
+function showAuthenticatedApp(user){
+  currentUser = user || null;
+  const authScreen = document.getElementById("authScreen");
+  const appShell = document.getElementById("appShell");
+  const emailEl = document.getElementById("accountEmail");
+  if(authScreen) authScreen.style.display = user ? "none" : "grid";
+  if(appShell) appShell.classList.toggle("authPending", !user);
+  if(emailEl) emailEl.textContent = user?.email || "Not signed in";
+  if(!user) setCloudStatus("Signed out");
+}
+function scheduleCloudSave(){
+  if(!authReady || !currentUser) return;
+  clearTimeout(cloudSaveTimer);
+  setCloudStatus("Unsaved");
+  cloudSaveTimer = setTimeout(saveStateToCloud, 700);
+}
+async function saveStateToCloud(){
+  if(!currentUser) return;
+  if(cloudSaveInFlight){ cloudSaveQueued = true; return; }
+  cloudSaveInFlight = true;
+  setCloudStatus("Saving...");
+  try{
+    const { error } = await supabaseClient.from(CLOUD_TABLE).upsert({
+      user_id: currentUser.id,
+      data: buildSaveState(),
+      updated_at: new Date().toISOString()
+    }, { onConflict: "user_id" });
+    if(error) throw error;
+    setCloudStatus("Saved", "good");
+  }catch(error){
+    console.error("Cloud save failed", error);
+    setCloudStatus("Save failed", "error");
+    try{ toast("Cloud save failed", error.message || "Your changes remain saved on this browser."); }catch(_e){}
+  }finally{
+    cloudSaveInFlight = false;
+    if(cloudSaveQueued){ cloudSaveQueued = false; saveStateToCloud(); }
+  }
+}
+async function loadStateFromCloud(){
+  if(!currentUser) return;
+  setCloudStatus("Loading...");
+  const { data, error } = await supabaseClient.from(CLOUD_TABLE)
+    .select("data")
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+  if(error) throw error;
+  if(data?.data){
+    state = deepMerge(defaultState(), data.data);
+    migrateState(state);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveState()));
+    setCloudStatus("Loaded", "good");
+  }else{
+    await saveStateToCloud();
+  }
+  renderAll(true);
+}
+async function handleSignedIn(user){
+  showAuthenticatedApp(user);
+  setAuthMessage("");
+  try{
+    await loadStateFromCloud();
+  }catch(error){
+    console.error("Cloud load failed", error);
+    setCloudStatus("Setup needed", "error");
+    toast("Supabase setup needed", error.message || "The cloud data table is not ready yet.");
+    renderAll(true);
+  }
+}
+async function initializeAuth(){
+  const signInBtn = document.getElementById("signInBtn");
+  const signUpBtn = document.getElementById("signUpBtn");
+  const signOutBtn = document.getElementById("signOutBtn");
+  const emailInput = document.getElementById("authEmail");
+  const passwordInput = document.getElementById("authPassword");
+  const credentials = () => ({ email:(emailInput.value||"").trim(), password:passwordInput.value||"" });
+
+  signInBtn.addEventListener("click", async ()=>{
+    const {email,password}=credentials();
+    if(!email || !password) return setAuthMessage("Enter your email and password.", "error");
+    setAuthMessage("Signing in...");
+    const { data, error } = await supabaseClient.auth.signInWithPassword({email,password});
+    if(error) return setAuthMessage(error.message, "error");
+    await handleSignedIn(data.user);
+  });
+  signUpBtn.addEventListener("click", async ()=>{
+    const {email,password}=credentials();
+    if(!email || password.length < 6) return setAuthMessage("Enter an email and a password of at least 6 characters.", "error");
+    setAuthMessage("Creating account...");
+    const { data, error } = await supabaseClient.auth.signUp({email,password});
+    if(error) return setAuthMessage(error.message, "error");
+    if(data.session){ await handleSignedIn(data.user); }
+    else setAuthMessage("Account created. Check your email for the confirmation link, then sign in.", "good");
+  });
+  passwordInput.addEventListener("keydown", e=>{ if(e.key === "Enter") signInBtn.click(); });
+  signOutBtn.addEventListener("click", async ()=>{
+    await saveStateToCloud();
+    await supabaseClient.auth.signOut();
+    currentUser = null;
+    authReady = true;
+    state = defaultState();
+    showAuthenticatedApp(null);
+    setAuthMessage("You have been signed out.");
+  });
+
+  supabaseClient.auth.onAuthStateChange(async (event, session)=>{
+    if(event === "SIGNED_OUT") showAuthenticatedApp(null);
+    if(event === "SIGNED_IN" && session?.user && (!currentUser || currentUser.id !== session.user.id)) await handleSignedIn(session.user);
+  });
+  const { data:{ session } } = await supabaseClient.auth.getSession();
+  authReady = true;
+  if(session?.user) await handleSignedIn(session.user);
+  else showAuthenticatedApp(null);
 }
 
 const toastWrap = document.getElementById("toastWrap");
@@ -3415,9 +3588,13 @@ function escapeHtml(str){
 }
 
 if(!state.ui.viewDate) state.ui.viewDate = todayISO();
-renderAll(true);
+renderAll(false);
 setActiveSeg(habitViewSel.value||'day');
 updateViewDateLabel();
+initializeAuth().catch(error=>{
+  console.error("Authentication initialization failed", error);
+  setAuthMessage(error.message || "Could not connect to Supabase.", "error");
+});
 
 // Safety: force any legacy editTask calls to use the modal
 window.editTask = (id)=>{ try{ return openTaskModal(id); }catch(e){ console.error(e); } };
