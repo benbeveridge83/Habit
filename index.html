@@ -1034,7 +1034,12 @@
 
 <div id="toastWrap"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL = "https://dmpvolgxgbrjbfolxoxv.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XzQ05GHpdXrlv1JyddvKAQ_hsNCWbPa";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
 const STORAGE_KEY = "my_habit_app_v2";
 const todayISO = () => toLocalDateInput(new Date());
 const nowISO = () => new Date().toISOString();
