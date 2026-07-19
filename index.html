@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Habit App (V13)</title>
+  <title>My Habit App (V14)</title>
   <style>
     :root{
       --bg:#f7f8fb;
@@ -503,7 +503,7 @@
 .inheritNote{font-size:11px; color:var(--muted)}
 
 
-/* V13 account and cloud-sync UI */
+/* V14 account and cloud-sync UI */
 .authScreen{
   position:fixed; inset:0; z-index:20000;
   display:grid; place-items:center; padding:20px;
@@ -522,7 +522,7 @@
 #appShell.authPending{visibility:hidden}
 
 
-/* V13 mobile layout, help, cloud migration, and family dashboard */
+/* V14 mobile layout, help, cloud migration, and family dashboard */
 .headerLink{display:inline-flex;align-items:center;text-decoration:none;color:var(--text);border:1px solid var(--line);background:#fff;padding:8px 10px;border-radius:12px;font-size:13px}
 .headerLink:hover{border-color:#cbd5e1}
 .syncTools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -581,15 +581,57 @@
 }
 
 
-/* V13 navigation: only the selected section is visible */
+/* V14 navigation: only the selected section is visible */
 .appSection.hidden{display:none !important}
 .appSection{display:block}
+
+/* V14 permanent navigation */
+.globalMenuPanel{
+  position:fixed;
+  inset:0;
+  z-index:15000;
+  background:rgba(15,23,42,.35);
+  padding:74px 18px 18px;
+}
+.globalMenuInner{
+  max-width:760px;
+  margin:0 auto;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 24px 70px rgba(2,6,23,.24);
+}
+.globalNavGrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.globalNavBtn{
+  min-height:48px;
+  text-align:left;
+  font-weight:650;
+}
+.globalNavBtn.active{
+  border-color:rgba(37,99,235,.45);
+  background:rgba(37,99,235,.08);
+}
+@media(max-width:700px){
+  .globalMenuPanel{padding:92px 10px 10px}
+  .globalNavGrid{grid-template-columns:1fr 1fr}
+  #globalMenuBtn{min-height:38px}
+}
+@media(max-width:420px){
+  .globalNavGrid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
 <div id="authScreen" class="authScreen">
   <div class="authCard">
-    <h1>My Habit App <span class="small">(V13)</span></h1>
+    <h1>My Habit App <span class="small">(V14)</span></h1>
     <div class="sub" style="margin:0">Sign in so your habits are private and available on your other devices.</div>
     <div class="authFields">
       <input id="authEmail" type="email" autocomplete="email" placeholder="Email address" />
@@ -605,18 +647,39 @@
 <div id="appShell" class="authPending">
 
 <header>
-  <h1>My Habit App <span class="small">(V13)</span></h1>
+  <h1>My Habit App <span class="small">(V14)</span></h1>
   <div class="meta">
     <div class="pill">Today <strong id="todayLabel"></strong></div>
     <div class="pill">Level <strong id="levelLabel" class="mono">1</strong> <span class="mono" id="xpLabel">0 XP</span></div>
     <div class="pill">Best Day <strong id="bestDayLabel" class="mono">0 XP</strong></div>
     <div class="pill accountPill">Account <strong id="accountEmail">Not signed in</strong></div>
     <div class="pill">Cloud <strong id="cloudStatus">Waiting</strong></div>
-    <a class="headerLink" href="habit_app_user_manual_v13.html" target="_blank" rel="noopener">? User Manual</a>
+    <button class="primary" id="globalMenuBtn">☰ Menu</button>
+    <a class="headerLink" href="habit_app_user_manual_v14.html" target="_blank" rel="noopener">? User Manual</a>
     <button id="signOutBtn">Sign Out</button>
     <button class="primary" id="resetTodayBtn" title="Resets checkmarks for today (keeps your data)">Reset Today</button>
   </div>
 </header>
+
+<div id="globalMenuPanel" class="globalMenuPanel" style="display:none">
+  <div class="globalMenuInner">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <strong>Navigate</strong>
+      <button id="globalMenuCloseBtn">Close</button>
+    </div>
+    <div class="globalNavGrid">
+      <button class="globalNavBtn" data-tab="habits">Habits</button>
+      <button class="globalNavBtn" data-tab="todo">To-Do</button>
+      <button class="globalNavBtn" data-tab="goals">Goals</button>
+      <button class="globalNavBtn" data-tab="priorities">Priorities</button>
+      <button class="globalNavBtn" data-tab="bad">Bad Habit Destroyer</button>
+      <button class="globalNavBtn" data-tab="journal">Journal</button>
+      <button class="globalNavBtn" data-tab="life">Life Architecture</button>
+      <button class="globalNavBtn" data-tab="family">Family Dashboard</button>
+      <button class="globalNavBtn" data-tab="settings">Settings</button>
+    </div>
+  </div>
+</div>
 
 <main>
   <div class="grid">
@@ -684,7 +747,7 @@
       <button class="navJump" data-tab="journal">Journal</button>
       <button class="navJump" data-tab="life">Life Architecture</button>
       <button class="navJump" data-tab="family">Family Dashboard</button>
-      <a class="headerLink" href="habit_app_user_manual_v13.html" target="_blank" rel="noopener">User Manual</a>
+      <a class="headerLink" href="habit_app_user_manual_v14.html" target="_blank" rel="noopener">User Manual</a>
     </div>
     <div class="row" style="margin-top:10px; justify-content:space-between; flex-wrap:wrap; gap:8px">
       <div class="small">Extra panels</div>
@@ -1031,7 +1094,7 @@
 
     <aside class="card" id="sidePanel" style="display:none">
       <h2>Dashboard</h2>
-      <div class="sub">Snapshot + quick stats (V13).</div>
+      <div class="sub">Snapshot + quick stats (V14).</div>
 
       <div class="card" style="margin-bottom:10px">
         <h2>Today Stats</h2>
@@ -1227,7 +1290,7 @@ function defaultLifeTree(){
 }
 function defaultState(){
   return {
-    version: 5,
+    version: 6,
     settings: { levelCurve: 1.35, perfectBonus: 25, maxPriorityBonus: 10, priorityCurve: 1.2 },
     ui: { habitView: "day", viewDate: toLocalDateInput(new Date()), rowPctWindow: "month", showAllHabits: false },
     player: { totalXP: 0, bestDayXP: 0, lastDayXPDate: "", dailyXP: {} },
@@ -1628,6 +1691,9 @@ const rowPctWindowSel = document.getElementById("rowPctWindow");
 // View bar + menu
 const showAllHabitsBtn = document.getElementById("showAllHabitsBtn");
 const menuBtn = document.getElementById("menuBtn");
+const globalMenuBtn = document.getElementById("globalMenuBtn");
+const globalMenuPanel = document.getElementById("globalMenuPanel");
+const globalMenuCloseBtn = document.getElementById("globalMenuCloseBtn");
 const menuPanel = document.getElementById("menuPanel");
 const tabsEl = document.getElementById("tabs");
 const sidePanel = document.getElementById("sidePanel");
@@ -1696,16 +1762,18 @@ function showTab(name){
   state.ui = state.ui || {};
   state.ui.activeTab = tabName;
   save();
+
   if(menuPanel) menuPanel.style.display="none";
   if(tabsEl) tabsEl.style.display="none";
+  if(globalMenuPanel) globalMenuPanel.style.display="none";
+
   if(tabName === "priorities") renderPriorities();
   if(tabName === "life") renderLife();
   if(tabName === "todo") renderTodo();
   if(tabName === "family") loadFamilyDashboard();
-  const target=document.getElementById("tab-"+tabName);
-  if(target) window.scrollTo({top:Math.max(0,target.getBoundingClientRect().top+window.scrollY-80),behavior:"smooth"});
-}
 
+  window.scrollTo({top:0,behavior:"smooth"});
+}
 function updateViewDateLabel(){
   if(!viewDateLabel) return;
   const d = parseDate(viewDateInput.value);
@@ -1720,6 +1788,27 @@ if(menuBtn && menuPanel){
     if(tabsEl) tabsEl.style.display = open ? "none" : "flex";
   });
 }
+
+
+if(globalMenuBtn && globalMenuPanel){
+  globalMenuBtn.addEventListener("click", ()=>{
+    globalMenuPanel.style.display = globalMenuPanel.style.display === "none" ? "block" : "none";
+  });
+}
+if(globalMenuCloseBtn && globalMenuPanel){
+  globalMenuCloseBtn.addEventListener("click", ()=>{ globalMenuPanel.style.display = "none"; });
+}
+if(globalMenuPanel){
+  globalMenuPanel.addEventListener("click", e=>{
+    if(e.target === globalMenuPanel) globalMenuPanel.style.display = "none";
+  });
+}
+document.querySelectorAll(".globalNavBtn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const tab = btn.dataset.tab;
+    if(tab) showTab(tab);
+  });
+});
 
 if(toggleStatsBtn && sidePanel){
   toggleStatsBtn.addEventListener("click", ()=>{
@@ -3376,7 +3465,7 @@ async function loadFamilyDashboard(){
     startFamilyRealtime();
   }catch(e){
     console.error(e);
-    familyAccessMessage.textContent="Family access is not configured in Supabase yet. Run the included V13 SQL setup file, then refresh.";
+    familyAccessMessage.textContent="Family access is not configured in Supabase yet. Run the included V14 SQL setup file, then refresh.";
     familyControls.style.display="none"; familyDashboardBody.style.display="none";
   }
 }
@@ -3492,7 +3581,7 @@ if(catModalCloseBtn){
 if(catModalBackdrop){
   catModalBackdrop.addEventListener("click", (e)=>{ if(e.target === catModalBackdrop) closeCategoryModal(); });
 }
-document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closeCategoryModal(); });
+document.addEventListener("keydown", (e)=>{ if(e.key === "Escape"){ closeCategoryModal(); if(globalMenuPanel) globalMenuPanel.style.display="none"; } });
 if(openQuickAddBtn){
   openQuickAddBtn.addEventListener("click", ()=> openTaskModal(null));
 }
