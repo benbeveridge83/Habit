@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Habit App (V12)</title>
+  <title>My Habit App (V13)</title>
   <style>
     :root{
       --bg:#f7f8fb;
@@ -503,7 +503,7 @@
 .inheritNote{font-size:11px; color:var(--muted)}
 
 
-/* V12 account and cloud-sync UI */
+/* V13 account and cloud-sync UI */
 .authScreen{
   position:fixed; inset:0; z-index:20000;
   display:grid; place-items:center; padding:20px;
@@ -522,7 +522,7 @@
 #appShell.authPending{visibility:hidden}
 
 
-/* V12 mobile layout, help, cloud migration, and family dashboard */
+/* V13 mobile layout, help, cloud migration, and family dashboard */
 .headerLink{display:inline-flex;align-items:center;text-decoration:none;color:var(--text);border:1px solid var(--line);background:#fff;padding:8px 10px;border-radius:12px;font-size:13px}
 .headerLink:hover{border-color:#cbd5e1}
 .syncTools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -580,12 +580,16 @@
   .accountPill{max-width:100%}
 }
 
+
+/* V13 navigation: only the selected section is visible */
+.appSection.hidden{display:none !important}
+.appSection{display:block}
 </style>
 </head>
 <body>
 <div id="authScreen" class="authScreen">
   <div class="authCard">
-    <h1>My Habit App <span class="small">(V12)</span></h1>
+    <h1>My Habit App <span class="small">(V13)</span></h1>
     <div class="sub" style="margin:0">Sign in so your habits are private and available on your other devices.</div>
     <div class="authFields">
       <input id="authEmail" type="email" autocomplete="email" placeholder="Email address" />
@@ -601,14 +605,14 @@
 <div id="appShell" class="authPending">
 
 <header>
-  <h1>My Habit App <span class="small">(V12)</span></h1>
+  <h1>My Habit App <span class="small">(V13)</span></h1>
   <div class="meta">
     <div class="pill">Today <strong id="todayLabel"></strong></div>
     <div class="pill">Level <strong id="levelLabel" class="mono">1</strong> <span class="mono" id="xpLabel">0 XP</span></div>
     <div class="pill">Best Day <strong id="bestDayLabel" class="mono">0 XP</strong></div>
     <div class="pill accountPill">Account <strong id="accountEmail">Not signed in</strong></div>
     <div class="pill">Cloud <strong id="cloudStatus">Waiting</strong></div>
-    <a class="headerLink" href="habit_app_user_manual_v12.html" target="_blank" rel="noopener">? User Manual</a>
+    <a class="headerLink" href="habit_app_user_manual_v13.html" target="_blank" rel="noopener">? User Manual</a>
     <button id="signOutBtn">Sign Out</button>
     <button class="primary" id="resetTodayBtn" title="Resets checkmarks for today (keeps your data)">Reset Today</button>
   </div>
@@ -629,7 +633,7 @@
         <div class="tab" data-tab="settings">Settings</div>
       </div>
 
-      <div id="tab-habits">
+      <div id="tab-habits" class="appSection">
         
         
 
@@ -680,7 +684,7 @@
       <button class="navJump" data-tab="journal">Journal</button>
       <button class="navJump" data-tab="life">Life Architecture</button>
       <button class="navJump" data-tab="family">Family Dashboard</button>
-      <a class="headerLink" href="habit_app_user_manual_v12.html" target="_blank" rel="noopener">User Manual</a>
+      <a class="headerLink" href="habit_app_user_manual_v13.html" target="_blank" rel="noopener">User Manual</a>
     </div>
     <div class="row" style="margin-top:10px; justify-content:space-between; flex-wrap:wrap; gap:8px">
       <div class="small">Extra panels</div>
@@ -956,7 +960,7 @@
             <h2>Family Dashboard</h2>
             <div class="sub">View another account's habit completion, streaks, and progress. Access is limited to the administrator account.</div>
           </div>
-          <button class="primary" id="refreshFamilyBtn">Refresh family data</button>
+          <div class="row"><span class="small" id="familyLastUpdated"></span><button class="primary" id="refreshFamilyBtn">Refresh family data</button></div>
         </div>
         <div id="familyAccessMessage" class="cloudNotice">Loading access…</div>
         <div id="familyControls" class="row" style="margin-top:10px;display:none">
@@ -1027,7 +1031,7 @@
 
     <aside class="card" id="sidePanel" style="display:none">
       <h2>Dashboard</h2>
-      <div class="sub">Snapshot + quick stats (V12).</div>
+      <div class="sub">Snapshot + quick stats (V13).</div>
 
       <div class="card" style="margin-bottom:10px">
         <h2>Today Stats</h2>
@@ -1223,7 +1227,7 @@ function defaultLifeTree(){
 }
 function defaultState(){
   return {
-    version: 4,
+    version: 5,
     settings: { levelCurve: 1.35, perfectBonus: 25, maxPriorityBonus: 10, priorityCurve: 1.2 },
     ui: { habitView: "day", viewDate: toLocalDateInput(new Date()), rowPctWindow: "month", showAllHabits: false },
     player: { totalXP: 0, bestDayXP: 0, lastDayXPDate: "", dailyXP: {} },
@@ -1530,6 +1534,7 @@ async function initializeAuth(){
   passwordInput.addEventListener("keydown", e=>{ if(e.key === "Enter") signInBtn.click(); });
   signOutBtn.addEventListener("click", async ()=>{
     await saveStateToCloud();
+    stopFamilyRealtime();
     await supabaseClient.auth.signOut();
     currentUser = null;
     authReady = true;
@@ -1587,18 +1592,7 @@ function toast(title, msg){
 }
 
 const tabButtons = document.querySelectorAll(".tab");
-tabButtons.forEach(btn => btn.addEventListener("click", () => {
-  tabButtons.forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  const name = btn.dataset.tab;
-  ["habits","todo","goals","priorities","bad","journal","life","family","settings"].forEach(t => {
-    document.getElementById("tab-"+t).classList.toggle("hidden", t !== name);
-  });
-  if(name === "priorities") renderPriorities();
-  if(name === "life") renderLife();
-  if(name === "todo") renderTodo();
-  if(name === "family") loadFamilyDashboard();
-}));
+tabButtons.forEach(btn => btn.addEventListener("click", () => showTab(btn.dataset.tab)));
 
 const todayLabel = document.getElementById("todayLabel");
 const weekLabel = document.getElementById("weekLabel");
@@ -1691,23 +1685,25 @@ function fmtLong(d){
 
 function showTab(name){
   const tabName = String(name||"habits");
-  // Toggle tab pills
-  document.querySelectorAll("[data-tab]").forEach(el=>{
-    if(el.dataset && el.dataset.tab === tabName) el.classList.add("active");
-    else el.classList.remove("active");
+  const names = ["habits","todo","goals","priorities","bad","journal","life","family","settings"];
+  names.forEach(n=>{
+    const sec=document.getElementById("tab-"+n);
+    if(sec) sec.classList.toggle("hidden", n!==tabName);
   });
-  // Toggle tab sections
-  document.querySelectorAll(".tabSection").forEach(sec=>sec.style.display="none");
-  const target = document.getElementById("tab-"+tabName);
-  if(target) target.style.display = "block";
-  // Persist / close menu
-  try{
-    state.ui = state.ui || {};
-    state.ui.activeTab = tabName;
-    save();
-  }catch(e){}
-  if(typeof closeMenu === "function") closeMenu();
-  else if(typeof menuPanel !== "undefined" && menuPanel) menuPanel.classList.remove("open");
+  document.querySelectorAll("[data-tab]").forEach(el=>{
+    el.classList.toggle("active", !!(el.dataset && el.dataset.tab===tabName));
+  });
+  state.ui = state.ui || {};
+  state.ui.activeTab = tabName;
+  save();
+  if(menuPanel) menuPanel.style.display="none";
+  if(tabsEl) tabsEl.style.display="none";
+  if(tabName === "priorities") renderPriorities();
+  if(tabName === "life") renderLife();
+  if(tabName === "todo") renderTodo();
+  if(tabName === "family") loadFamilyDashboard();
+  const target=document.getElementById("tab-"+tabName);
+  if(target) window.scrollTo({top:Math.max(0,target.getBoundingClientRect().top+window.scrollY-80),behavior:"smooth"});
 }
 
 function updateViewDateLabel(){
@@ -1835,6 +1831,8 @@ const familyHabitsKpi = document.getElementById("familyHabitsKpi");
 const familyXpKpi = document.getElementById("familyXpKpi");
 const familyCompletionChart = document.getElementById("familyCompletionChart");
 const familyHabitHistory = document.getElementById("familyHabitHistory");
+const familyLastUpdated = document.getElementById("familyLastUpdated");
+let familyRealtimeChannel = null;
 
 function weekStartISO(date = new Date()){
   const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -3365,17 +3363,41 @@ async function loadFamilyDashboard(){
     if(pe)throw pe;if(de)throw de;
     const pmap=new Map((profiles||[]).map(p=>[p.user_id,p]));
     familyRows=(rows||[]).filter(r=>r.user_id!==currentUser.id).map(r=>({...r,...(pmap.get(r.user_id)||{})}));
+    if(familyLastUpdated){
+      const newest=familyRows.map(r=>r.updated_at).filter(Boolean).sort().pop();
+      familyLastUpdated.textContent=newest?`Latest cloud update: ${new Date(newest).toLocaleString()}`:"";
+    }
     familyUserSelect.innerHTML="";
     familyRows.forEach((r,i)=>{const o=document.createElement("option");o.value=r.user_id;o.textContent=r.display_name||r.email||`User ${i+1}`;familyUserSelect.appendChild(o)});
     familyAccessMessage.textContent=familyRows.length?`${familyRows.length} other account(s) available.`:"No other accounts have saved cloud data yet.";
     familyControls.style.display=familyRows.length?"flex":"none";
     familyDashboardBody.style.display=familyRows.length?"block":"none";
     if(familyRows.length)renderSelectedFamilyUser();
+    startFamilyRealtime();
   }catch(e){
     console.error(e);
-    familyAccessMessage.textContent="Family access is not configured in Supabase yet. Run the included V12 SQL setup file, then refresh.";
+    familyAccessMessage.textContent="Family access is not configured in Supabase yet. Run the included V13 SQL setup file, then refresh.";
     familyControls.style.display="none"; familyDashboardBody.style.display="none";
   }
+}
+
+function startFamilyRealtime(){
+  if(!currentUser || !ADMIN_EMAILS.includes((currentUser.email||"").toLowerCase())) return;
+  if(familyRealtimeChannel) return;
+  familyRealtimeChannel = supabaseClient.channel("habit-family-live")
+    .on("postgres_changes", {event:"*", schema:"public", table:CLOUD_TABLE}, payload=>{
+      if(!payload?.new?.user_id || payload.new.user_id===currentUser.id) return;
+      const idx=familyRows.findIndex(r=>r.user_id===payload.new.user_id);
+      if(idx>=0) familyRows[idx]={...familyRows[idx],...payload.new};
+      else familyRows.push(payload.new);
+      if(familyLastUpdated) familyLastUpdated.textContent=`Live update: ${new Date().toLocaleString()}`;
+      if(familyUserSelect && familyUserSelect.value===payload.new.user_id) renderSelectedFamilyUser();
+      toast("Family data updated","A child account saved new habit data.");
+    })
+    .subscribe();
+}
+function stopFamilyRealtime(){
+  if(familyRealtimeChannel){ supabaseClient.removeChannel(familyRealtimeChannel); familyRealtimeChannel=null; }
 }
 
 function renderSettings(){
@@ -3903,12 +3925,18 @@ function escapeHtml(str){
 
 if(!state.ui.viewDate) state.ui.viewDate = todayISO();
 renderAll(false);
+showTab(state.ui?.activeTab || "habits");
 setActiveSeg(habitViewSel.value||'day');
 updateViewDateLabel();
 initializeAuth().catch(error=>{
   console.error("Authentication initialization failed", error);
   setAuthMessage(error.message || "Could not connect to Supabase.", "error");
 });
+
+
+window.addEventListener("pagehide", ()=>{ if(currentUser) saveStateToCloud(); });
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden" && currentUser) saveStateToCloud(); });
+setInterval(()=>{ if(currentUser && cloudSaveTimer) saveStateToCloud(); }, 15000);
 
 // Safety: force any legacy editTask calls to use the modal
 window.editTask = (id)=>{ try{ return openTaskModal(id); }catch(e){ console.error(e); } };
