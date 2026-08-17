@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Habit App (V15)</title>
+  <title>My Habit App (V19 Journal)</title>
   <style>
     :root{
       --bg:#f7f8fb;
@@ -191,6 +191,19 @@
     }
     .dragItem[draggable="true"]{cursor:grab}
     .dragItem.dragging{opacity:.55}
+
+    .journalLayout{display:grid;grid-template-columns:minmax(230px,.65fr) minmax(360px,1.35fr) minmax(260px,.75fr);gap:12px;align-items:start}
+    @media(max-width:1050px){.journalLayout{grid-template-columns:1fr}.journalPanel{width:100%!important}}
+    .journalPanel{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(241,245,249,.45)}
+    .journalOutlineRow{display:flex;gap:6px;align-items:center;padding:6px;border:1px solid transparent;border-radius:10px;cursor:pointer}
+    .journalOutlineRow:hover{background:#fff;border-color:var(--line)}
+    .journalOutlineRow.selected{background:rgba(37,99,235,.09);border-color:rgba(37,99,235,.35)}
+    .journalOutlineRow.recordTarget{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.35)}
+    .journalSegment{border-left:4px solid rgba(37,99,235,.35);padding:8px 10px;margin:8px 0;background:#fff;border-radius:0 10px 10px 0}
+    .journalSegment h4{margin:0 0 5px;font-size:13px}.journalSegment p{margin:0;white-space:pre-wrap;font-size:13px}
+    .voiceBtn.listening{background:#fee2e2;border-color:#ef4444;color:#991b1b;animation:pulseVoice 1.4s infinite}
+    @keyframes pulseVoice{50%{box-shadow:0 0 0 5px rgba(239,68,68,.12)}}
+    .audioPlayer{width:100%;margin-top:8px}
     .dragHandle{
       width:26px; text-align:center; color:var(--muted);
       border:1px solid var(--line); border-radius:10px; padding:4px 6px;
@@ -650,22 +663,47 @@
 .bookProgressText{font-size:12px;color:var(--muted)}
 .bookHabitInput{width:110px!important}
 .booksGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.exerciseGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.exerciseCard{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+.exerciseLogInputs{display:grid;grid-template-columns:repeat(2,minmax(90px,140px));gap:10px;margin-top:10px}
+.familySection{margin-top:18px}
+.familyDataTable{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+.familyDataTable table{border-collapse:collapse;width:100%;min-width:650px}
+.familyDataTable th,.familyDataTable td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;white-space:nowrap}
+.familyDataTable th{background:#f8fafc;color:var(--muted);font-size:12px}
 .gbTableWrap{overflow:auto;border:1px solid var(--line);border-radius:14px;max-height:60vh}
 .gbTable{border-collapse:separate;border-spacing:0;width:100%;font-size:12px}
 .gbTable th,.gbTable td{border-bottom:1px solid var(--line);padding:8px;text-align:left}
 .gbTable thead th{position:sticky;top:0;background:#f8fafc;z-index:2}
 .gbCurrent{background:rgba(37,99,235,.07)}
+.gbMetrics{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:9px;margin:12px 0}
+.gbMetric{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.gbMetric strong{display:block;font-size:20px;margin-top:3px}
+.gbProgressWrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff;max-height:66vh}
+.gbProgressTable{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:12px}
+.gbProgressTable th,.gbProgressTable td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap;background:#fff}
+.gbProgressTable thead th{position:sticky;top:0;z-index:5;background:#f8fafc}
+.gbProgressTable .gbMeta{position:sticky;z-index:3;text-align:left}
+.gbProgressTable thead .gbMeta{z-index:7;background:#f8fafc}
+.gbProgressTable .gbVol{left:0;min-width:54px}
+.gbProgressTable .gbAuthor{left:54px;min-width:115px}
+.gbProgressTable .gbTitle{left:169px;min-width:260px;max-width:260px;white-space:normal}
+.gbProgressTable .gbPages{left:429px;min-width:100px}
+.gbPageInput{width:62px!important;min-width:62px;padding:5px!important;text-align:center}
+.gbCompleteRow .gbMeta{background:#f0fdf4}
+.gbTodayHead{background:#dbeafe!important;color:#1d4ed8}
+@media(max-width:900px){.gbMetrics{grid-template-columns:repeat(2,minmax(120px,1fr))}}
 .sharedItem{border:1px solid var(--line);border-radius:10px;padding:9px;margin:7px 0;background:#fff}
 .modal.wide{width:min(1000px,100%)}
 #bookChartCanvas{width:100%;height:300px;display:block}
-@media(max-width:700px){.booksGrid{grid-template-columns:1fr}.goalWorkTable th:first-child,.goalWorkTable td:first-child{min-width:190px}.bookHabitRow{flex-direction:column;align-items:stretch}}
+@media(max-width:700px){.booksGrid,.exerciseGrid{grid-template-columns:1fr}.goalWorkTable th:first-child,.goalWorkTable td:first-child{min-width:190px}.bookHabitRow{flex-direction:column;align-items:stretch}}
 
 </style>
 </head>
 <body>
 <div id="authScreen" class="authScreen">
   <div class="authCard">
-    <h1>My Habit App <span class="small">(V15)</span></h1>
+    <h1>My Habit App <span class="small">(V17)</span></h1>
     <div class="sub" style="margin:0">Sign in so your habits are private and available on your other devices.</div>
     <div class="authFields">
       <input id="authEmail" type="email" autocomplete="email" placeholder="Email address" />
@@ -681,7 +719,7 @@
 <div id="appShell" class="authPending">
 
 <header>
-  <h1>My Habit App <span class="small">(V15)</span></h1>
+  <h1>My Habit App <span class="small">(V18)</span></h1>
   <div class="meta">
     <div class="pill">Today <strong id="todayLabel"></strong></div>
     <div class="pill">Level <strong id="levelLabel" class="mono">1</strong> <span class="mono" id="xpLabel">0 XP</span></div>
@@ -711,6 +749,8 @@
       <button class="globalNavBtn" data-tab="journal">Journal</button>
       <button class="globalNavBtn" data-tab="life">Life Architecture</button>
       <button class="globalNavBtn" data-tab="books">Books</button>
+      <button class="globalNavBtn" data-tab="exercise">Exercise</button>
+      <button class="globalNavBtn" data-tab="meds">Meds</button>
       <button class="globalNavBtn" data-tab="greatbooks">Great Books</button>
       <button class="globalNavBtn" data-tab="family">Family Dashboard</button>
       <button class="globalNavBtn" data-tab="settings">Settings</button>
@@ -731,6 +771,8 @@
         <div class="tab" data-tab="journal">Journal</div>
         <div class="tab" data-tab="life">Life Architecture</div>
         <div class="tab" data-tab="books">Books</div>
+        <div class="tab" data-tab="exercise">Exercise</div>
+        <div class="tab" data-tab="meds">Meds</div>
         <div class="tab" data-tab="greatbooks">Great Books</div>
         <div class="tab" data-tab="family">Family Dashboard</div>
         <div class="tab" data-tab="settings">Settings</div>
@@ -788,6 +830,8 @@
       <button class="navJump" data-tab="journal">Journal</button>
       <button class="navJump" data-tab="life">Life Architecture</button>
       <button class="navJump" data-tab="books">Books</button>
+      <button class="navJump" data-tab="exercise">Exercise</button>
+      <button class="navJump" data-tab="meds">Meds</button>
       <button class="navJump" data-tab="greatbooks">Great Books</button>
       <button class="navJump" data-tab="family">Family Dashboard</button>
       <a class="headerLink" href="habit_app_user_manual_v15.html" target="_blank" rel="noopener">User Manual</a>
@@ -986,25 +1030,27 @@
       </div>
 
       <div id="tab-journal" class="hidden">
-        <div class="row" style="justify-content:space-between; align-items:flex-start;">
-          <div style="flex:1">
-            <h2>New Entry</h2>
-            <div class="row">
-              <div style="flex:1"><input id="journalTitle" placeholder="Title (e.g., Weekly Review - Feb 27)" /></div>
-              <button class="primary" id="saveEntryBtn" style="width:140px">Save</button>
-              <button id="newEntryBtn" style="width:140px">Clear</button>
-            </div>
-            <div class="row" style="margin:8px 0"><button id="journalVoiceBtn" class="primary voiceBtn">🎤 Start voice to text</button><span id="journalVoiceStatus" class="small">Voice recognition uses your browser microphone.</span></div>
-            <textarea id="journalBody" placeholder="Write here..."></textarea>
-            <div class="row" style="justify-content:space-between">
-              <div class="small">Click an entry on the right to load/edit it.</div>
-              <button class="danger" id="deleteEntryBtn">Delete Loaded Entry</button>
-            </div>
+        <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2>Journal</h2><div class="sub">Type freely, or record audio while routing your words into different outline headings.</div></div><button id="newEntryBtn">+ New Entry</button></div>
+        <div class="journalLayout">
+          <div class="journalPanel">
+            <h2>Journal Structure</h2>
+            <div class="sub">Create your usual parent / child outline. While recording, tap a heading to send the next words there.</div>
+            <div class="row"><button class="primary" id="journalAddRootBtn">+ Parent</button><button id="journalAddChildBtn">+ Child</button><button id="journalAddSiblingBtn">+ Sibling</button></div>
+            <div class="row" style="margin-top:6px"><button id="journalIndentBtn">Indent</button><button id="journalOutdentBtn">Outdent</button><button id="journalMoveUpBtn">↑</button><button id="journalMoveDownBtn">↓</button></div>
+            <div class="row" style="margin-top:6px"><button id="journalRenameHeadingBtn">Rename</button><button class="danger" id="journalDeleteHeadingBtn">Delete</button></div>
+            <div id="journalOutlineTree" style="margin-top:10px"></div>
           </div>
-
-          <div style="width:360px; max-width:100%">
-            <h2>Entries</h2>
-            <input id="journalSearch" placeholder="Search titles / text..." />
+          <div class="journalPanel">
+            <div class="row"><div style="flex:1"><label class="small">Entry title<input id="journalTitle" placeholder="Today, Weekly Review, Family..." /></label></div><div style="width:170px"><label class="small">Date<input id="journalDate" type="date" /></label></div></div>
+            <div class="row" style="margin:10px 0"><button id="journalVoiceBtn" class="primary voiceBtn">🎤 Record + transcribe</button><button id="journalPauseBtn" disabled>Pause</button><span id="journalVoiceStatus" class="small">Audio and text will both be saved.</span></div>
+            <div id="journalActiveHeading" class="cloudNotice">Choose a heading on the left before or during recording.</div>
+            <label class="small">Typed journal text<textarea id="journalBody" placeholder="Type here..."></textarea></label>
+            <div id="journalSegments"></div>
+            <audio id="journalAudioPlayer" class="audioPlayer" controls style="display:none"></audio>
+            <div class="row" style="justify-content:space-between;margin-top:10px"><button class="primary" id="saveEntryBtn">Save Entry</button><button class="danger" id="deleteEntryBtn">Delete Loaded Entry</button></div>
+          </div>
+          <div class="journalPanel">
+            <h2>Entries</h2><input id="journalSearch" placeholder="Search date, title, text, headings..." />
             <div id="entriesList" class="list" style="margin-top:10px"></div>
           </div>
         </div>
@@ -1069,10 +1115,34 @@
         <div class="booksGrid"><div class="card"><h2>Currently Reading / Want to Read</h2><div id="booksActiveList"></div></div><div class="card"><h2>Finished</h2><div id="booksFinishedList"></div></div></div>
       </div>
 
+      <div id="tab-exercise" class="hidden">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div><h2>Exercise</h2><div class="sub">Add exercises and record sets and reps for the selected day.</div></div>
+          <button class="primary" id="addExerciseBtn">+ Add Exercise</button>
+        </div>
+        <div class="cloudNotice">Recording for <strong id="exerciseDateLabel"></strong>. Change the date on the Habits tab to enter or review another day.</div>
+        <div id="exerciseList" class="exerciseGrid" style="margin-top:12px"></div>
+      </div>
+
+      <div id="tab-meds" class="hidden">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div><h2>Meds</h2><div class="sub">Quickly record every dose and see your total for each day.</div></div>
+          <button class="primary" id="addMedBtn">+ Add Medication</button>
+        </div>
+        <div class="cloudNotice">The last strength used for each medication is automatically filled in for the next dose. Always follow your prescriber's directions.</div>
+        <div id="medsList" class="exerciseGrid" style="margin-top:12px"></div>
+        <div class="familySection">
+          <div class="row" style="justify-content:space-between;align-items:center"><div><h2 style="margin-bottom:4px">Daily medication history</h2><div class="sub">Totals and individual doses for recent days.</div></div><select id="medHistoryDays" style="width:150px"><option value="7">Last 7 days</option><option value="14" selected>Last 14 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></div>
+          <div id="medsHistory" class="familyDataTable" style="margin-top:10px"></div>
+        </div>
+      </div>
+
       <div id="tab-greatbooks" class="hidden">
-        <div class="row" style="justify-content:space-between"><div><h2>Gateway to the Great Books</h2><div class="sub">Part II reading list for ninth and tenth grades, imported from your spreadsheet.</div></div><div class="row"><input id="greatBooksSearch" placeholder="Search author or title" style="width:260px"><button id="refreshSharedGreatBooksBtn">Refresh shared pages/text</button></div></div>
-        <div class="cloudNotice">Choose any selection to add it to your reading habits. When you finish it, the next selection becomes current unless you choose a different one.</div>
-        <div class="gbTableWrap" style="margin-top:10px"><table class="gbTable"><thead><tr><th>Volume</th><th>Author</th><th>Selection</th><th>Pages</th><th>Actions</th></tr></thead><tbody id="greatBooksRows"></tbody></table></div>
+        <div class="row" style="justify-content:space-between"><div><h2>Gateway to the Great Books</h2><div class="sub">All readings in one progress table. Enter the last page reached in a date cell.</div></div><div class="row"><input id="greatBooksSearch" placeholder="Search author or title" style="width:240px"><select id="greatBooksDays"><option value="7">7 days</option><option value="14" selected>14 days</option><option value="30">30 days</option><option value="60">60 days</option></select><button id="refreshSharedGreatBooksBtn">Refresh shared pages/text</button></div></div>
+        <div class="gbMetrics"><div class="gbMetric"><span class="small">All readings</span><strong id="gbReadingCount">0</strong></div><div class="gbMetric"><span class="small">Total pages</span><strong id="gbTotalPages">0</strong></div><div class="gbMetric"><span class="small">Pages read</span><strong id="gbPagesRead">0</strong></div><div class="gbMetric"><span class="small">Pages left</span><strong id="gbPagesLeft">0</strong></div><div class="gbMetric"><span class="small">Complete</span><strong id="gbPercentDone">0%</strong></div><div class="gbMetric"><span class="small">Current pace</span><strong id="gbCurrentPace">0/day</strong></div><div class="gbMetric"><span class="small">Est. days left</span><strong id="gbDaysLeft">—</strong><span class="small" id="gbFinishDate"></span></div></div>
+        <div class="cloudNotice">The left columns stay frozen while you scroll through dates. A reading turns complete when its last page is reached. Pace uses the most recent 14 calendar days.</div>
+        <div id="greatBooksProgressGrid" class="gbProgressWrap" style="margin-top:10px"></div>
+        <div id="greatBooksRows" style="display:none"></div>
         <div class="sep"></div><div id="greatBookSharedPanel" class="card"><h2>Shared text and page images</h2><div class="small">Select a reading above. Text and uploaded page images are shared with all signed-in users.</div><div id="greatBookSelectedLabel" style="font-weight:700;margin:8px 0"></div>
           <textarea id="greatBookTextInput" placeholder="Paste text or notes for the selected reading..."></textarea>
           <div class="row"><button class="primary" id="saveGreatBookTextBtn">Save Shared Text</button><input id="greatBookImageInput" type="file" accept="image/*,.pdf" multiple style="max-width:360px"><button id="uploadGreatBookImagesBtn">Upload Page Images/PDF</button></div>
@@ -1105,6 +1175,22 @@
           <h2>Habit history</h2>
           <div class="sub">Green = completed, amber = partial numeric progress, dash = not completed or unavailable.</div>
           <div id="familyHabitHistory" class="familyHabitGrid"></div>
+          <div class="familySection">
+            <h2>Books & reading</h2>
+            <div class="sub">Current titles, page progress, and the latest reading entry in the selected range.</div>
+            <div id="familyBooksTable" class="familyDataTable"></div>
+          </div>
+          <div class="familySection">
+            <h2>Great Books reading table</h2>
+            <div class="sub">All assigned selections, overall progress, pace, and the latest 14 days of page entries.</div>
+            <div id="familyGreatBooksMetrics" class="gbMetrics"></div>
+            <div id="familyGreatBooksTable" class="gbProgressWrap"></div>
+          </div>
+          <div class="familySection">
+            <h2>Exercise history</h2>
+            <div class="sub">All recorded sets and reps within the selected time range.</div>
+            <div id="familyExerciseTable" class="familyDataTable"></div>
+          </div>
         </div>
       </div>
 
@@ -1359,12 +1445,14 @@ function defaultLifeTree(){
 }
 function defaultState(){
   return {
-    version: 7,
+    version: 9,
     settings: { levelCurve: 1.35, perfectBonus: 25, maxPriorityBonus: 10, priorityCurve: 1.2 },
     ui: { habitView: "day", viewDate: toLocalDateInput(new Date()), rowPctWindow: "month", showAllHabits: false },
     player: { totalXP: 0, bestDayXP: 0, lastDayXPDate: "", dailyXP: {} },
     goals: { items: [], selectedId: null, workStart: null },
-    books: { items: [], greatBooks: { currentId:null, completedIds:[], selectedId:null } },
+    books: { items: [], greatBooks: { currentId:null, completedIds:[], selectedId:null, pageByDate:{} } },
+    exercise: { items: [] },
+    meds: { items: [] },
     habits: {
       groups: [{ id: cryptoId(), name: "Morning Routine" },{ id: cryptoId(), name: "Evening Routine" }],
       categories: [{ id: cryptoId(), name: "Health", color:"#22c55e" }, { id: cryptoId(), name: "Work", color:"#2563eb" }, { id: cryptoId(), name: "Home", color:"#f59e0b" }],
@@ -1376,7 +1464,7 @@ function defaultState(){
     },
     todo: { categories: [{id: cryptoId(), name:"Errands", parentId:null, color:"#7c3aed"}, {id: cryptoId(), name:"Calls", parentId:null, color:"#2563eb"}, {id: cryptoId(), name:"Admin", parentId:null, color:"#f59e0b"}], items: [], selectedLifeId: "root", showCompleted: false, lastCategoryIds: [], filterCategoryIds: [], filterNoCategoryOnly: false },
     bad: { relapsePenalty: 50, clean: { current: 0, longest: 0, lastCleanDate: "" }, urges: [], targets: [] },
-    journal: { entries: [], loadedId: null },
+    journal: { entries: [], loadedId: null, headings: [], selectedHeadingId: null },
     life: { tree: defaultLifeTree() }
   };
 }
@@ -1449,11 +1537,23 @@ function migrateState(s){
   if(!Array.isArray(s.goals.items)) s.goals.items=[];
   s.goals.items.forEach((g,i)=>{ if(!('parentId' in g)) g.parentId=null; if(!('order' in g)) g.order=i; if(!('collapsed' in g)) g.collapsed=false; if(!g.workByDate) g.workByDate={}; if(g.completed && !g.completedAt) g.completedAt=g.updatedAt||g.createdAt||nowISO(); });
   if(!('selectedId' in s.goals)) s.goals.selectedId=null;
-  if(!s.books) s.books={items:[],greatBooks:{currentId:null,completedIds:[],selectedId:null}};
+  if(!s.books) s.books={items:[],greatBooks:{currentId:null,completedIds:[],selectedId:null,pageByDate:{}}};
   if(!Array.isArray(s.books.items)) s.books.items=[];
-  if(!s.books.greatBooks) s.books.greatBooks={currentId:null,completedIds:[],selectedId:null};
+  if(!s.books.greatBooks) s.books.greatBooks={currentId:null,completedIds:[],selectedId:null,pageByDate:{}};
   if(!Array.isArray(s.books.greatBooks.completedIds)) s.books.greatBooks.completedIds=[];
+  if(!s.books.greatBooks.pageByDate || typeof s.books.greatBooks.pageByDate!=="object") s.books.greatBooks.pageByDate={};
   s.books.items.forEach(b=>{ if(!b.history)b.history={}; if(!b.status)b.status='want'; if(!('currentPage' in b))b.currentPage=0; });
+  if(!s.exercise) s.exercise={items:[]};
+  if(!Array.isArray(s.exercise.items)) s.exercise.items=[];
+  s.exercise.items.forEach(x=>{ if(!x.history||typeof x.history!=="object")x.history={}; if(!x.name)x.name="Exercise"; });
+  if(!s.meds) s.meds={items:[]};
+  if(!Array.isArray(s.meds.items)) s.meds.items=[];
+  s.meds.items.forEach(m=>{ if(!m.name)m.name="Medication"; if(!m.unit)m.unit="mg"; if(!Array.isArray(m.doses))m.doses=[]; if(!Number.isFinite(Number(m.lastStrength)))m.lastStrength=0; });
+  if(!s.journal) s.journal={entries:[],loadedId:null,headings:[],selectedHeadingId:null};
+  if(!Array.isArray(s.journal.entries)) s.journal.entries=[];
+  if(!Array.isArray(s.journal.headings)) s.journal.headings=[];
+  s.journal.headings.forEach((h,i)=>{if(!('parentId' in h))h.parentId=null;if(!('order' in h))h.order=i;});
+  s.journal.entries.forEach(e=>{if(!e.entryDate)e.entryDate=toLocalDateInput(new Date(e.createdAt||Date.now()));if(!Array.isArray(e.segments))e.segments=[];});
 }
 function load(){
   try{
@@ -1529,6 +1629,8 @@ function mergeAppStates(localState, cloudState){
   base.todo.categories = byId(base.todo.categories, local.todo.categories);
   base.todo.items = byId(base.todo.items, local.todo.items);
   base.journal.entries = byId(base.journal.entries, local.journal.entries);
+  base.books.items = byId(base.books.items, local.books.items);
+  base.exercise.items = byId(base.exercise.items, local.exercise.items);
   base.bad.targets = byId(base.bad.targets, local.bad.targets);
   base.bad.urges = [...(base.bad.urges||[]),...(local.bad.urges||[])].filter((x,i,a)=>a.findIndex(y=>y.ts===x.ts&&y.trigger===x.trigger)===i);
   base.habits.doneByDate = {...(base.habits.doneByDate||{})};
@@ -1831,7 +1933,7 @@ function fmtLong(d){
 
 function showTab(name){
   const tabName = String(name||"habits");
-  const names = ["habits","todo","goals","goalwork","priorities","bad","journal","life","books","greatbooks","family","settings"];
+  const names = ["habits","todo","goals","goalwork","priorities","bad","journal","life","books","exercise","meds","greatbooks","family","settings"];
   names.forEach(n=>{
     const sec=document.getElementById("tab-"+n);
     if(sec) sec.classList.toggle("hidden", n!==tabName);
@@ -1853,6 +1955,8 @@ function showTab(name){
   if(tabName === "family") loadFamilyDashboard();
   if(tabName === "goalwork") renderGoalWork();
   if(tabName === "books") renderBooks();
+  if(tabName === "exercise") renderExercise();
+  if(tabName === "meds") renderMeds();
   if(tabName === "greatbooks"){ renderGreatBooks(); refreshGreatBookShared(); }
 
   window.scrollTo({top:0,behavior:"smooth"});
@@ -1947,6 +2051,7 @@ const addBadBtn = document.getElementById("addBadBtn");
 const badTargets = document.getElementById("badTargets");
 
 const journalTitle = document.getElementById("journalTitle");
+const journalDate = document.getElementById("journalDate");
 const journalBody = document.getElementById("journalBody");
 const saveEntryBtn = document.getElementById("saveEntryBtn");
 const newEntryBtn = document.getElementById("newEntryBtn");
@@ -1954,10 +2059,15 @@ const deleteEntryBtn = document.getElementById("deleteEntryBtn");
 const entriesList = document.getElementById("entriesList");
 const journalSearch = document.getElementById("journalSearch");
 const journalVoiceBtn=document.getElementById("journalVoiceBtn"), journalVoiceStatus=document.getElementById("journalVoiceStatus");
+const journalPauseBtn=document.getElementById("journalPauseBtn"),journalOutlineTree=document.getElementById("journalOutlineTree"),journalSegments=document.getElementById("journalSegments"),journalActiveHeading=document.getElementById("journalActiveHeading"),journalAudioPlayer=document.getElementById("journalAudioPlayer");
+const journalAddRootBtn=document.getElementById("journalAddRootBtn"),journalAddChildBtn=document.getElementById("journalAddChildBtn"),journalAddSiblingBtn=document.getElementById("journalAddSiblingBtn"),journalIndentBtn=document.getElementById("journalIndentBtn"),journalOutdentBtn=document.getElementById("journalOutdentBtn"),journalMoveUpBtn=document.getElementById("journalMoveUpBtn"),journalMoveDownBtn=document.getElementById("journalMoveDownBtn"),journalRenameHeadingBtn=document.getElementById("journalRenameHeadingBtn"),journalDeleteHeadingBtn=document.getElementById("journalDeleteHeadingBtn");
 const activeBooksHabitWrap=document.getElementById("activeBooksHabitWrap");
 const addBookBtn=document.getElementById("addBookBtn"), booksActiveList=document.getElementById("booksActiveList"), booksFinishedList=document.getElementById("booksFinishedList");
+const addExerciseBtn=document.getElementById("addExerciseBtn"), exerciseList=document.getElementById("exerciseList"), exerciseDateLabel=document.getElementById("exerciseDateLabel");
+const addMedBtn=document.getElementById("addMedBtn"), medsList=document.getElementById("medsList"), medsHistory=document.getElementById("medsHistory"), medHistoryDays=document.getElementById("medHistoryDays");
 const bookModalBackdrop=document.getElementById("bookModalBackdrop"), bookModalCloseBtn=document.getElementById("bookModalCloseBtn"), bookModalTitle=document.getElementById("bookModalTitle"), bookChartCanvas=document.getElementById("bookChartCanvas"), bookChartSummary=document.getElementById("bookChartSummary");
-const greatBooksSearch=document.getElementById("greatBooksSearch"), greatBooksRows=document.getElementById("greatBooksRows"), greatBookSelectedLabel=document.getElementById("greatBookSelectedLabel"), greatBookTextInput=document.getElementById("greatBookTextInput"), saveGreatBookTextBtn=document.getElementById("saveGreatBookTextBtn"), greatBookImageInput=document.getElementById("greatBookImageInput"), uploadGreatBookImagesBtn=document.getElementById("uploadGreatBookImagesBtn"), greatBookSharedList=document.getElementById("greatBookSharedList"), refreshSharedGreatBooksBtn=document.getElementById("refreshSharedGreatBooksBtn");
+const greatBooksSearch=document.getElementById("greatBooksSearch"), greatBooksDays=document.getElementById("greatBooksDays"), greatBooksRows=document.getElementById("greatBooksRows"), greatBooksProgressGrid=document.getElementById("greatBooksProgressGrid"), greatBookSelectedLabel=document.getElementById("greatBookSelectedLabel"), greatBookTextInput=document.getElementById("greatBookTextInput"), saveGreatBookTextBtn=document.getElementById("saveGreatBookTextBtn"), greatBookImageInput=document.getElementById("greatBookImageInput"), uploadGreatBookImagesBtn=document.getElementById("uploadGreatBookImagesBtn"), greatBookSharedList=document.getElementById("greatBookSharedList"), refreshSharedGreatBooksBtn=document.getElementById("refreshSharedGreatBooksBtn");
+const gbReadingCount=document.getElementById("gbReadingCount"),gbTotalPages=document.getElementById("gbTotalPages"),gbPagesRead=document.getElementById("gbPagesRead"),gbPagesLeft=document.getElementById("gbPagesLeft"),gbPercentDone=document.getElementById("gbPercentDone"),gbCurrentPace=document.getElementById("gbCurrentPace"),gbDaysLeft=document.getElementById("gbDaysLeft"),gbFinishDate=document.getElementById("gbFinishDate");
 
 const lifeTreeEl = document.getElementById("lifeTree");
 const lifeSelectedLabel = document.getElementById("lifeSelectedLabel");
@@ -2014,6 +2124,10 @@ const familyHabitsKpi = document.getElementById("familyHabitsKpi");
 const familyXpKpi = document.getElementById("familyXpKpi");
 const familyCompletionChart = document.getElementById("familyCompletionChart");
 const familyHabitHistory = document.getElementById("familyHabitHistory");
+const familyBooksTable = document.getElementById("familyBooksTable");
+const familyGreatBooksMetrics = document.getElementById("familyGreatBooksMetrics");
+const familyGreatBooksTable = document.getElementById("familyGreatBooksTable");
+const familyExerciseTable = document.getElementById("familyExerciseTable");
 const familyLastUpdated = document.getElementById("familyLastUpdated");
 let familyRealtimeChannel = null;
 
@@ -3129,44 +3243,39 @@ Enter 1-5:`);
   renderAll(true);
 }
 
+let journalDraftSegments=[],journalAudioBlob=null,journalAudioUrl=null;
+const journalHeadingById=id=>(state.journal.headings||[]).find(h=>h.id===id);
+const journalHeadingChildren=pid=>(state.journal.headings||[]).filter(h=>(h.parentId||null)===(pid||null)).sort((a,b)=>(a.order||0)-(b.order||0));
+function journalHeadingPath(id){const names=[];let h=journalHeadingById(id),guard=0;while(h&&guard++<30){names.unshift(h.title);h=journalHeadingById(h.parentId)}return names.join(' › ')||'General';}
+function renderJournalOutline(){
+  if(!journalOutlineTree)return;journalOutlineTree.innerHTML='';
+  const draw=(pid,depth)=>journalHeadingChildren(pid).forEach(h=>{const row=document.createElement('div');row.className='journalOutlineRow'+(h.id===state.journal.selectedHeadingId?' selected recordTarget':'');row.style.marginLeft=(depth*16)+'px';row.innerHTML=`<span>${depth?'↳':'▸'}</span><strong>${escapeHtml(h.title)}</strong>`;row.onclick=()=>{state.journal.selectedHeadingId=h.id;save();renderJournalOutline();renderJournalActiveHeading();};journalOutlineTree.appendChild(row);draw(h.id,depth+1)});draw(null,0);
+  if(!state.journal.headings.length)journalOutlineTree.innerHTML='<div class="small">Add a parent heading such as Family, Work, Health, or Gratitude.</div>';
+}
+function renderJournalActiveHeading(){const h=journalHeadingById(state.journal.selectedHeadingId);journalActiveHeading.innerHTML=h?`Recording destination: <strong>${escapeHtml(journalHeadingPath(h.id))}</strong>`:'Choose a heading on the left before or during recording. Unassigned speech goes to General.';}
+function renderJournalSegments(){journalSegments.innerHTML=journalDraftSegments.map((s,i)=>`<div class="journalSegment"><div class="row" style="justify-content:space-between"><h4>${escapeHtml(journalHeadingPath(s.headingId))}</h4><button class="danger iconBtn" data-jseg-delete="${i}">Remove</button></div><p>${escapeHtml(s.text||'')}</p></div>`).join('');journalSegments.querySelectorAll('[data-jseg-delete]').forEach(b=>b.onclick=()=>{journalDraftSegments.splice(Number(b.dataset.jsegDelete),1);renderJournalSegments()});}
 function renderJournal(){
-  const q = (journalSearch.value || "").trim().toLowerCase();
-  entriesList.innerHTML = "";
-  const list = [...state.journal.entries].sort((a,b)=> (b.updatedAt||b.createdAt).localeCompare(a.updatedAt||a.createdAt));
-  const filtered = q ? list.filter(e => (e.title||"").toLowerCase().includes(q) || (e.body||"").toLowerCase().includes(q)) : list;
-  if(filtered.length === 0){
-    entriesList.innerHTML = `<div class="small">No entries match.</div>`;
-    return;
-  }
-  filtered.forEach(e => {
-    const div = document.createElement("div");
-    div.className = "entry";
-    const t = new Date(e.updatedAt || e.createdAt);
-    div.innerHTML = `
-      <div class="t">
-        <strong>${escapeHtml(e.title || "Untitled")}</strong>
-        <span class="mono">${t.toLocaleDateString()}</span>
-      </div>
-      <p>${escapeHtml((e.body||"").slice(0,90))}${(e.body||"").length>90?"…":""}</p>
-    `;
-    div.onclick = () => loadEntry(e.id);
-    entriesList.appendChild(div);
-  });
+  if(journalDate&&!journalDate.value)journalDate.value=todayISO();
+  renderJournalOutline();renderJournalActiveHeading();renderJournalSegments();
+  const q=(journalSearch.value||'').trim().toLowerCase(),list=[...state.journal.entries].sort((a,b)=>(b.entryDate||'').localeCompare(a.entryDate||'')||(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  const filtered=q?list.filter(e=>[e.title,e.body,e.entryDate,...(e.segments||[]).map(s=>s.text+' '+journalHeadingPath(s.headingId))].join(' ').toLowerCase().includes(q)):list;
+  entriesList.innerHTML=filtered.map(e=>{const preview=[e.body,...(e.segments||[]).map(s=>s.text)].filter(Boolean).join(' ');return `<div class="entry" data-journal-entry="${e.id}"><div class="t"><strong>${e.audioId?'🎙️ ':''}${escapeHtml(e.title||'Untitled')}</strong><span class="mono">${new Date((e.entryDate||todayISO())+'T00:00:00').toLocaleDateString()}</span></div><p>${escapeHtml(preview.slice(0,90))}${preview.length>90?'…':''}</p></div>`}).join('')||'<div class="small">No entries match.</div>';
+  entriesList.querySelectorAll('[data-journal-entry]').forEach(x=>x.onclick=()=>loadEntry(x.dataset.journalEntry));
 }
-function loadEntry(id){
-  const e = state.journal.entries.find(x=>x.id===id);
-  if(!e) return;
-  state.journal.loadedId = id;
-  journalTitle.value = e.title || "";
-  journalBody.value = e.body || "";
-  save();
+function openJournalAudioDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('habitJournalAudio',1);req.onupgradeneeded=()=>req.result.createObjectStore('recordings');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+async function saveJournalAudio(id,blob){const db=await openJournalAudioDB();await new Promise((resolve,reject)=>{const tx=db.transaction('recordings','readwrite');tx.objectStore('recordings').put(blob,id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}
+async function getJournalAudio(id){if(!id)return null;const db=await openJournalAudioDB(),blob=await new Promise((resolve,reject)=>{const req=db.transaction('recordings').objectStore('recordings').get(id);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)});db.close();return blob}
+async function deleteJournalAudio(id){if(!id)return;const db=await openJournalAudioDB();await new Promise((resolve,reject)=>{const tx=db.transaction('recordings','readwrite');tx.objectStore('recordings').delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}
+async function loadEntry(id){
+  const e=state.journal.entries.find(x=>x.id===id);if(!e)return;state.journal.loadedId=id;journalTitle.value=e.title||'';journalDate.value=e.entryDate||todayISO();journalBody.value=e.body||'';journalDraftSegments=(e.segments||[]).map(s=>({...s}));journalAudioBlob=null;renderJournalSegments();
+  if(journalAudioUrl)URL.revokeObjectURL(journalAudioUrl);journalAudioUrl=null;journalAudioPlayer.style.display='none';journalAudioPlayer.removeAttribute('src');
+  const blob=await getJournalAudio(e.audioId);if(blob){journalAudioUrl=URL.createObjectURL(blob);journalAudioPlayer.src=journalAudioUrl;journalAudioPlayer.style.display='block'}save();
 }
-function clearEntryEditor(){
-  state.journal.loadedId = null;
-  journalTitle.value = "";
-  journalBody.value = "";
-  save();
-}
+function clearEntryEditor(){state.journal.loadedId=null;journalTitle.value='';journalDate.value=todayISO();journalBody.value='';journalDraftSegments=[];journalAudioBlob=null;if(journalAudioUrl)URL.revokeObjectURL(journalAudioUrl);journalAudioUrl=null;journalAudioPlayer.style.display='none';journalAudioPlayer.removeAttribute('src');renderJournalSegments();save();}
+function addJournalHeading(parentId=null,afterId=null){const title=prompt(parentId?'Child heading:':'Journal heading:','');if(!title||!title.trim())return;const sib=journalHeadingChildren(parentId),after=sib.find(x=>x.id===afterId);const h={id:cryptoId(),title:title.trim(),parentId:parentId||null,order:after?(after.order||0)+.5:sib.length};state.journal.headings.push(h);state.journal.selectedHeadingId=h.id;save();renderJournal()}
+function moveJournalHeading(delta){const h=journalHeadingById(state.journal.selectedHeadingId);if(!h)return alert('Select a heading first.');const sib=journalHeadingChildren(h.parentId),i=sib.findIndex(x=>x.id===h.id),j=i+delta;if(j<0||j>=sib.length)return;const t=sib[j].order;sib[j].order=h.order;h.order=t;save();renderJournal()}
+function indentJournalHeading(){const h=journalHeadingById(state.journal.selectedHeadingId);if(!h)return alert('Select a heading first.');const sib=journalHeadingChildren(h.parentId),i=sib.findIndex(x=>x.id===h.id);if(i<1)return alert('A heading needs a previous sibling before it can be indented.');h.parentId=sib[i-1].id;h.order=journalHeadingChildren(h.parentId).length;save();renderJournal()}
+function outdentJournalHeading(){const h=journalHeadingById(state.journal.selectedHeadingId),p=h&&journalHeadingById(h.parentId);if(!h||!p)return alert('This heading is already at the top level.');h.parentId=p.parentId||null;h.order=(p.order||0)+.5;save();renderJournal()}
 
 function renderLifeTree(container, selectedId, onSelect, badgeFn){
   ensureLifeTree();
@@ -3514,6 +3623,13 @@ function renderSelectedFamilyUser(){
     }).join("")+"</tr>";
   });
   familyHabitHistory.innerHTML=html+"</tbody></table>";
+  const books=(app.books?.items||[]);
+  familyBooksTable.innerHTML=books.length?`<table><thead><tr><th>Title</th><th>Author</th><th>Status</th><th>Current page</th><th>Total pages</th><th>Latest entry</th></tr></thead><tbody>${books.map(b=>{const entries=Object.entries(b.history||{}).filter(([d])=>dates.includes(d)).sort((a,z)=>z[0].localeCompare(a[0]));const latest=entries[0];return `<tr><td><strong>${escapeHtml(b.title||'Untitled')}</strong></td><td>${escapeHtml(b.author||'—')}</td><td>${escapeHtml(b.status||'want')}</td><td>${Number(b.currentPage)||0}</td><td>${Number(b.totalPages)||0}</td><td>${latest?escapeHtml(latest[0])+': page '+Number(latest[1]):'—'}</td></tr>`}).join('')}</tbody></table>`:'<div class="small" style="padding:12px">No books have been added.</div>';
+  const familyGbSummary=greatBooksSummary(app),familyGbDates=dates.slice(-14);
+  familyGreatBooksMetrics.innerHTML=greatBooksMetricHtml(familyGbSummary);
+  familyGreatBooksTable.innerHTML=greatBooksGridHtml(app,familyGbDates,false,'');
+  const exerciseRows=[];(app.exercise?.items||[]).forEach(x=>Object.entries(x.history||{}).forEach(([date,log])=>{if(dates.includes(date)&&(Number(log?.sets)>0||Number(log?.reps)>0))exerciseRows.push({date,name:x.name,sets:Number(log.sets)||0,reps:Number(log.reps)||0})}));exerciseRows.sort((a,b)=>b.date.localeCompare(a.date)||a.name.localeCompare(b.name));
+  familyExerciseTable.innerHTML=exerciseRows.length?`<table><thead><tr><th>Date</th><th>Exercise</th><th>Sets</th><th>Reps per set</th><th>Total reps</th></tr></thead><tbody>${exerciseRows.map(x=>`<tr><td>${escapeHtml(x.date)}</td><td><strong>${escapeHtml(x.name)}</strong></td><td>${x.sets}</td><td>${x.reps}</td><td>${x.sets*x.reps}</td></tr>`).join('')}</tbody></table>`:'<div class="small" style="padding:12px">No exercise has been recorded in this range.</div>';
   familyDashboardBody.style.display="block";
 }
 async function loadFamilyDashboard(){
@@ -3572,16 +3688,16 @@ function stopFamilyRealtime(){
 }
 
 
-let recognition=null;
 function initVoice(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!journalVoiceBtn)return;
-  if(!SR){journalVoiceBtn.disabled=true;journalVoiceStatus.textContent='Voice-to-text is not supported in this browser. Chrome or Edge works best.';return}
-  recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.lang='en-US';let base='';
-  recognition.onstart=()=>{base=journalBody.value+(journalBody.value&&!journalBody.value.endsWith(' ')?' ':'');journalVoiceBtn.classList.add('listening');journalVoiceBtn.textContent='■ Stop voice to text';journalVoiceStatus.textContent='Listening…'};
-  recognition.onresult=e=>{let final='',interim='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)final+=t+' ';else interim+=t}if(final){base+=final;journalBody.value=base}else journalBody.value=base+interim};
-  recognition.onerror=e=>{journalVoiceStatus.textContent='Microphone error: '+e.error};recognition.onend=()=>{journalVoiceBtn.classList.remove('listening');journalVoiceBtn.textContent='🎤 Start voice to text';journalVoiceStatus.textContent='Stopped. Review the text, then Save.'};
-  journalVoiceBtn.onclick=()=>{if(journalVoiceBtn.classList.contains('listening'))recognition.stop();else recognition.start()};
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!journalVoiceBtn)return;
+  if(!SR||!navigator.mediaDevices||!window.MediaRecorder){journalVoiceBtn.disabled=true;journalVoiceStatus.textContent='Recording with transcription requires Chrome or Edge and microphone permission.';return}
+  let recognition=null,recorder=null,stream=null,chunks=[],active=false,paused=false,currentHeading=null,segmentFinal='',segmentInterim='';
+  const commitSegment=()=>{const text=(segmentFinal+' '+segmentInterim).trim();if(text)journalDraftSegments.push({id:cryptoId(),headingId:currentHeading,text,createdAt:nowISO()});segmentFinal='';segmentInterim='';renderJournalSegments()};
+  const startRecognition=()=>{recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.lang='en-US';recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal){segmentFinal+=(segmentFinal?' ':'')+t;segmentInterim=''}else segmentInterim=t}journalVoiceStatus.textContent=`Recording under ${journalHeadingPath(currentHeading)}… ${segmentInterim}`};recognition.onerror=e=>{if(e.error!=='aborted')journalVoiceStatus.textContent='Transcription: '+e.error};recognition.onend=()=>{if(active&&!paused)try{recognition.start()}catch(_){}};recognition.start()};
+  const stopAll=()=>{if(!active)return;active=false;commitSegment();try{recognition.stop()}catch(_){}if(recorder&&recorder.state!=='inactive')recorder.stop();if(stream)stream.getTracks().forEach(t=>t.stop());journalVoiceBtn.classList.remove('listening');journalVoiceBtn.textContent='🎤 Record + transcribe';journalPauseBtn.disabled=true;journalPauseBtn.textContent='Pause';journalVoiceStatus.textContent='Recording stopped. Review the sections, then save the entry.'};
+  journalVoiceBtn.onclick=async()=>{if(active){stopAll();return}try{stream=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onstop=()=>{journalAudioBlob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});if(journalAudioUrl)URL.revokeObjectURL(journalAudioUrl);journalAudioUrl=URL.createObjectURL(journalAudioBlob);journalAudioPlayer.src=journalAudioUrl;journalAudioPlayer.style.display='block'};currentHeading=state.journal.selectedHeadingId||null;active=true;paused=false;recorder.start(1000);startRecognition();journalVoiceBtn.classList.add('listening');journalVoiceBtn.textContent='■ Stop & keep recording';journalPauseBtn.disabled=false;journalVoiceStatus.textContent=`Recording under ${journalHeadingPath(currentHeading)}…`;}catch(e){journalVoiceStatus.textContent='Microphone permission was not available: '+e.message}};
+  journalPauseBtn.onclick=()=>{if(!active)return;if(!paused){commitSegment();paused=true;recorder.pause();try{recognition.stop()}catch(_){}journalPauseBtn.textContent='Resume';journalVoiceStatus.textContent='Paused.'}else{paused=false;recorder.resume();currentHeading=state.journal.selectedHeadingId||null;startRecognition();journalPauseBtn.textContent='Pause'}};
+  journalOutlineTree.addEventListener('click',()=>{if(!active||paused)return;commitSegment();currentHeading=state.journal.selectedHeadingId||null;journalVoiceStatus.textContent=`Recording under ${journalHeadingPath(currentHeading)}…`});
 }
 function bookById(id){return (state.books.items||[]).find(b=>b.id===id)||null}
 function addBook(prefill={}){const title=prompt('Book title:',prefill.title||'');if(!title||!title.trim())return;const author=prompt('Author:',prefill.author||'')||'';const pages=Math.max(1,Number(prompt('Total pages:',String(prefill.totalPages||prefill.pages||300)))||1);const status=confirm('Add this book to the habit screen now?\nOK = currently reading; Cancel = want to read')?'reading':'want';const b={id:cryptoId(),title:title.trim(),author:author.trim(),totalPages:pages,currentPage:0,status,history:{},greatBookId:prefill.greatBookId||null,createdAt:nowISO(),updatedAt:nowISO()};state.books.items.push(b);save();renderAll(true);toast('Book added',b.title)}
@@ -3589,8 +3705,59 @@ function updateBookPage(book,iso,page){const p=Math.max(0,Math.min(Number(book.t
 function addGreatBookToHabits(id,automatic=false){const item=GREAT_BOOKS_CATALOG.find(x=>x.id===id);if(!item)return;state.books.greatBooks.currentId=id;let b=state.books.items.find(x=>x.greatBookId===id);if(!b){b={id:cryptoId(),title:item.title,author:item.author,totalPages:Math.max(1,item.pages||((item.lastPage||0)-(item.firstPage||0)+1)),currentPage:0,status:'reading',history:{},greatBookId:id,createdAt:nowISO(),updatedAt:nowISO()};state.books.items.push(b)}else b.status='reading';save();renderAll(true);if(!automatic)toast('Added to habits',item.title)}
 function renderActiveBooksHabit(){if(!activeBooksHabitWrap)return;const books=state.books.items.filter(b=>b.status==='reading');if(!books.length){activeBooksHabitWrap.innerHTML='';return}let h='<div class="group"><div class="groupHeader"><div class="groupTitle"><strong>Books</strong><span>Reading progress</span></div></div><div class="tasks">';books.forEach(b=>{const pct=Math.round((b.currentPage/Math.max(1,b.totalPages))*100);h+=`<div class="bookHabitRow" data-book-open="${b.id}"><div><div class="name">📖 ${escapeHtml(b.title)}</div><div class="bookProgressText">${b.currentPage} / ${b.totalPages} pages • ${pct}%${b.author?' • '+escapeHtml(b.author):''}</div><div class="progress" style="margin-top:6px"><div class="bar good" style="width:${pct}%"></div></div></div><div class="row"><label class="small">Current page <input class="bookHabitInput" type="number" min="0" max="${b.totalPages}" value="${b.currentPage}" data-book-page="${b.id}"></label><button data-book-chart="${b.id}">Chart</button></div></div>`});activeBooksHabitWrap.innerHTML=h+'</div></div>';activeBooksHabitWrap.querySelectorAll('[data-book-page]').forEach(i=>{i.onclick=e=>e.stopPropagation();i.onchange=()=>updateBookPage(bookById(i.dataset.bookPage),state.ui.viewDate||todayISO(),i.value)});activeBooksHabitWrap.querySelectorAll('[data-book-chart]').forEach(b=>{b.onclick=e=>{e.stopPropagation();openBookChart(b.dataset.bookChart)}});activeBooksHabitWrap.querySelectorAll('[data-book-open]').forEach(r=>r.onclick=e=>{if(!e.target.closest('input,button'))openBookChart(r.dataset.bookOpen)})}
 function renderBooks(){if(!booksActiveList)return;const active=state.books.items.filter(b=>b.status!=='finished'),finished=state.books.items.filter(b=>b.status==='finished');const card=b=>`<div class="bookCard"><div class="row" style="justify-content:space-between"><div><strong>${escapeHtml(b.title)}</strong><div class="small">${escapeHtml(b.author||'Unknown author')} • ${b.currentPage}/${b.totalPages} pages</div></div><div class="row"><button data-book-start="${b.id}">${b.status==='reading'?'Pause':'Read Now'}</button><button data-book-edit="${b.id}">Edit</button><button data-book-chart="${b.id}">Chart</button><button class="danger" data-book-delete="${b.id}">Delete</button></div></div></div>`;booksActiveList.innerHTML=active.map(card).join('')||'<div class="small">No books here.</div>';booksFinishedList.innerHTML=finished.map(card).join('')||'<div class="small">No finished books yet.</div>';document.querySelectorAll('[data-book-start]').forEach(x=>x.onclick=()=>{const b=bookById(x.dataset.bookStart);b.status=b.status==='reading'?'want':'reading';save();renderAll(true)});document.querySelectorAll('[data-book-edit]').forEach(x=>x.onclick=()=>{const b=bookById(x.dataset.bookEdit),t=prompt('Title:',b.title);if(t&&t.trim())b.title=t.trim();const a=prompt('Author:',b.author||'');if(a!==null)b.author=a.trim();const p=Number(prompt('Total pages:',b.totalPages));if(p>0)b.totalPages=p;save();renderAll(true)});document.querySelectorAll('[data-book-chart]').forEach(x=>x.onclick=()=>openBookChart(x.dataset.bookChart));document.querySelectorAll('[data-book-delete]').forEach(x=>x.onclick=()=>{if(confirm('Delete this book and its reading history?')){state.books.items=state.books.items.filter(b=>b.id!==x.dataset.bookDelete);save();renderAll(true)}})}
+function renderExercise(){if(!exerciseList)return;const iso=state.ui.viewDate||todayISO();if(exerciseDateLabel)exerciseDateLabel.textContent=fmtLong(parseDate(iso));const items=state.exercise?.items||[];exerciseList.innerHTML=items.map(x=>{const log=x.history?.[iso]||{};return `<div class="exerciseCard"><div class="row" style="justify-content:space-between"><strong>🏋️ ${escapeHtml(x.name)}</strong><div class="row"><button data-exercise-rename="${x.id}">Rename</button><button class="danger" data-exercise-delete="${x.id}">Delete</button></div></div><div class="exerciseLogInputs"><label class="small">Sets<input type="number" min="0" step="1" value="${Number(log.sets)||0}" data-exercise-sets="${x.id}"></label><label class="small">Reps per set<input type="number" min="0" step="1" value="${Number(log.reps)||0}" data-exercise-reps="${x.id}"></label></div><div class="small" style="margin-top:8px">Total reps: ${(Number(log.sets)||0)*(Number(log.reps)||0)}</div></div>`}).join('')||'<div class="small">No exercises yet. Click “Add Exercise” to begin.</div>';const update=(id,field,value)=>{const x=state.exercise.items.find(e=>e.id===id);if(!x)return;x.history=x.history||{};const log=x.history[iso]||{sets:0,reps:0};log[field]=Math.max(0,Math.round(Number(value)||0));if(log.sets||log.reps)x.history[iso]=log;else delete x.history[iso];x.updatedAt=nowISO();save();renderExercise()};exerciseList.querySelectorAll('[data-exercise-sets]').forEach(i=>i.onchange=()=>update(i.dataset.exerciseSets,'sets',i.value));exerciseList.querySelectorAll('[data-exercise-reps]').forEach(i=>i.onchange=()=>update(i.dataset.exerciseReps,'reps',i.value));exerciseList.querySelectorAll('[data-exercise-rename]').forEach(b=>b.onclick=()=>{const x=state.exercise.items.find(e=>e.id===b.dataset.exerciseRename),n=prompt('Exercise name:',x.name);if(n&&n.trim()){x.name=n.trim();x.updatedAt=nowISO();save();renderExercise()}});exerciseList.querySelectorAll('[data-exercise-delete]').forEach(b=>b.onclick=()=>{const x=state.exercise.items.find(e=>e.id===b.dataset.exerciseDelete);if(confirm(`Delete “${x.name}” and all of its exercise history?`)){state.exercise.items=state.exercise.items.filter(e=>e.id!==x.id);save();renderExercise()}})}
+
+function medDoseDay(dose){return toLocalDateInput(new Date(dose.takenAt))}
+function medNumber(v){const n=Number(v);return Number.isFinite(n)?Math.round(n*1000)/1000:0}
+function renderMeds(){
+  if(!medsList||!medsHistory)return;
+  const today=todayISO(),items=state.meds?.items||[];
+  medsList.innerHTML=items.map(m=>{const todayDoses=(m.doses||[]).filter(d=>medDoseDay(d)===today),total=todayDoses.reduce((sum,d)=>sum+medNumber(d.strength),0),last=todayDoses.slice().sort((a,b)=>b.takenAt.localeCompare(a.takenAt))[0];return `<div class="exerciseCard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><strong>💊 ${escapeHtml(m.name)}</strong><div class="small">Today: <strong>${medNumber(total)} ${escapeHtml(m.unit)}</strong> in ${todayDoses.length} dose${todayDoses.length===1?'':'s'}${last?' • last '+new Date(last.takenAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):''}</div></div><div class="row"><button data-med-edit="${m.id}">Edit</button><button class="danger" data-med-delete="${m.id}">Delete</button></div></div><div class="exerciseLogInputs" style="align-items:end"><label class="small">Strength<input type="number" min="0" step="any" value="${medNumber(m.lastStrength)}" data-med-strength="${m.id}" inputmode="decimal"></label><label class="small">Unit<select data-med-unit="${m.id}"><option ${m.unit==='mg'?'selected':''}>mg</option><option ${m.unit==='mcg'?'selected':''}>mcg</option><option ${m.unit==='g'?'selected':''}>g</option><option ${m.unit==='mL'?'selected':''}>mL</option><option ${m.unit==='units'?'selected':''}>units</option><option ${m.unit==='tablet(s)'?'selected':''}>tablet(s)</option></select></label><button class="primary" style="min-height:44px;font-weight:800" data-med-take="${m.id}">✓ Take now</button></div></div>`}).join('')||'<div class="small">No medications yet. Click “Add Medication” to begin.</div>';
+  medsList.querySelectorAll('[data-med-take]').forEach(b=>b.onclick=()=>{const m=items.find(x=>x.id===b.dataset.medTake),input=medsList.querySelector(`[data-med-strength="${m.id}"]`),unit=medsList.querySelector(`[data-med-unit="${m.id}"]`),strength=medNumber(input.value);if(strength<=0)return alert('Enter the strength taken.');m.lastStrength=strength;m.unit=unit.value;m.doses.push({id:cryptoId(),strength,unit:m.unit,takenAt:nowISO()});m.updatedAt=nowISO();save();renderMeds();toast('Dose recorded',`${m.name}: ${strength} ${m.unit}`)});
+  medsList.querySelectorAll('[data-med-strength]').forEach(i=>i.onchange=()=>{const m=items.find(x=>x.id===i.dataset.medStrength);if(m&&medNumber(i.value)>0){m.lastStrength=medNumber(i.value);save()}});
+  medsList.querySelectorAll('[data-med-unit]').forEach(s=>s.onchange=()=>{const m=items.find(x=>x.id===s.dataset.medUnit);if(m){m.unit=s.value;save();renderMeds()}});
+  medsList.querySelectorAll('[data-med-edit]').forEach(b=>b.onclick=()=>{const m=items.find(x=>x.id===b.dataset.medEdit),n=prompt('Medication name:',m.name);if(n&&n.trim()){m.name=n.trim();save();renderMeds()}});
+  medsList.querySelectorAll('[data-med-delete]').forEach(b=>b.onclick=()=>{const m=items.find(x=>x.id===b.dataset.medDelete);if(confirm(`Delete “${m.name}” and all recorded doses?`)){state.meds.items=items.filter(x=>x.id!==m.id);save();renderMeds()}});
+  const days=Math.max(1,Number(medHistoryDays?.value)||14),start=addDaysISO(today,-days+1),rows=[];
+  items.forEach(m=>(m.doses||[]).filter(d=>medDoseDay(d)>=start&&medDoseDay(d)<=today).forEach(d=>rows.push({m,d,day:medDoseDay(d)})));
+  rows.sort((a,b)=>b.d.takenAt.localeCompare(a.d.takenAt));
+  const totals={};rows.forEach(r=>{const key=r.m.id+'|'+r.day;totals[key]=(totals[key]||0)+medNumber(r.d.strength)});
+  medsHistory.innerHTML=rows.length?`<table><thead><tr><th>Date</th><th>Medication</th><th>Time taken</th><th>Dose</th><th>Daily total</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${new Date(r.day+'T00:00:00').toLocaleDateString()}</td><td><strong>${escapeHtml(r.m.name)}</strong></td><td>${new Date(r.d.takenAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</td><td>${medNumber(r.d.strength)} ${escapeHtml(r.d.unit||r.m.unit)}</td><td><strong>${medNumber(totals[r.m.id+'|'+r.day])} ${escapeHtml(r.d.unit||r.m.unit)}</strong></td><td><button class="danger" data-med-dose-delete="${r.m.id}|${r.d.id}">Remove</button></td></tr>`).join('')}</tbody></table>`:'<div class="small" style="padding:12px">No doses recorded in this time range.</div>';
+  medsHistory.querySelectorAll('[data-med-dose-delete]').forEach(b=>b.onclick=()=>{const [mid,did]=b.dataset.medDoseDelete.split('|'),m=items.find(x=>x.id===mid);if(m&&confirm('Remove this dose from the log?')){m.doses=m.doses.filter(d=>d.id!==did);save();renderMeds()}});
+}
 function openBookChart(id){const b=bookById(id);if(!b)return;bookModalTitle.textContent=b.title+' — Reading Progress';bookModalBackdrop.style.display='flex';const entries=Object.entries(b.history||{}).sort((a,c)=>a[0].localeCompare(c[0])).slice(-45),dpr=devicePixelRatio||1,rect=bookChartCanvas.getBoundingClientRect();bookChartCanvas.width=Math.max(650,rect.width*dpr);bookChartCanvas.height=300*dpr;const ctx=bookChartCanvas.getContext('2d');ctx.scale(dpr,dpr);const w=bookChartCanvas.width/dpr,h=300,pad={l:45,r:15,t:15,b:40};ctx.clearRect(0,0,w,h);ctx.strokeStyle='#e5e7eb';ctx.fillStyle='#64748b';ctx.font='11px system-ui';[0,.25,.5,.75,1].forEach(v=>{const y=pad.t+(1-v)*(h-pad.t-pad.b);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(Math.round(v*b.totalPages),4,y+4)});if(entries.length){const bw=Math.max(4,(w-pad.l-pad.r)/entries.length-3);entries.forEach(([date,page],i)=>{const x=pad.l+i*(w-pad.l-pad.r)/entries.length,y=pad.t+(1-page/b.totalPages)*(h-pad.t-pad.b);ctx.fillStyle='#2563eb';ctx.fillRect(x,y,bw,h-pad.b-y);if(i%Math.max(1,Math.floor(entries.length/7))===0){ctx.fillStyle='#64748b';ctx.fillText(date.slice(5),x-4,h-12)}})}bookChartSummary.textContent=`Current page ${b.currentPage} of ${b.totalPages} (${Math.round(b.currentPage/b.totalPages*100)}%). Each bar shows the highest page recorded on that date.`}
-function renderGreatBooks(){if(!greatBooksRows)return;const q=(greatBooksSearch?.value||'').toLowerCase();const current=state.books.greatBooks.currentId;greatBooksRows.innerHTML=GREAT_BOOKS_CATALOG.filter(x=>!q||x.title.toLowerCase().includes(q)||x.author.toLowerCase().includes(q)).map(x=>`<tr class="${x.id===current?'gbCurrent':''}"><td>${escapeHtml(x.volume)}</td><td>${escapeHtml(x.author)}</td><td>${escapeHtml(x.title)}</td><td>${x.firstPage||''}-${x.lastPage||''} (${x.pages||'?'} pages)</td><td><button data-gb-select="${x.id}">${x.id===current?'Current':'Read This'}</button><button data-gb-shared="${x.id}">Text/Pages</button>${state.books.greatBooks.completedIds.includes(x.id)?' ✅':''}</td></tr>`).join('');greatBooksRows.querySelectorAll('[data-gb-select]').forEach(b=>b.onclick=()=>addGreatBookToHabits(b.dataset.gbSelect));greatBooksRows.querySelectorAll('[data-gb-shared]').forEach(b=>b.onclick=()=>{state.books.greatBooks.selectedId=b.dataset.gbShared;save();renderGreatBooks();refreshGreatBookShared()});const sel=GREAT_BOOKS_CATALOG.find(x=>x.id===state.books.greatBooks.selectedId);greatBookSelectedLabel.textContent=sel?`${sel.author} — ${sel.title}`:'Select Text/Pages for a reading above.'}
+function greatBookTotal(item){return Math.max(0,Number(item.pages)||0)}
+function greatBookPageEntries(app,item){return Object.entries(app?.books?.greatBooks?.pageByDate?.[item.id]||{}).filter(([,v])=>Number.isFinite(Number(v))&&Number(v)>0).sort((a,b)=>a[0].localeCompare(b[0]))}
+function greatBookPageAt(app,item,date){const entries=greatBookPageEntries(app,item).filter(([d])=>d<=date);return entries.length?Number(entries[entries.length-1][1]):0}
+function greatBookPagesRead(app,item,date=todayISO()){
+  const total=greatBookTotal(item),page=greatBookPageAt(app,item,date);
+  if(!total||!page)return 0;
+  if(item.lastPage&&page>=Number(item.lastPage))return total;
+  return Math.max(0,Math.min(total,page-Number(item.firstPage||0)));
+}
+function greatBooksSummary(app){
+  const total=GREAT_BOOKS_CATALOG.reduce((s,x)=>s+greatBookTotal(x),0);
+  const read=GREAT_BOOKS_CATALOG.reduce((s,x)=>s+greatBookPagesRead(app,x),0),left=Math.max(0,total-read);
+  const start=addDaysISO(todayISO(),-14),before=addDaysISO(start,-1);
+  const gained=GREAT_BOOKS_CATALOG.reduce((s,x)=>s+Math.max(0,greatBookPagesRead(app,x)-greatBookPagesRead(app,x,before)),0);
+  const pace=gained/14,days=pace>0?Math.ceil(left/pace):null;
+  return {count:GREAT_BOOKS_CATALOG.length,total,read,left,pct:total?Math.round(read/total*100):0,pace,days,finish:days!==null?addDaysISO(todayISO(),days):null};
+}
+function greatBooksMetricHtml(m){return `<div class="gbMetric"><span class="small">All readings</span><strong>${m.count}</strong></div><div class="gbMetric"><span class="small">Total pages</span><strong>${m.total.toLocaleString()}</strong></div><div class="gbMetric"><span class="small">Pages read</span><strong>${m.read.toLocaleString()}</strong></div><div class="gbMetric"><span class="small">Pages left</span><strong>${m.left.toLocaleString()}</strong></div><div class="gbMetric"><span class="small">Complete</span><strong>${m.pct}%</strong></div><div class="gbMetric"><span class="small">Current pace</span><strong>${m.pace.toFixed(1)}/day</strong></div><div class="gbMetric"><span class="small">Est. days left</span><strong>${m.days===null?'—':m.days}</strong><span class="small">${m.finish?'Finish '+new Date(m.finish+'T00:00:00').toLocaleDateString():'Enter pages to calculate'}</span></div>`}
+function greatBooksGridHtml(app,dates,editable,q=''){
+  const query=q.toLowerCase(),items=GREAT_BOOKS_CATALOG.filter(x=>!query||x.title.toLowerCase().includes(query)||x.author.toLowerCase().includes(query));
+  let html=`<table class="gbProgressTable"><thead><tr><th class="gbMeta gbVol">Vol.</th><th class="gbMeta gbAuthor">Author</th><th class="gbMeta gbTitle">Reading</th><th class="gbMeta gbPages">Pages</th>${dates.map(d=>`<th class="${d===todayISO()?'gbTodayHead':''}">${new Date(d+'T00:00:00').toLocaleDateString(undefined,{month:'numeric',day:'numeric'})}</th>`).join('')}<th>%</th><th>Read</th><th>Left</th></tr></thead><tbody>`;
+  items.forEach(item=>{const total=greatBookTotal(item),read=greatBookPagesRead(app,item),left=Math.max(0,total-read),pct=total?Math.round(read/total*100):0,logs=app?.books?.greatBooks?.pageByDate?.[item.id]||{};html+=`<tr class="${pct>=100?'gbCompleteRow':''}"><td class="gbMeta gbVol">${escapeHtml(item.volume)}</td><td class="gbMeta gbAuthor">${escapeHtml(item.author)}</td><td class="gbMeta gbTitle"><strong>${escapeHtml(item.title)}</strong>${editable?`<div><button data-gb-shared="${item.id}">Text/Pages</button></div>`:''}</td><td class="gbMeta gbPages">${item.firstPage||'—'}–${item.lastPage||'—'}<br><span class="small">${total} total</span></td>${dates.map(d=>{const v=logs[d]??'';return `<td>${editable?`<input class="gbPageInput" type="number" min="${Number(item.firstPage)||0}" ${item.lastPage?`max="${Number(item.lastPage)}"`:''} placeholder="${greatBookPageAt(app,item,d)||''}" value="${v}" data-gb-page="${item.id}" data-gb-date="${d}" aria-label="${escapeHtml(item.title)} page on ${d}">`:(v?Number(v):'<span class="small">—</span>')}</td>`}).join('')}<td><strong>${pct}%</strong></td><td>${read}</td><td>${left}</td></tr>`});
+  return html+'</tbody></table>';
+}
+function renderGreatBooks(){
+  if(!greatBooksProgressGrid)return;const days=Number(greatBooksDays?.value)||14,dates=familyDateList(days),m=greatBooksSummary(state);
+  gbReadingCount.textContent=m.count;gbTotalPages.textContent=m.total.toLocaleString();gbPagesRead.textContent=m.read.toLocaleString();gbPagesLeft.textContent=m.left.toLocaleString();gbPercentDone.textContent=m.pct+'%';gbCurrentPace.textContent=m.pace.toFixed(1)+'/day';gbDaysLeft.textContent=m.days===null?'—':m.days;gbFinishDate.textContent=m.finish?'Finish '+new Date(m.finish+'T00:00:00').toLocaleDateString():'Enter pages to calculate';
+  greatBooksProgressGrid.innerHTML=greatBooksGridHtml(state,dates,true,greatBooksSearch?.value||'');
+  greatBooksProgressGrid.querySelectorAll('[data-gb-page]').forEach(input=>input.onchange=()=>{const item=GREAT_BOOKS_CATALOG.find(x=>x.id===input.dataset.gbPage);if(!item)return;const raw=input.value.trim();const gb=state.books.greatBooks;gb.pageByDate[item.id]=gb.pageByDate[item.id]||{};if(!raw)delete gb.pageByDate[item.id][input.dataset.gbDate];else gb.pageByDate[item.id][input.dataset.gbDate]=Math.max(Number(item.firstPage)||0,Math.min(Number(item.lastPage)||99999,Number(raw)||0));const complete=greatBookPagesRead(state,item)>=greatBookTotal(item)&&greatBookTotal(item)>0;gb.completedIds=complete?[...new Set([...(gb.completedIds||[]),item.id])]:(gb.completedIds||[]).filter(id=>id!==item.id);save();renderGreatBooks()});
+  greatBooksProgressGrid.querySelectorAll('[data-gb-shared]').forEach(b=>b.onclick=()=>{state.books.greatBooks.selectedId=b.dataset.gbShared;save();renderGreatBooks();refreshGreatBookShared()});
+  const sel=GREAT_BOOKS_CATALOG.find(x=>x.id===state.books.greatBooks.selectedId);greatBookSelectedLabel.textContent=sel?`${sel.author} — ${sel.title}`:'Choose Text/Pages beside a reading.';
+}
 async function refreshGreatBookShared(){const id=state.books.greatBooks.selectedId;if(!id||!currentUser){greatBookSharedList.innerHTML='';return}const {data,error}=await supabaseClient.from(GREAT_BOOK_CONTENT_TABLE).select('*').eq('catalog_id',id).order('created_at',{ascending:false});if(error){greatBookSharedList.innerHTML='<div class="small">Shared content setup needed: '+escapeHtml(error.message)+'</div>';return}greatBookSharedList.innerHTML=(data||[]).map(r=>`<div class="sharedItem"><div class="small">${new Date(r.created_at).toLocaleString()} • ${escapeHtml(r.created_by_email||'user')}</div>${r.content_text?`<div style="white-space:pre-wrap;margin-top:6px">${escapeHtml(r.content_text)}</div>`:''}${r.file_url?`<div style="margin-top:6px"><a href="${escapeHtml(r.file_url)}" target="_blank" rel="noopener">Open uploaded page/file</a></div>`:''}</div>`).join('')||'<div class="small">No shared text or page images yet.</div>'}
 async function saveSharedGreatBookText(){const id=state.books.greatBooks.selectedId,text=greatBookTextInput.value.trim();if(!id)return alert('Select a Great Books reading first.');if(!text)return alert('Paste or type text first.');const {error}=await supabaseClient.from(GREAT_BOOK_CONTENT_TABLE).insert({catalog_id:id,content_text:text,created_by:currentUser.id,created_by_email:currentUser.email});if(error)return alert(error.message);greatBookTextInput.value='';await refreshGreatBookShared();toast('Shared','Text is now available to all users.')}
 async function uploadSharedGreatBookFiles(){const id=state.books.greatBooks.selectedId,files=[...(greatBookImageInput.files||[])];if(!id)return alert('Select a Great Books reading first.');if(!files.length)return alert('Choose one or more images or PDFs.');for(const f of files){const path=`${id}/${Date.now()}-${cryptoId()}-${f.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const {error:ue}=await supabaseClient.storage.from(GREAT_BOOK_BUCKET).upload(path,f,{upsert:false});if(ue){alert(ue.message);continue}const {data:urlData}=supabaseClient.storage.from(GREAT_BOOK_BUCKET).getPublicUrl(path);const {error:ie}=await supabaseClient.from(GREAT_BOOK_CONTENT_TABLE).insert({catalog_id:id,file_path:path,file_url:urlData.publicUrl,created_by:currentUser.id,created_by_email:currentUser.email});if(ie)alert(ie.message)}greatBookImageInput.value='';await refreshGreatBookShared();toast('Uploaded','Page files are now shared.')}
@@ -3625,6 +3792,8 @@ function renderAll(commitXP=false){
   renderGoalWork();
   renderActiveBooksHabit();
   renderBooks();
+  renderExercise();
+  renderMeds();
   renderPriorities();
   renderBad();
   renderJournal();
@@ -3749,31 +3918,40 @@ addBadBtn.addEventListener("click", () => {
   save(); renderAll(true);
 });
 
-saveEntryBtn.addEventListener("click", () => {
+saveEntryBtn.addEventListener("click", async () => {
   const title = (journalTitle.value || "").trim() || "Untitled";
   const body = (journalBody.value || "").trim();
   const ts = nowISO();
   const id = state.journal.loadedId;
+  let entry;
   if(id){
-    const e = state.journal.entries.find(x=>x.id===id);
-    if(!e) return;
-    e.title = title; e.body = body; e.updatedAt = ts;
+    entry = state.journal.entries.find(x=>x.id===id);
+    if(!entry) return;
+    entry.title=title;entry.body=body;entry.entryDate=journalDate.value||todayISO();entry.segments=journalDraftSegments.map(s=>({...s}));entry.updatedAt=ts;
   } else {
-    state.journal.entries.push({ id: cryptoId(), title, body, createdAt: ts, updatedAt: ts });
-    state.journal.loadedId = null;
+    entry={id:cryptoId(),title,body,entryDate:journalDate.value||todayISO(),segments:journalDraftSegments.map(s=>({...s})),createdAt:ts,updatedAt:ts};state.journal.entries.push(entry);state.journal.loadedId=entry.id;
   }
-  save(); renderAll(true);
+  if(journalAudioBlob){entry.audioId=entry.audioId||('audio-'+entry.id);await saveJournalAudio(entry.audioId,journalAudioBlob);journalAudioBlob=null}
+  save();renderJournal();toast('Journal saved',`${title} — ${new Date(entry.entryDate+'T00:00:00').toLocaleDateString()}`);
 });
 newEntryBtn.addEventListener("click", () => { clearEntryEditor(); renderAll(true); });
-deleteEntryBtn.addEventListener("click", () => {
+deleteEntryBtn.addEventListener("click", async () => {
   const id = state.journal.loadedId;
   if(!id) return alert("No entry loaded.");
   if(!confirm("Delete this entry?")) return;
+  const old=state.journal.entries.find(e=>e.id===id);if(old?.audioId)await deleteJournalAudio(old.audioId);
   state.journal.entries = state.journal.entries.filter(e=>e.id!==id);
   clearEntryEditor();
   save(); renderAll(true);
 });
 journalSearch.addEventListener("input", () => renderJournal());
+if(journalAddRootBtn)journalAddRootBtn.onclick=()=>addJournalHeading(null);
+if(journalAddChildBtn)journalAddChildBtn.onclick=()=>{const id=state.journal.selectedHeadingId;if(!id)return alert('Select a heading first.');addJournalHeading(id)};
+if(journalAddSiblingBtn)journalAddSiblingBtn.onclick=()=>{const h=journalHeadingById(state.journal.selectedHeadingId);if(!h)return alert('Select a heading first.');addJournalHeading(h.parentId,h.id)};
+if(journalIndentBtn)journalIndentBtn.onclick=indentJournalHeading;if(journalOutdentBtn)journalOutdentBtn.onclick=outdentJournalHeading;
+if(journalMoveUpBtn)journalMoveUpBtn.onclick=()=>moveJournalHeading(-1);if(journalMoveDownBtn)journalMoveDownBtn.onclick=()=>moveJournalHeading(1);
+if(journalRenameHeadingBtn)journalRenameHeadingBtn.onclick=()=>{const h=journalHeadingById(state.journal.selectedHeadingId);if(!h)return alert('Select a heading first.');const n=prompt('Rename heading:',h.title);if(n&&n.trim()){h.title=n.trim();save();renderJournal()}};
+if(journalDeleteHeadingBtn)journalDeleteHeadingBtn.onclick=()=>{const h=journalHeadingById(state.journal.selectedHeadingId);if(!h)return alert('Select a heading first.');if(!confirm(`Delete “${h.title}” and its child headings? Existing journal text will remain saved.`))return;const ids=new Set([h.id]);let changed=true;while(changed){changed=false;state.journal.headings.forEach(x=>{if(ids.has(x.parentId)&&!ids.has(x.id)){ids.add(x.id);changed=true}})}state.journal.headings=state.journal.headings.filter(x=>!ids.has(x.id));state.journal.selectedHeadingId=null;save();renderJournal()};
 if(goalAddRootBtn)goalAddRootBtn.onclick=()=>addGoalNode(null);
 if(goalAddChildBtn)goalAddChildBtn.onclick=()=>{if(!state.goals.selectedId)return alert('Select a goal first.');addGoalNode(state.goals.selectedId)};
 if(goalAddSiblingBtn)goalAddSiblingBtn.onclick=()=>{const g=goalById(state.goals.selectedId);if(!g)return alert('Select a goal first.');addGoalNode(g.parentId||null,g.id)};
@@ -3783,7 +3961,10 @@ if(goalCompleteBtn)goalCompleteBtn.onclick=()=>{const g=goalById(state.goals.sel
 if(goalDeleteBtn)goalDeleteBtn.onclick=deleteGoalNode;if(goalSaveDescBtn)goalSaveDescBtn.onclick=()=>{const g=goalById(state.goals.selectedId);if(!g)return alert('Select a goal first.');g.desc=goalSelectedDesc.value;g.updatedAt=nowISO();save();toast('Saved','Goal description updated.')};
 if(goalWorkPrevBtn)goalWorkPrevBtn.onclick=()=>{state.goals.workStart=addDaysISO(state.goals.workStart||addDaysISO(todayISO(),-13),-14);save();renderGoalWork()};if(goalWorkNextBtn)goalWorkNextBtn.onclick=()=>{state.goals.workStart=addDaysISO(state.goals.workStart||addDaysISO(todayISO(),-13),14);save();renderGoalWork()};if(goalWorkTodayBtn)goalWorkTodayBtn.onclick=()=>{state.goals.workStart=addDaysISO(todayISO(),-13);save();renderGoalWork()};
 if(addBookBtn)addBookBtn.onclick=()=>addBook();if(bookModalCloseBtn)bookModalCloseBtn.onclick=()=>bookModalBackdrop.style.display='none';if(bookModalBackdrop)bookModalBackdrop.onclick=e=>{if(e.target===bookModalBackdrop)bookModalBackdrop.style.display='none'};
-if(greatBooksSearch)greatBooksSearch.oninput=renderGreatBooks;if(saveGreatBookTextBtn)saveGreatBookTextBtn.onclick=()=>saveSharedGreatBookText();if(uploadGreatBookImagesBtn)uploadGreatBookImagesBtn.onclick=()=>uploadSharedGreatBookFiles();if(refreshSharedGreatBooksBtn)refreshSharedGreatBooksBtn.onclick=()=>refreshGreatBookShared();
+if(addExerciseBtn)addExerciseBtn.onclick=()=>{const name=prompt('Exercise name:','');if(!name||!name.trim())return;state.exercise.items.push({id:cryptoId(),name:name.trim(),history:{},createdAt:nowISO(),updatedAt:nowISO()});save();renderExercise();toast('Exercise added',name.trim())};
+if(addMedBtn)addMedBtn.onclick=()=>{const name=prompt('Medication name:','');if(!name||!name.trim())return;const strength=medNumber(prompt('Usual strength (you can change it each time):','0'));const unit=prompt('Unit (mg, mcg, mL, units, tablets, etc.):','mg')||'mg';state.meds.items.push({id:cryptoId(),name:name.trim(),unit:unit.trim()||'mg',lastStrength:Math.max(0,strength),doses:[],createdAt:nowISO(),updatedAt:nowISO()});save();renderMeds();toast('Medication added',name.trim())};
+if(medHistoryDays)medHistoryDays.onchange=renderMeds;
+if(greatBooksSearch)greatBooksSearch.oninput=renderGreatBooks;if(greatBooksDays)greatBooksDays.onchange=renderGreatBooks;if(saveGreatBookTextBtn)saveGreatBookTextBtn.onclick=()=>saveSharedGreatBookText();if(uploadGreatBookImagesBtn)uploadGreatBookImagesBtn.onclick=()=>uploadSharedGreatBookFiles();if(refreshSharedGreatBooksBtn)refreshSharedGreatBooksBtn.onclick=()=>refreshGreatBookShared();
 initVoice();
 
 lifeAddChildBtn.addEventListener("click", addChild);
