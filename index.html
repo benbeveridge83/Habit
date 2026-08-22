@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Habit App (V19 Journal)</title>
+  <title>My Habit App (V21 Med Analytics)</title>
   <style>
     :root{
       --bg:#f7f8fb;
@@ -696,6 +696,12 @@
 .sharedItem{border:1px solid var(--line);border-radius:10px;padding:9px;margin:7px 0;background:#fff}
 .modal.wide{width:min(1000px,100%)}
 #bookChartCanvas{width:100%;height:300px;display:block}
+#medAnalyticsCanvas{width:100%;height:320px;display:block}
+.medAnalyticsControls{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.medAnalyticsControls .field{min-width:170px;flex:1}
+.medMetricValue{font-size:20px!important;overflow-wrap:anywhere}
+@media(max-width:900px){.medLiveMetrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:520px){.medLiveMetrics{grid-template-columns:1fr!important}}
 @media(max-width:700px){.booksGrid,.exerciseGrid{grid-template-columns:1fr}.goalWorkTable th:first-child,.goalWorkTable td:first-child{min-width:190px}.bookHabitRow{flex-direction:column;align-items:stretch}}
 
 </style>
@@ -1127,10 +1133,27 @@
       <div id="tab-meds" class="hidden">
         <div class="row" style="justify-content:space-between;align-items:flex-start">
           <div><h2>Meds</h2><div class="sub">Quickly record every dose and see your total for each day.</div></div>
-          <button class="primary" id="addMedBtn">+ Add Medication</button>
+          <div class="row"><button id="toggleMedAnalyticsBtn">📊 View dosage graphs</button><button class="primary" id="addMedBtn">+ Add Medication</button></div>
         </div>
         <div class="cloudNotice">The last strength used for each medication is automatically filled in for the next dose. Always follow your prescriber's directions.</div>
         <div id="medsList" class="exerciseGrid" style="margin-top:12px"></div>
+        <div id="medAnalyticsPanel" class="card" style="display:none;margin-top:12px">
+          <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin-bottom:4px">Medication analytics</h2><div class="sub">Each medication is analyzed separately so different units are never combined.</div></div></div>
+          <div class="medAnalyticsControls" style="margin-top:10px">
+            <label class="field"><span class="lbl">Medication</span><select id="medAnalyticsMedication"></select></label>
+            <label class="field"><span class="lbl">Bar graph</span><select id="medAnalyticsMetric"><option value="total">Total dosage per day</option><option value="hourly">Average dose per hour</option><option value="gap">Average time between doses</option></select></label>
+            <label class="field"><span class="lbl">Time range</span><select id="medAnalyticsDays"><option value="7">Last 7 days</option><option value="14" selected>Last 14 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label>
+          </div>
+          <div class="familyKpis medLiveMetrics" style="grid-template-columns:repeat(5,minmax(0,1fr));margin-top:12px">
+            <div class="familyKpi"><span class="small">Total dose today</span><strong class="medMetricValue" id="medTodayTotal">—</strong></div>
+            <div class="familyKpi"><span class="small">Projected full-day total</span><strong class="medMetricValue" id="medTodayProjected">—</strong></div>
+            <div class="familyKpi"><span class="small">Running dose per hour</span><strong class="medMetricValue" id="medTodayHourly">—</strong></div>
+            <div class="familyKpi"><span class="small">Time since last dose</span><strong class="medMetricValue" id="medSinceLast">—</strong></div>
+            <div class="familyKpi"><span class="small">Average time between doses today</span><strong class="medMetricValue" id="medAverageGap">—</strong></div>
+          </div>
+          <div class="small" id="medProjectionNote" style="margin-bottom:8px"></div>
+          <canvas id="medAnalyticsCanvas"></canvas><div id="medAnalyticsSummary" class="small"></div>
+        </div>
         <div class="familySection">
           <div class="row" style="justify-content:space-between;align-items:center"><div><h2 style="margin-bottom:4px">Daily medication history</h2><div class="sub">Totals and individual doses for recent days.</div></div><select id="medHistoryDays" style="width:150px"><option value="7">Last 7 days</option><option value="14" selected>Last 14 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></div>
           <div id="medsHistory" class="familyDataTable" style="margin-top:10px"></div>
@@ -1390,6 +1413,20 @@
 
 
 <div class="modalBackdrop" id="bookModalBackdrop"><div class="modal wide"><div class="modalHeader"><strong id="bookModalTitle">Reading Progress</strong><button id="bookModalCloseBtn">Close</button></div><div class="modalBody"><canvas id="bookChartCanvas"></canvas><div id="bookChartSummary" class="small"></div></div></div></div>
+<div class="modalBackdrop" id="medDoseModalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="medDoseModalTitle">
+    <div class="modalHeader"><strong id="medDoseModalTitle">Edit medication entry</strong><button id="medDoseModalCloseBtn">Close</button></div>
+    <div class="modalBody">
+      <label class="field"><span class="lbl">Medication</span><select id="medDoseMedication"></select></label>
+      <label class="field"><span class="lbl">Date</span><input id="medDoseDate" type="date"></label>
+      <label class="field"><span class="lbl">Time</span><input id="medDoseTime" type="time"></label>
+      <label class="field"><span class="lbl">Amount</span><input id="medDoseStrength" type="number" min="0.001" step="any" inputmode="decimal"></label>
+      <label class="field"><span class="lbl">Unit</span><input id="medDoseUnit" type="text" placeholder="mg, mcg, mL, tablets..."></label>
+      <div class="small">Saving updates the medication history and recalculates the daily total.</div>
+    </div>
+    <div class="modalFooter"><div class="row"><button id="medDoseModalCancelBtn">Cancel</button><button class="primary" id="medDoseModalSaveBtn">Save changes</button></div></div>
+  </div>
+</div>
 
 <div id="toastWrap"></div>
 </div>
@@ -2065,6 +2102,8 @@ const activeBooksHabitWrap=document.getElementById("activeBooksHabitWrap");
 const addBookBtn=document.getElementById("addBookBtn"), booksActiveList=document.getElementById("booksActiveList"), booksFinishedList=document.getElementById("booksFinishedList");
 const addExerciseBtn=document.getElementById("addExerciseBtn"), exerciseList=document.getElementById("exerciseList"), exerciseDateLabel=document.getElementById("exerciseDateLabel");
 const addMedBtn=document.getElementById("addMedBtn"), medsList=document.getElementById("medsList"), medsHistory=document.getElementById("medsHistory"), medHistoryDays=document.getElementById("medHistoryDays");
+const toggleMedAnalyticsBtn=document.getElementById("toggleMedAnalyticsBtn"),medAnalyticsPanel=document.getElementById("medAnalyticsPanel"),medAnalyticsMedication=document.getElementById("medAnalyticsMedication"),medAnalyticsMetric=document.getElementById("medAnalyticsMetric"),medAnalyticsDays=document.getElementById("medAnalyticsDays"),medAnalyticsCanvas=document.getElementById("medAnalyticsCanvas"),medAnalyticsSummary=document.getElementById("medAnalyticsSummary"),medTodayTotal=document.getElementById("medTodayTotal"),medTodayProjected=document.getElementById("medTodayProjected"),medTodayHourly=document.getElementById("medTodayHourly"),medSinceLast=document.getElementById("medSinceLast"),medAverageGap=document.getElementById("medAverageGap"),medProjectionNote=document.getElementById("medProjectionNote");
+const medDoseModalBackdrop=document.getElementById("medDoseModalBackdrop"),medDoseModalCloseBtn=document.getElementById("medDoseModalCloseBtn"),medDoseModalCancelBtn=document.getElementById("medDoseModalCancelBtn"),medDoseModalSaveBtn=document.getElementById("medDoseModalSaveBtn"),medDoseMedication=document.getElementById("medDoseMedication"),medDoseDate=document.getElementById("medDoseDate"),medDoseTime=document.getElementById("medDoseTime"),medDoseStrength=document.getElementById("medDoseStrength"),medDoseUnit=document.getElementById("medDoseUnit");
 const bookModalBackdrop=document.getElementById("bookModalBackdrop"), bookModalCloseBtn=document.getElementById("bookModalCloseBtn"), bookModalTitle=document.getElementById("bookModalTitle"), bookChartCanvas=document.getElementById("bookChartCanvas"), bookChartSummary=document.getElementById("bookChartSummary");
 const greatBooksSearch=document.getElementById("greatBooksSearch"), greatBooksDays=document.getElementById("greatBooksDays"), greatBooksRows=document.getElementById("greatBooksRows"), greatBooksProgressGrid=document.getElementById("greatBooksProgressGrid"), greatBookSelectedLabel=document.getElementById("greatBookSelectedLabel"), greatBookTextInput=document.getElementById("greatBookTextInput"), saveGreatBookTextBtn=document.getElementById("saveGreatBookTextBtn"), greatBookImageInput=document.getElementById("greatBookImageInput"), uploadGreatBookImagesBtn=document.getElementById("uploadGreatBookImagesBtn"), greatBookSharedList=document.getElementById("greatBookSharedList"), refreshSharedGreatBooksBtn=document.getElementById("refreshSharedGreatBooksBtn");
 const gbReadingCount=document.getElementById("gbReadingCount"),gbTotalPages=document.getElementById("gbTotalPages"),gbPagesRead=document.getElementById("gbPagesRead"),gbPagesLeft=document.getElementById("gbPagesLeft"),gbPercentDone=document.getElementById("gbPercentDone"),gbCurrentPace=document.getElementById("gbCurrentPace"),gbDaysLeft=document.getElementById("gbDaysLeft"),gbFinishDate=document.getElementById("gbFinishDate");
@@ -3709,6 +3748,30 @@ function renderExercise(){if(!exerciseList)return;const iso=state.ui.viewDate||t
 
 function medDoseDay(dose){return toLocalDateInput(new Date(dose.takenAt))}
 function medNumber(v){const n=Number(v);return Number.isFinite(n)?Math.round(n*1000)/1000:0}
+function medDuration(ms){if(!Number.isFinite(ms)||ms<0)return '—';const mins=Math.floor(ms/60000),h=Math.floor(mins/60),m=mins%60;return `${h}h ${m}m`}
+function medAverageGapMs(doses){if(doses.length<2)return null;const sorted=doses.slice().sort((a,b)=>new Date(a.takenAt)-new Date(b.takenAt));let sum=0;for(let i=1;i<sorted.length;i++)sum+=new Date(sorted[i].takenAt)-new Date(sorted[i-1].takenAt);return sum/(sorted.length-1)}
+function renderMedAnalytics(){
+  if(!medAnalyticsPanel||medAnalyticsPanel.style.display==='none')return;const items=state.meds?.items||[],prior=medAnalyticsMedication.value;medAnalyticsMedication.innerHTML=items.map(m=>`<option value="${escapeHtml(m.id)}">${escapeHtml(m.name)}</option>`).join('');if(items.some(m=>m.id===prior))medAnalyticsMedication.value=prior;const med=items.find(m=>m.id===medAnalyticsMedication.value)||items[0];if(!med){medAnalyticsCanvas.style.display='none';medAnalyticsSummary.textContent='Add a medication and record a dose to see analytics.';return}medAnalyticsCanvas.style.display='block';medAnalyticsMedication.value=med.id;
+  const now=new Date(),today=todayISO(),midnight=new Date(now.getFullYear(),now.getMonth(),now.getDate()),elapsedHours=Math.max((now-midnight)/3600000,1/60),todayDoses=(med.doses||[]).filter(d=>medDoseDay(d)===today&&new Date(d.takenAt)<=now),total=todayDoses.reduce((s,d)=>s+medNumber(d.strength),0),hourly=total/elapsedHours,projected=hourly*24,last=todayDoses.slice().sort((a,b)=>b.takenAt.localeCompare(a.takenAt))[0],gap=medAverageGapMs(todayDoses),unit=med.unit||todayDoses[0]?.unit||'';
+  medTodayTotal.textContent=`${medNumber(total)} ${unit}`;medTodayProjected.textContent=`${medNumber(projected)} ${unit}`;medTodayHourly.textContent=`${medNumber(hourly)} ${unit}/hr`;medSinceLast.textContent=last?medDuration(now-new Date(last.takenAt)):'No dose today';medAverageGap.textContent=gap===null?'Need 2 doses':medDuration(gap);medProjectionNote.textContent='Projected total = today’s recorded dose divided by hours elapsed since midnight, then multiplied by 24. It is a pace estimate, not a dosing recommendation.';
+  const days=Math.max(1,Number(medAnalyticsDays.value)||14),metric=medAnalyticsMetric.value,dates=Array.from({length:days},(_,i)=>addDaysISO(today,i-days+1)),values=dates.map(date=>{const ds=(med.doses||[]).filter(d=>medDoseDay(d)===date),dayTotal=ds.reduce((s,d)=>s+medNumber(d.strength),0);if(metric==='gap'){const g=medAverageGapMs(ds);return g===null?0:g/3600000}if(metric==='hourly')return dayTotal/(date===today?elapsedHours:24);return dayTotal});drawMedBarChart(dates,values,metric,unit,med.name);
+}
+function drawMedBarChart(dates,values,metric,unit,name){
+  const dpr=devicePixelRatio||1,rect=medAnalyticsCanvas.getBoundingClientRect(),cssW=Math.max(320,rect.width||700),cssH=320;medAnalyticsCanvas.width=cssW*dpr;medAnalyticsCanvas.height=cssH*dpr;const ctx=medAnalyticsCanvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const pad={l:58,r:12,t:24,b:50},w=cssW,h=cssH,max=Math.max(...values,0),axisMax=max>0?max*1.12:1,plotW=w-pad.l-pad.r,plotH=h-pad.t-pad.b;ctx.clearRect(0,0,w,h);ctx.font='11px system-ui';ctx.strokeStyle='#e5e7eb';ctx.fillStyle='#64748b';for(let i=0;i<=4;i++){const v=axisMax*(4-i)/4,y=pad.t+plotH*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(medNumber(v),4,y+4)}const slot=plotW/Math.max(1,values.length),barW=Math.max(3,slot*.68);values.forEach((v,i)=>{const bh=v/axisMax*plotH,x=pad.l+i*slot+(slot-barW)/2,y=pad.t+plotH-bh;ctx.fillStyle='#2563eb';ctx.fillRect(x,y,barW,bh);if(values.length<=14||i%Math.ceil(values.length/14)===0){ctx.save();ctx.translate(x+barW/2,h-8);ctx.rotate(-Math.PI/5);ctx.fillStyle='#64748b';ctx.textAlign='right';ctx.fillText(dates[i].slice(5),0,0);ctx.restore()}});const label=metric==='total'?`total ${unit} per midnight-to-midnight day`:metric==='hourly'?`average ${unit} per hour`:'average hours between doses';medAnalyticsSummary.textContent=`${name}: ${label}. Days without enough recorded doses show zero.`;
+}
+let editingMedDose=null;
+function closeMedDoseModal(){editingMedDose=null;if(medDoseModalBackdrop)medDoseModalBackdrop.style.display='none'}
+function openMedDoseModal(medId,doseId){
+  const items=state.meds?.items||[],m=items.find(x=>x.id===medId),d=m?.doses?.find(x=>x.id===doseId);if(!m||!d)return;
+  editingMedDose={medId,doseId};
+  medDoseMedication.innerHTML=items.map(x=>`<option value="${escapeHtml(x.id)}" ${x.id===medId?'selected':''}>${escapeHtml(x.name)}</option>`).join('');
+  const taken=new Date(d.takenAt);medDoseDate.value=toLocalDateInput(taken);medDoseTime.value=`${String(taken.getHours()).padStart(2,'0')}:${String(taken.getMinutes()).padStart(2,'0')}`;medDoseStrength.value=medNumber(d.strength);medDoseUnit.value=d.unit||m.unit||'mg';medDoseModalBackdrop.style.display='flex';medDoseStrength.focus();
+}
+function saveMedDoseEdit(){
+  if(!editingMedDose)return;const items=state.meds?.items||[],source=items.find(x=>x.id===editingMedDose.medId),dose=source?.doses?.find(x=>x.id===editingMedDose.doseId),target=items.find(x=>x.id===medDoseMedication.value);if(!source||!dose||!target)return closeMedDoseModal();
+  const strength=medNumber(medDoseStrength.value),unit=medDoseUnit.value.trim(),date=medDoseDate.value,time=medDoseTime.value;if(strength<=0)return alert('Enter an amount greater than zero.');if(!unit)return alert('Enter a unit.');if(!date||!time)return alert('Enter both a date and time.');const taken=new Date(`${date}T${time}:00`);if(Number.isNaN(taken.getTime()))return alert('Enter a valid date and time.');
+  if(target.id!==source.id){source.doses=source.doses.filter(x=>x.id!==dose.id);target.doses=target.doses||[];target.doses.push(dose)}dose.strength=strength;dose.unit=unit;dose.takenAt=taken.toISOString();source.updatedAt=nowISO();target.updatedAt=nowISO();target.lastStrength=strength;target.unit=unit;save();closeMedDoseModal();renderMeds();toast('Medication entry updated',`${target.name}: ${strength} ${unit}`);
+}
 function renderMeds(){
   if(!medsList||!medsHistory)return;
   const today=todayISO(),items=state.meds?.items||[];
@@ -3722,8 +3785,10 @@ function renderMeds(){
   items.forEach(m=>(m.doses||[]).filter(d=>medDoseDay(d)>=start&&medDoseDay(d)<=today).forEach(d=>rows.push({m,d,day:medDoseDay(d)})));
   rows.sort((a,b)=>b.d.takenAt.localeCompare(a.d.takenAt));
   const totals={};rows.forEach(r=>{const key=r.m.id+'|'+r.day;totals[key]=(totals[key]||0)+medNumber(r.d.strength)});
-  medsHistory.innerHTML=rows.length?`<table><thead><tr><th>Date</th><th>Medication</th><th>Time taken</th><th>Dose</th><th>Daily total</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${new Date(r.day+'T00:00:00').toLocaleDateString()}</td><td><strong>${escapeHtml(r.m.name)}</strong></td><td>${new Date(r.d.takenAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</td><td>${medNumber(r.d.strength)} ${escapeHtml(r.d.unit||r.m.unit)}</td><td><strong>${medNumber(totals[r.m.id+'|'+r.day])} ${escapeHtml(r.d.unit||r.m.unit)}</strong></td><td><button class="danger" data-med-dose-delete="${r.m.id}|${r.d.id}">Remove</button></td></tr>`).join('')}</tbody></table>`:'<div class="small" style="padding:12px">No doses recorded in this time range.</div>';
+  medsHistory.innerHTML=rows.length?`<table><thead><tr><th>Date</th><th>Medication</th><th>Time taken</th><th>Dose</th><th>Daily total</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${new Date(r.day+'T00:00:00').toLocaleDateString()}</td><td><strong>${escapeHtml(r.m.name)}</strong></td><td>${new Date(r.d.takenAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</td><td>${medNumber(r.d.strength)} ${escapeHtml(r.d.unit||r.m.unit)}</td><td><strong>${medNumber(totals[r.m.id+'|'+r.day])} ${escapeHtml(r.d.unit||r.m.unit)}</strong></td><td><div class="row"><button data-med-dose-edit="${r.m.id}|${r.d.id}">Edit</button><button class="danger" data-med-dose-delete="${r.m.id}|${r.d.id}">Remove</button></div></td></tr>`).join('')}</tbody></table>`:'<div class="small" style="padding:12px">No doses recorded in this time range.</div>';
+  medsHistory.querySelectorAll('[data-med-dose-edit]').forEach(b=>b.onclick=()=>{const [mid,did]=b.dataset.medDoseEdit.split('|');openMedDoseModal(mid,did)});
   medsHistory.querySelectorAll('[data-med-dose-delete]').forEach(b=>b.onclick=()=>{const [mid,did]=b.dataset.medDoseDelete.split('|'),m=items.find(x=>x.id===mid);if(m&&confirm('Remove this dose from the log?')){m.doses=m.doses.filter(d=>d.id!==did);save();renderMeds()}});
+  renderMedAnalytics();
 }
 function openBookChart(id){const b=bookById(id);if(!b)return;bookModalTitle.textContent=b.title+' — Reading Progress';bookModalBackdrop.style.display='flex';const entries=Object.entries(b.history||{}).sort((a,c)=>a[0].localeCompare(c[0])).slice(-45),dpr=devicePixelRatio||1,rect=bookChartCanvas.getBoundingClientRect();bookChartCanvas.width=Math.max(650,rect.width*dpr);bookChartCanvas.height=300*dpr;const ctx=bookChartCanvas.getContext('2d');ctx.scale(dpr,dpr);const w=bookChartCanvas.width/dpr,h=300,pad={l:45,r:15,t:15,b:40};ctx.clearRect(0,0,w,h);ctx.strokeStyle='#e5e7eb';ctx.fillStyle='#64748b';ctx.font='11px system-ui';[0,.25,.5,.75,1].forEach(v=>{const y=pad.t+(1-v)*(h-pad.t-pad.b);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(Math.round(v*b.totalPages),4,y+4)});if(entries.length){const bw=Math.max(4,(w-pad.l-pad.r)/entries.length-3);entries.forEach(([date,page],i)=>{const x=pad.l+i*(w-pad.l-pad.r)/entries.length,y=pad.t+(1-page/b.totalPages)*(h-pad.t-pad.b);ctx.fillStyle='#2563eb';ctx.fillRect(x,y,bw,h-pad.b-y);if(i%Math.max(1,Math.floor(entries.length/7))===0){ctx.fillStyle='#64748b';ctx.fillText(date.slice(5),x-4,h-12)}})}bookChartSummary.textContent=`Current page ${b.currentPage} of ${b.totalPages} (${Math.round(b.currentPage/b.totalPages*100)}%). Each bar shows the highest page recorded on that date.`}
 function greatBookTotal(item){return Math.max(0,Number(item.pages)||0)}
@@ -3964,6 +4029,13 @@ if(addBookBtn)addBookBtn.onclick=()=>addBook();if(bookModalCloseBtn)bookModalClo
 if(addExerciseBtn)addExerciseBtn.onclick=()=>{const name=prompt('Exercise name:','');if(!name||!name.trim())return;state.exercise.items.push({id:cryptoId(),name:name.trim(),history:{},createdAt:nowISO(),updatedAt:nowISO()});save();renderExercise();toast('Exercise added',name.trim())};
 if(addMedBtn)addMedBtn.onclick=()=>{const name=prompt('Medication name:','');if(!name||!name.trim())return;const strength=medNumber(prompt('Usual strength (you can change it each time):','0'));const unit=prompt('Unit (mg, mcg, mL, units, tablets, etc.):','mg')||'mg';state.meds.items.push({id:cryptoId(),name:name.trim(),unit:unit.trim()||'mg',lastStrength:Math.max(0,strength),doses:[],createdAt:nowISO(),updatedAt:nowISO()});save();renderMeds();toast('Medication added',name.trim())};
 if(medHistoryDays)medHistoryDays.onchange=renderMeds;
+if(toggleMedAnalyticsBtn)toggleMedAnalyticsBtn.onclick=()=>{const opening=medAnalyticsPanel.style.display==='none';medAnalyticsPanel.style.display=opening?'block':'none';toggleMedAnalyticsBtn.textContent=opening?'Hide dosage graphs':'📊 View dosage graphs';if(opening)requestAnimationFrame(renderMedAnalytics)};
+[medAnalyticsMedication,medAnalyticsMetric,medAnalyticsDays].forEach(x=>{if(x)x.onchange=renderMedAnalytics});
+setInterval(()=>{if(medAnalyticsPanel&&medAnalyticsPanel.style.display!=='none')renderMedAnalytics()},60000);
+if(medDoseModalCloseBtn)medDoseModalCloseBtn.onclick=closeMedDoseModal;
+if(medDoseModalCancelBtn)medDoseModalCancelBtn.onclick=closeMedDoseModal;
+if(medDoseModalSaveBtn)medDoseModalSaveBtn.onclick=saveMedDoseEdit;
+if(medDoseModalBackdrop)medDoseModalBackdrop.onclick=e=>{if(e.target===medDoseModalBackdrop)closeMedDoseModal()};
 if(greatBooksSearch)greatBooksSearch.oninput=renderGreatBooks;if(greatBooksDays)greatBooksDays.onchange=renderGreatBooks;if(saveGreatBookTextBtn)saveGreatBookTextBtn.onclick=()=>saveSharedGreatBookText();if(uploadGreatBookImagesBtn)uploadGreatBookImagesBtn.onclick=()=>uploadSharedGreatBookFiles();if(refreshSharedGreatBooksBtn)refreshSharedGreatBooksBtn.onclick=()=>refreshGreatBookShared();
 initVoice();
 
