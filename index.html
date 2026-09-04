@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Habit App (V21 Med Analytics)</title>
+  <title>My Habit App</title>
   <style>
     :root{
       --bg:#f7f8fb;
@@ -704,12 +704,126 @@
 @media(max-width:520px){.medLiveMetrics{grid-template-columns:1fr!important}}
 @media(max-width:700px){.booksGrid,.exerciseGrid{grid-template-columns:1fr}.goalWorkTable th:first-child,.goalWorkTable td:first-child{min-width:190px}.bookHabitRow{flex-direction:column;align-items:stretch}}
 
+/* V22 app shell */
+:root{
+  --app-navy:#0b1730;
+  --app-navy-2:#132544;
+  --app-blue:#3b82f6;
+  --app-cyan:#22d3ee;
+  --app-surface:#f4f7fb;
+  --sidebar-width:252px;
+}
+body{background:var(--app-surface);min-height:100vh}
+#appShell{min-height:100vh}
+.appSidebar{
+  position:fixed;inset:0 auto 0 0;width:var(--sidebar-width);z-index:100;
+  display:flex;flex-direction:column;color:#dbeafe;
+  background:linear-gradient(180deg,var(--app-navy),#091426 72%,#07101f);
+  border-right:1px solid rgba(255,255,255,.08);
+  box-shadow:10px 0 35px rgba(15,23,42,.10);
+}
+.appBrand{display:flex;align-items:center;gap:12px;padding:22px 18px 18px}
+.appBrandMark{
+  width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
+  color:#fff;font-size:21px;font-weight:900;
+  background:linear-gradient(135deg,var(--app-blue),var(--app-cyan));
+  box-shadow:0 10px 28px rgba(34,211,238,.18);
+}
+.appBrand strong{display:block;color:#fff;font-size:16px;letter-spacing:.1px}
+.appBrand span{display:block;color:#8ea3c3;font-size:12px;margin-top:2px}
+.sidebarScroll{flex:1;min-height:0;overflow:auto;padding:4px 12px 22px;scrollbar-width:thin}
+.navGroupLabel{
+  padding:15px 10px 7px;color:#6f88ad;font-size:11px;font-weight:800;
+  letter-spacing:.11em;text-transform:uppercase;
+}
+.appSidebar .globalNavBtn{
+  width:100%;min-height:44px;margin:2px 0;padding:10px 12px;border:0;border-radius:11px;
+  display:flex;align-items:center;gap:11px;text-align:left;color:#b8c7dd;background:transparent;
+  font-size:14px;font-weight:650;
+}
+.appSidebar .globalNavBtn:hover{color:#fff;background:rgba(255,255,255,.07)}
+.appSidebar .globalNavBtn.active{
+  color:#fff;background:linear-gradient(90deg,rgba(59,130,246,.28),rgba(34,211,238,.10));
+  box-shadow:inset 3px 0 0 var(--app-cyan);
+}
+.navIcon{width:22px;text-align:center;font-size:17px;filter:saturate(.85)}
+.sidebarFoot{margin-top:auto;padding:14px 18px 20px;border-top:1px solid rgba(255,255,255,.08);color:#6f88ad;font-size:12px}
+header{
+  margin-left:var(--sidebar-width);width:calc(100% - var(--sidebar-width));height:70px;padding:10px 24px;z-index:90;
+  background:rgba(255,255,255,.92);border-bottom:1px solid #dce4ef;
+}
+.pageIdentity{min-width:170px}
+.pageIdentity h1{font-size:18px;letter-spacing:-.2px}
+.pageIdentity .small{font-size:12px;margin-top:2px;display:block}
+header .meta{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+header .meta::-webkit-scrollbar{display:none}
+header .pill{flex:0 0 auto;background:#f8fafc;padding:7px 10px}
+header button,header .headerLink{flex:0 0 auto;min-height:38px}
+main{max-width:none;margin-left:var(--sidebar-width);padding:22px 24px 38px}
+main>.grid{display:block}
+main>.grid>section.card{
+  padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;min-width:0;
+}
+.appSection{animation:appSectionIn .18s ease-out}
+@keyframes appSectionIn{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{border-color:#dce4ef;box-shadow:0 8px 24px rgba(31,50,81,.06)}
+button{min-height:40px;font-weight:650;transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
+button:active{transform:translateY(1px)}
+button.primary{color:#1d4ed8;background:#eff6ff;border-color:#93c5fd}
+input,select,textarea{min-height:42px;border-color:#d7e0ec}
+.appMobileDock{display:none}
+#globalMenuBtn{display:none}
+#viewBarCard{top:84px}
+
+@media(max-width:1050px){
+  header .meta .accountPill,header .meta #signOutBtn,header .meta .headerLink{display:none}
+}
+@media(max-width:760px){
+  :root{--sidebar-width:0px}
+  .appSidebar{display:none}
+  header{margin-left:0;width:100%;height:auto;min-height:62px;padding:9px 12px;align-items:center}
+  .pageIdentity{min-width:0}
+  .pageIdentity h1{font-size:16px}
+  .pageIdentity .small{display:none}
+  header .meta{gap:5px}
+  header .meta .pill{display:none}
+  header .meta .pill:first-child{display:flex}
+  header #resetTodayBtn{display:none}
+  #globalMenuBtn{display:inline-flex;align-items:center;justify-content:center;font-size:0;width:42px;padding:0}
+  #globalMenuBtn::before{content:'☰';font-size:20px}
+  main{margin-left:0;padding:12px 10px 92px}
+  #viewBarCard{top:72px}
+  .globalMenuPanel{padding:0!important;background:rgba(3,10,22,.62);backdrop-filter:blur(4px)}
+  .globalMenuInner{
+    position:absolute;inset:0 0 0 auto;width:min(88vw,360px);margin:0;border:0;border-radius:18px 0 0 18px;
+    padding:16px;background:#fff;overflow:auto;box-shadow:-18px 0 60px rgba(2,6,23,.28);
+  }
+  .globalMenuInner>.row:first-child{position:sticky;top:-16px;background:#fff;z-index:2;padding:16px 0 10px}
+  .globalNavGrid{grid-template-columns:1fr 1fr;gap:8px}
+  .globalNavGrid .globalNavBtn{min-height:54px;padding:10px;text-align:center;justify-content:center;background:#f8fafc}
+  .appMobileDock{
+    position:fixed;left:8px;right:8px;bottom:8px;z-index:110;display:grid;grid-template-columns:repeat(5,1fr);
+    padding:7px 6px calc(7px + env(safe-area-inset-bottom));border:1px solid rgba(203,213,225,.9);
+    border-radius:18px;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);
+    box-shadow:0 16px 40px rgba(15,23,42,.20);
+  }
+  .appMobileDock button{border:0;background:transparent;min-height:52px;padding:5px 2px;border-radius:12px;color:#64748b;font-size:11px}
+  .appMobileDock button span{display:block;font-size:19px;line-height:22px}
+  .appMobileDock .globalNavBtn.active{color:#1d4ed8;background:#eff6ff}
+  .appMobileDock .dockMore.active{color:#1d4ed8;background:#eff6ff}
+  .medAnalyticsControls .field{min-width:100%}
+}
+@media(max-width:420px){
+  .globalNavGrid{grid-template-columns:1fr 1fr}
+  .appMobileDock{left:5px;right:5px;bottom:5px}
+}
+
 </style>
 </head>
 <body>
 <div id="authScreen" class="authScreen">
   <div class="authCard">
-    <h1>My Habit App <span class="small">(V17)</span></h1>
+    <h1>My Habit App</h1>
     <div class="sub" style="margin:0">Sign in so your habits are private and available on your other devices.</div>
     <div class="authFields">
       <input id="authEmail" type="email" autocomplete="email" placeholder="Email address" />
@@ -724,8 +838,33 @@
 </div>
 <div id="appShell" class="authPending">
 
+<aside class="appSidebar" aria-label="Main navigation">
+  <div class="appBrand"><div class="appBrandMark">✓</div><div><strong>My Habit App</strong><span>Build your day</span></div></div>
+  <nav class="sidebarScroll">
+    <div class="navGroupLabel">Today</div>
+    <button class="globalNavBtn active" data-tab="habits"><span class="navIcon">◎</span>Habits</button>
+    <button class="globalNavBtn" data-tab="todo"><span class="navIcon">✓</span>To-Do</button>
+    <button class="globalNavBtn" data-tab="priorities"><span class="navIcon">↟</span>Priorities</button>
+    <div class="navGroupLabel">Plan</div>
+    <button class="globalNavBtn" data-tab="goals"><span class="navIcon">◇</span>Goals</button>
+    <button class="globalNavBtn" data-tab="goalwork"><span class="navIcon">▦</span>Goals Work</button>
+    <button class="globalNavBtn" data-tab="life"><span class="navIcon">⌘</span>Life Architecture</button>
+    <div class="navGroupLabel">Track</div>
+    <button class="globalNavBtn" data-tab="journal"><span class="navIcon">✎</span>Journal</button>
+    <button class="globalNavBtn" data-tab="books"><span class="navIcon">▤</span>Books</button>
+    <button class="globalNavBtn" data-tab="greatbooks"><span class="navIcon">▥</span>Great Books</button>
+    <button class="globalNavBtn" data-tab="exercise"><span class="navIcon">◆</span>Exercise</button>
+    <button class="globalNavBtn" data-tab="meds"><span class="navIcon">＋</span>Medication</button>
+    <button class="globalNavBtn" data-tab="bad"><span class="navIcon">◌</span>Bad Habits</button>
+    <div class="navGroupLabel">Account</div>
+    <button class="globalNavBtn" data-tab="family"><span class="navIcon">♙</span>Family Dashboard</button>
+    <button class="globalNavBtn" data-tab="settings"><span class="navIcon">⚙</span>Settings</button>
+  </nav>
+  <div class="sidebarFoot">V22 · Cloud synchronized</div>
+</aside>
+
 <header>
-  <h1>My Habit App <span class="small">(V18)</span></h1>
+  <div class="pageIdentity"><h1 id="currentSectionLabel">Habits</h1><span class="small">Focus on what matters today</span></div>
   <div class="meta">
     <div class="pill">Today <strong id="todayLabel"></strong></div>
     <div class="pill">Level <strong id="levelLabel" class="mono">1</strong> <span class="mono" id="xpLabel">0 XP</span></div>
@@ -742,7 +881,7 @@
 <div id="globalMenuPanel" class="globalMenuPanel" style="display:none">
   <div class="globalMenuInner">
     <div class="row" style="justify-content:space-between;align-items:center">
-      <strong>Navigate</strong>
+      <div><strong>Navigate</strong><div class="small">Choose an area</div></div>
       <button id="globalMenuCloseBtn">Close</button>
     </div>
     <div class="globalNavGrid">
@@ -1297,6 +1436,14 @@
     </aside>
   </div>
 </main>
+
+<nav class="appMobileDock" aria-label="Quick navigation">
+  <button class="globalNavBtn active" data-tab="habits"><span>◎</span>Habits</button>
+  <button class="globalNavBtn" data-tab="todo"><span>✓</span>To-Do</button>
+  <button class="globalNavBtn" data-tab="journal"><span>✎</span>Journal</button>
+  <button class="globalNavBtn" data-tab="meds"><span>＋</span>Meds</button>
+  <button class="dockMore" id="mobileMoreBtn" type="button"><span>•••</span>More</button>
+</nav>
 
 
 <div class="modalBackdrop" id="catModalBackdrop">
@@ -1913,6 +2060,8 @@ const menuBtn = document.getElementById("menuBtn");
 const globalMenuBtn = document.getElementById("globalMenuBtn");
 const globalMenuPanel = document.getElementById("globalMenuPanel");
 const globalMenuCloseBtn = document.getElementById("globalMenuCloseBtn");
+const mobileMoreBtn = document.getElementById("mobileMoreBtn");
+const currentSectionLabel = document.getElementById("currentSectionLabel");
 const menuPanel = document.getElementById("menuPanel");
 const tabsEl = document.getElementById("tabs");
 const sidePanel = document.getElementById("sidePanel");
@@ -1971,6 +2120,12 @@ function fmtLong(d){
 function showTab(name){
   const tabName = String(name||"habits");
   const names = ["habits","todo","goals","goalwork","priorities","bad","journal","life","books","exercise","meds","greatbooks","family","settings"];
+  const sectionNames = {
+    habits:"Habits", todo:"To-Do", goals:"Goals", goalwork:"Goals Work",
+    priorities:"Priorities", bad:"Bad Habit Destroyer", journal:"Journal",
+    life:"Life Architecture", books:"Books", exercise:"Exercise",
+    meds:"Medication", greatbooks:"Great Books", family:"Family Dashboard", settings:"Settings"
+  };
   names.forEach(n=>{
     const sec=document.getElementById("tab-"+n);
     if(sec) sec.classList.toggle("hidden", n!==tabName);
@@ -1978,6 +2133,8 @@ function showTab(name){
   document.querySelectorAll("[data-tab]").forEach(el=>{
     el.classList.toggle("active", !!(el.dataset && el.dataset.tab===tabName));
   });
+  if(currentSectionLabel) currentSectionLabel.textContent = sectionNames[tabName] || "My Habit App";
+  if(mobileMoreBtn) mobileMoreBtn.classList.toggle("active", !["habits","todo","journal","meds"].includes(tabName));
   state.ui = state.ui || {};
   state.ui.activeTab = tabName;
   save();
@@ -2016,6 +2173,11 @@ if(menuBtn && menuPanel){
 
 if(globalMenuBtn && globalMenuPanel){
   globalMenuBtn.addEventListener("click", ()=>{
+    globalMenuPanel.style.display = globalMenuPanel.style.display === "none" ? "block" : "none";
+  });
+}
+if(mobileMoreBtn && globalMenuPanel){
+  mobileMoreBtn.addEventListener("click", ()=>{
     globalMenuPanel.style.display = globalMenuPanel.style.display === "none" ? "block" : "none";
   });
 }
