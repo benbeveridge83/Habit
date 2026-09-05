@@ -755,7 +755,7 @@ header{
 .pageIdentity{min-width:170px}
 .pageIdentity h1{font-size:18px;letter-spacing:-.2px}
 .pageIdentity .small{font-size:12px;margin-top:2px;display:block}
-header .meta{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+header .meta{min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
 header .meta::-webkit-scrollbar{display:none}
 header .pill{flex:0 0 auto;background:#f8fafc;padding:7px 10px}
 header button,header .headerLink{flex:0 0 auto;min-height:38px}
@@ -770,7 +770,7 @@ main>.grid>section.card{
 button{min-height:40px;font-weight:650;transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
 button:active{transform:translateY(1px)}
 button.primary{color:#1d4ed8;background:#eff6ff;border-color:#93c5fd}
-input,select,textarea{min-height:42px;border-color:#d7e0ec}
+input:not([type=checkbox]):not([type=radio]):not([type=color]),select,textarea{min-height:42px;border-color:#d7e0ec}
 .appMobileDock{display:none}
 #globalMenuBtn{display:none}
 #viewBarCard{top:84px}
@@ -860,7 +860,7 @@ input,select,textarea{min-height:42px;border-color:#d7e0ec}
     <button class="globalNavBtn" data-tab="family"><span class="navIcon">♙</span>Family Dashboard</button>
     <button class="globalNavBtn" data-tab="settings"><span class="navIcon">⚙</span>Settings</button>
   </nav>
-  <div class="sidebarFoot">V22 · Cloud synchronized</div>
+  <div class="sidebarFoot">V22</div>
 </aside>
 
 <header>
@@ -1358,7 +1358,10 @@ input,select,textarea{min-height:42px;border-color:#d7e0ec}
 
       <div id="tab-settings" class="hidden">
         <h2>Settings</h2>
-        <div class="sub">Minimal controls for V1.</div>
+        <div class="row" style="margin-bottom:16px">
+          <button type="button" onclick="document.getElementById('signOutBtn').click()">Sign Out</button>
+          <button type="button" onclick="document.getElementById('resetTodayBtn').click()">Reset Today</button>
+        </div>
         <div class="card">
           <h2>Progress & XP</h2>
           <div class="row">
