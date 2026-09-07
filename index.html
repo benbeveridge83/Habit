@@ -16,11 +16,11 @@
   <script>
     (async function(){
       try{
-        const response = await fetch('./app-v22-base.html?v=20260907-journalplanner1', {cache:'no-store'});
+        const response = await fetch('./app-v22-base.html?v=20260907-prioritycenter1', {cache:'no-store'});
         if(!response.ok) throw new Error('Could not load app (' + response.status + ')');
         let html = await response.text();
-        html = html.replace('</head>', '<link rel="stylesheet" href="./habit-grid-fix.css?v=20260904-gridfix1"><link rel="stylesheet" href="./journal-outline-enhancement.css?v=20260907-journalplanner1"></head>');
-        html = html.replace('</body>', '<script src="./habit-grid-fix.js?v=20260904-gridfix1"><\/script><script src="./todo-inline-controls.js?v=20260907-todocontrols1"><\/script><script src="./journal-outline-enhancement.js?v=20260907-journalplanner1"><\/script></body>');
+        html = html.replace('</head>', '<link rel="stylesheet" href="./habit-grid-fix.css?v=20260904-gridfix1"><link rel="stylesheet" href="./journal-outline-enhancement.css?v=20260907-journalplanner1"><link rel="stylesheet" href="./priority-center.css?v=20260907-prioritycenter1"></head>');
+        html = html.replace('</body>', '<script src="./habit-grid-fix.js?v=20260904-gridfix1"><\/script><script src="./todo-inline-controls.js?v=20260907-todocontrols1"><\/script><script src="./journal-outline-enhancement.js?v=20260907-journalplanner1"><\/script><script src="./priority-center.js?v=20260907-prioritycenter1"><\/script></body>');
         document.open();
         document.write(html);
         document.close();
