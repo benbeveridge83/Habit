@@ -1,0 +1,1 @@
+window.GRADED_READING_PLAN={v:'2026-09-07-v2',s:'Gateway to the Great Books, Volume 1, Plan of Graded Reading, Parts I-IV',l:{I:'7th and 8th Grades',II:'9th and 10th Grades',III:'11th and 12th Grades',IV:'College Freshmen and Sophomores'},c:{gateway:'Gateway to the Great Books',greatbooks:'Great Books of the Western World'}};window.GRADED_READING_PLAN_ITEMS=[];
