@@ -1,0 +1,18 @@
+#tab-logic .logicHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+#tab-logic .logicHeader h2{margin:0 0 4px}
+#tab-logic .logicModes,#tab-logic .logicActions{display:flex;gap:8px;flex-wrap:wrap}
+#tab-logic .logicLayout{display:grid;grid-template-columns:minmax(250px,330px) minmax(0,1fr) minmax(240px,300px);gap:14px;align-items:start}
+#tab-logic .logicChecks{display:grid;gap:8px;margin-bottom:12px}
+#tab-logic .logicChecks label{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:#fff}
+#tab-logic .logicChecks input{width:auto;margin-top:3px}
+#tab-logic .logicStem{font-size:18px;line-height:1.45;white-space:normal;margin-bottom:12px}
+#tab-logic .logicChoiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#tab-logic .logicChoice{min-height:52px;text-align:left}
+#tab-logic .logicChoice.selected{border-color:rgba(37,99,235,.55);background:rgba(37,99,235,.08)}
+#tab-logic .logicFeedback{margin-top:12px;display:grid;gap:6px;padding:10px 0}
+#tab-logic .logicGood{color:#15803d}
+#tab-logic .logicBad{color:#b91c1c}
+#tab-logic .logicSquareRef{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;line-height:1.8;background:rgba(241,245,249,.55)}
+#tab-logic button{min-height:44px}
+@media(max-width:1050px){#tab-logic .logicLayout{grid-template-columns:1fr}}
+@media(max-width:620px){#tab-logic .logicChoiceGrid{grid-template-columns:1fr}}
