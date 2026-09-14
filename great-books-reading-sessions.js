@@ -26,46 +26,45 @@
     return html+'</tbody></table>';
   }
   function init(){
-    if(!root.document||!core||typeof root.renderGreatBooks!=='function'||!root.greatBooksProgressGrid)return;
-    const originalRender=root.renderGreatBooks;
-    const catalog=()=>root.GREAT_BOOKS_CATALOG||[];
+    if(!root.document||!core||typeof renderGreatBooks!=='function'||typeof greatBooksProgressGrid==='undefined'||!greatBooksProgressGrid)return;
+    const originalRender=renderGreatBooks;
+    const catalog=()=>typeof GREAT_BOOKS_CATALOG!=='undefined'?GREAT_BOOKS_CATALOG:[];
     function ensureState(){
-      const gb=root.state.books.greatBooks;gb.readingSessions=gb.readingSessions||{};
+      const gb=state.books.greatBooks;gb.readingSessions=gb.readingSessions||{};
       if(gb.readingSessionsVersion===1)return;
       catalog().forEach(item=>{if(!Array.isArray(gb.readingSessions[item.id]))gb.readingSessions[item.id]=core.migratePageByDate(item,(gb.pageByDate||{})[item.id]||{});});
-      gb.readingSessionsVersion=1;root.save();
+      gb.readingSessionsVersion=1;save();
     }
     function ensureModal(){
-      let back=root.document.getElementById('gbReadingSessionModalBackdrop');if(back)return back;
-      back=root.document.createElement('div');back.id='gbReadingSessionModalBackdrop';back.className='gbSessionModalBackdrop';back.innerHTML='<div class="gbSessionModal" role="dialog" aria-modal="true"><button class="gbSessionModalClose" type="button" aria-label="Close">x</button><div id="gbSessionModalBody"></div></div>';
-      root.document.body.appendChild(back);back.querySelector('.gbSessionModalClose').onclick=()=>back.classList.remove('open');back.onclick=e=>{if(e.target===back)back.classList.remove('open');};return back;
+      let back=document.getElementById('gbReadingSessionModalBackdrop');if(back)return back;
+      back=document.createElement('div');back.id='gbReadingSessionModalBackdrop';back.className='gbSessionModalBackdrop';back.innerHTML='<div class="gbSessionModal" role="dialog" aria-modal="true"><button class="gbSessionModalClose" type="button" aria-label="Close">x</button><div id="gbSessionModalBody"></div></div>';
+      document.body.appendChild(back);back.querySelector('.gbSessionModalClose').onclick=()=>back.classList.remove('open');back.onclick=e=>{if(e.target===back)back.classList.remove('open');};return back;
     }
     function openLog(item){
-      const sessions=root.state.books.greatBooks.readingSessions[item.id]||[],total=core.totalAssigned(item),read=core.sessionPagesRead(sessions),remaining=total-read,next=core.nextAssignedPage(item,sessions);if(!total)return;
+      const sessions=state.books.greatBooks.readingSessions[item.id]||[],total=core.totalAssigned(item),read=core.sessionPagesRead(sessions),remaining=total-read,next=core.nextAssignedPage(item,sessions);if(!total)return;
       const back=ensureModal(),body=back.querySelector('#gbSessionModalBody');
       body.innerHTML=`<h3>${esc(item.title)}</h3><div class="small">Assigned: ${esc(item.pageNumbers||'')} - ${remaining} pages remaining</div><div class="gbSessionPromptNext">Start on page <strong>${next}</strong></div><label class="gbSessionPromptLabel">How many pages did you read?<input id="gbSessionPageCount" type="number" inputmode="numeric" min="1" max="${remaining}" step="1" placeholder="2"></label><div class="gbSessionModalActions"><button type="button" data-gb-session-cancel>Cancel</button><button type="button" class="primary" data-gb-session-save>Add reading</button></div>`;
       back.classList.add('open');const input=body.querySelector('#gbSessionPageCount');setTimeout(()=>input.focus(),0);body.querySelector('[data-gb-session-cancel]').onclick=()=>back.classList.remove('open');
-      const submit=()=>{const count=Number(input.value);try{const result=core.createSession(item,sessions,count,root.todayISO(),typeof root.cryptoId==='function'?root.cryptoId():String(Date.now()));root.state.books.greatBooks.readingSessions[item.id]=result.sessions;root.state.books.greatBooks.pageByDate[item.id]=root.state.books.greatBooks.pageByDate[item.id]||{};root.state.books.greatBooks.pageByDate[item.id][root.todayISO()]=result.session.endPage;if(result.complete&&!root.state.books.greatBooks.completedIds.includes(item.id))root.state.books.greatBooks.completedIds.push(item.id);root.save();back.classList.remove('open');render();}catch(error){root.alert(error.message);}};
+      const submit=()=>{const count=Number(input.value);try{const result=core.createSession(item,sessions,count,todayISO(),typeof cryptoId==='function'?cryptoId():String(Date.now()));state.books.greatBooks.readingSessions[item.id]=result.sessions;state.books.greatBooks.pageByDate[item.id]=state.books.greatBooks.pageByDate[item.id]||{};state.books.greatBooks.pageByDate[item.id][todayISO()]=result.session.endPage;if(result.complete&&!state.books.greatBooks.completedIds.includes(item.id))state.books.greatBooks.completedIds.push(item.id);save();back.classList.remove('open');render();}catch(error){alert(error.message);}};
       body.querySelector('[data-gb-session-save]').onclick=submit;input.onkeydown=e=>{if(e.key==='Enter')submit();};
     }
     function openDetail(item,index){
-      const s=(root.state.books.greatBooks.readingSessions[item.id]||[])[index];if(!s)return;const back=ensureModal(),body=back.querySelector('#gbSessionModalBody'),date=new Date(`${s.date}T00:00:00`).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});body.innerHTML=`<h3>${esc(item.title)}</h3><div class="gbSessionDetailPages">${esc(s.pageLabel)}</div><div>Read ${esc(date)}</div><div class="small">${s.count} page${s.count===1?'':'s'}</div><div class="gbSessionModalActions"><button type="button" class="primary" data-gb-session-close>Close</button></div>`;back.classList.add('open');body.querySelector('[data-gb-session-close]').onclick=()=>back.classList.remove('open');
+      const s=(state.books.greatBooks.readingSessions[item.id]||[])[index];if(!s)return;const back=ensureModal(),body=back.querySelector('#gbSessionModalBody'),date=new Date(`${s.date}T00:00:00`).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});body.innerHTML=`<h3>${esc(item.title)}</h3><div class="gbSessionDetailPages">${esc(s.pageLabel)}</div><div>Read ${esc(date)}</div><div class="small">${s.count} page${s.count===1?'':'s'}</div><div class="gbSessionModalActions"><button type="button" class="primary" data-gb-session-close>Close</button></div>`;back.classList.add('open');body.querySelector('[data-gb-session-close]').onclick=()=>back.classList.remove('open');
     }
     function bindGrid(){
-      const grid=root.greatBooksProgressGrid;
-      grid.querySelectorAll('[data-gb-log]').forEach(b=>b.onclick=e=>{e.stopPropagation();const item=catalog().find(x=>x.id===b.dataset.gbLog);if(item)openLog(item);});
-      grid.querySelectorAll('[data-gb-log-row]').forEach(row=>row.onclick=e=>{if(e.target.closest('button,[data-gb-session-detail]'))return;const item=catalog().find(x=>x.id===row.dataset.gbLogRow);if(item&&core.totalAssigned(item))openLog(item);});
-      grid.querySelectorAll('[data-gb-session-detail]').forEach(b=>b.onclick=e=>{e.stopPropagation();const [id,index]=b.dataset.gbSessionDetail.split('|'),item=catalog().find(x=>x.id===id);if(item)openDetail(item,Number(index));});
-      grid.querySelectorAll('[data-gb-complete]').forEach(b=>b.onclick=e=>{e.stopPropagation();const gb=root.state.books.greatBooks,id=b.dataset.gbComplete;if(gb.completedIds.includes(id))gb.completedIds=gb.completedIds.filter(x=>x!==id);else gb.completedIds=[...new Set([...gb.completedIds,id])];root.save();render();});
-      grid.querySelectorAll('[data-gb-shared]').forEach(b=>b.onclick=e=>{e.stopPropagation();root.state.books.greatBooks.selectedId=b.dataset.gbShared;root.save();if(typeof root.refreshGreatBookShared==='function')root.refreshGreatBookShared();});
+      greatBooksProgressGrid.querySelectorAll('[data-gb-log]').forEach(b=>b.onclick=e=>{e.stopPropagation();const item=catalog().find(x=>x.id===b.dataset.gbLog);if(item)openLog(item);});
+      greatBooksProgressGrid.querySelectorAll('[data-gb-log-row]').forEach(row=>row.onclick=e=>{if(e.target.closest('button,[data-gb-session-detail]'))return;const item=catalog().find(x=>x.id===row.dataset.gbLogRow);if(item&&core.totalAssigned(item))openLog(item);});
+      greatBooksProgressGrid.querySelectorAll('[data-gb-session-detail]').forEach(b=>b.onclick=e=>{e.stopPropagation();const [id,index]=b.dataset.gbSessionDetail.split('|'),item=catalog().find(x=>x.id===id);if(item)openDetail(item,Number(index));});
+      greatBooksProgressGrid.querySelectorAll('[data-gb-complete]').forEach(b=>b.onclick=e=>{e.stopPropagation();const gb=state.books.greatBooks,id=b.dataset.gbComplete;if(gb.completedIds.includes(id))gb.completedIds=gb.completedIds.filter(x=>x!==id);else gb.completedIds=[...new Set([...gb.completedIds,id])];save();render();});
+      greatBooksProgressGrid.querySelectorAll('[data-gb-shared]').forEach(b=>b.onclick=e=>{e.stopPropagation();state.books.greatBooks.selectedId=b.dataset.gbShared;save();if(typeof refreshGreatBookShared==='function')refreshGreatBookShared();});
     }
     function relabel(){
-      const tab=root.document.getElementById('tab-greatbooks'),sub=tab&&tab.querySelector(':scope > .row > div > .sub'),notice=tab&&tab.querySelector('.cloudNotice');if(sub)sub.textContent='Click a reading and enter only the number of pages you read. The app calculates the page range and your next starting page.';if(notice)notice.textContent='The Reading column stays frozen. Reading sessions stay next to each other instead of being spread across calendar dates. Tap a page-range cell to see the date it was read.';if(root.greatBooksDays)root.greatBooksDays.style.display='none';
+      const tab=document.getElementById('tab-greatbooks'),sub=tab&&tab.querySelector(':scope > .row > div > .sub'),notice=tab&&tab.querySelector('.cloudNotice');if(sub)sub.textContent='Click a reading and enter only the number of pages you read. The app calculates the page range and your next starting page.';if(notice)notice.textContent='The Reading column stays frozen. Reading sessions stay next to each other instead of being spread across calendar dates. Tap a page-range cell to see the date it was read.';if(typeof greatBooksDays!=='undefined'&&greatBooksDays)greatBooksDays.style.display='none';
     }
     function render(){
-      ensureState();originalRender();relabel();root.greatBooksProgressGrid.innerHTML=buildGridHtml(root.state,catalog(),root.greatBooksSearch&&root.greatBooksSearch.value||'');bindGrid();
+      ensureState();originalRender();relabel();greatBooksProgressGrid.innerHTML=buildGridHtml(state,catalog(),typeof greatBooksSearch!=='undefined'&&greatBooksSearch?greatBooksSearch.value:'');bindGrid();
     }
-    root.renderGreatBooks=render;if(root.greatBooksSearch)root.greatBooksSearch.oninput=render;ensureState();render();
+    renderGreatBooks=render;if(typeof greatBooksSearch!=='undefined'&&greatBooksSearch)greatBooksSearch.oninput=render;ensureState();render();
   }
   return {buildGridHtml,init};
 });
