@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const logic = require('./logic-study.js');
+const filterControls = require('./logic-filter-controls.js');
 
 assert.equal(logic.relationshipBetween('A','O'), 'Contradictories');
 assert.equal(logic.relationshipBetween('A','E'), 'Contraries');
@@ -33,8 +34,20 @@ assert(!conditional.stem.includes('?'));
 assert(!/^Identify\b|^Is this\b/i.test(conditional.stem));
 assert.equal(logic.makeReasoningAssertion('noerror').answer, 'No error / valid reasoning');
 
+assert.equal(typeof filterControls.setGroupChecked, 'function');
+assert.equal(typeof filterControls.addGroupControls, 'function');
+assert.equal(typeof filterControls.validateBeforeNew, 'function');
+
+const fakeBoxes = [{checked:false},{checked:false},{checked:false}];
+const fakeGroup = { querySelectorAll(){ return fakeBoxes; } };
+assert.equal(filterControls.setGroupChecked(fakeGroup, true), 3);
+assert(fakeBoxes.every(x => x.checked === true));
+filterControls.setGroupChecked(fakeGroup, false);
+assert(fakeBoxes.every(x => x.checked === false));
+
 const indexHtml = fs.readFileSync('./index.html','utf8');
 assert(indexHtml.includes('logic-study.css'));
 assert(indexHtml.includes('logic-study.js'));
+assert(indexHtml.includes('logic-filter-controls.js'));
 
 console.log('logic-study tests passed');
