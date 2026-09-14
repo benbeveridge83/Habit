@@ -1,0 +1,21 @@
+.gbSessionTable .gbSessionReadingHead{position:sticky;left:0;z-index:9;min-width:285px;text-align:left;background:#f8fafc}
+.gbSessionReading{position:sticky;left:0;z-index:6;min-width:285px;max-width:285px;text-align:left!important;white-space:normal!important;background:#fff!important;cursor:pointer}
+.gbCompleteRow .gbSessionReading{background:#f0fdf4!important}
+.gbSessionReading>strong{display:block;font-size:13px;line-height:1.25;margin-bottom:3px}
+.gbNextPage{display:inline-block;margin-top:6px;padding:4px 8px;border-radius:999px;background:rgba(37,99,235,.08);color:#1d4ed8;font-weight:700}
+.gbSessionRowActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.gbSessionRowActions button{padding:5px 8px;font-size:11px}
+.gbSessionCell{min-width:92px;max-width:116px}
+.gbSessionChip{width:100%;padding:7px 6px;border-radius:9px;font-weight:700;font-variant-numeric:tabular-nums;background:rgba(37,99,235,.06);border-color:rgba(37,99,235,.22)}
+.gbSessionEmpty{color:#cbd5e1}
+.gbSessionModalBackdrop{position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.48);display:none;align-items:center;justify-content:center;padding:18px}
+.gbSessionModalBackdrop.open{display:flex}
+.gbSessionModal{position:relative;width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 24px 70px rgba(15,23,42,.28)}
+.gbSessionModal h3{margin:0 32px 6px 0;font-size:17px}
+.gbSessionModalClose{position:absolute;right:10px;top:10px;width:32px;height:32px;padding:0;border-radius:999px}
+.gbSessionPromptNext{font-size:16px;margin:16px 0 10px}
+.gbSessionPromptLabel{display:grid;gap:6px;font-weight:700}
+.gbSessionPromptLabel input{font-size:22px;text-align:center}
+.gbSessionModalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.gbSessionDetailPages{font-size:24px;font-weight:800;margin:18px 0 8px;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.gbSessionReading,.gbSessionTable .gbSessionReadingHead{min-width:225px;max-width:225px}.gbSessionCell{min-width:82px}.gbSessionModal{padding:16px}}
