@@ -93,7 +93,7 @@
       },
       um:{
         title:'Undistributed Middle',
-        html:`<p><strong>Invalid categorical syllogism.</strong> The middle term appears in both premises but is never distributed, so the premises never establish that the two end groups overlap in the needed way.</p><p class="logicStudyForm">All A are M.<br>All B are M.<br>∴ All B are A.</p><p><strong>Example:</strong> All cats are animals. All dogs are animals. Therefore all dogs are cats.</p>`
+        html:`<p><strong>Invalid categorical syllogism.</strong> The middle term appears in both premises but is never distributed, so the premises do not establish a link between the two end terms.</p><p class="logicStudyForm">All A are M.<br>All B are M.<br>∴ All B are A.</p><p><strong>Example:</strong> All cats are animals. All dogs are animals. Therefore all dogs are cats.</p>`
       },
       ilmj:{
         title:'Illicit Major',
@@ -268,9 +268,10 @@
     let changed=false;
     GROUPS.forEach(group=>{if(enhanceGroup(doc,group)) changed=true;});
     hideLegacyBulk(doc);
+    if(!changed) return false;
     if(doc.getElementById('logicModeSquare')) renderModeStudy(doc,'square');
     if(doc.getElementById('logicModeErrors')) renderModeStudy(doc,'errors');
-    return changed;
+    return true;
   }
 
   function init(doc){
