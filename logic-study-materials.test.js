@@ -41,4 +41,34 @@ for (const [groupId, values] of Object.entries(expectedMaterials)) {
   }
 }
 
+// Regression: MutationObserver calls mount() after our own DOM insertions.
+// Once all groups are already enhanced, mount() must be a no-op; otherwise
+// renderModeStudy() writes innerHTML, which triggers the observer again forever.
+let outlineWrites = 0;
+const outline = {
+  get innerHTML(){ return ''; },
+  set innerHTML(value){ outlineWrites += 1; }
+};
+const panel = {
+  querySelector(selector){ return selector === '.logicStudyOutline' ? outline : null; }
+};
+const modeEl = {
+  querySelector(){ return panel; }
+};
+const enhancedSource = { dataset:{logicStudyEnhanced:'1'} };
+const emptyDualList = { querySelectorAll(){ return []; } };
+const fakeDoc = {
+  getElementById(id){
+    if(['logicSquareCats','logicAssertionKinds','logicErrorCats'].includes(id)) return enhancedSource;
+    if(['logicModeSquare','logicModeErrors'].includes(id)) return modeEl;
+    return null;
+  },
+  querySelector(selector){
+    return selector.startsWith('[data-logic-dual-group=') ? emptyDualList : null;
+  },
+  querySelectorAll(){ return []; }
+};
+assert.equal(study.mount(fakeDoc), false, 'nothing new should be mounted once Logic groups are enhanced');
+assert.equal(outlineWrites, 0, 'an observer-triggered no-op mount must not rewrite study DOM');
+
 console.log('logic study materials tests passed');
