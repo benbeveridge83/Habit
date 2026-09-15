@@ -1,0 +1,28 @@
+#tab-logic .logicQuizSource{display:none!important}
+#tab-logic .logicLegacyBulkHidden{display:none!important}
+#tab-logic .logicDualChecks{display:grid;gap:8px;margin-bottom:12px}
+#tab-logic .logicDualHeader,#tab-logic .logicDualRow{display:grid;grid-template-columns:minmax(0,1fr) 58px 58px;gap:8px;align-items:center}
+#tab-logic .logicDualHeader{padding:0 10px 2px;color:var(--muted,#64748b);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center}
+#tab-logic .logicDualHeader span:first-child{text-align:left}
+#tab-logic .logicDualRow{min-height:46px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff}
+#tab-logic .logicDualTopic{font-size:14px;line-height:1.25}
+#tab-logic .logicMiniCheck{display:grid;place-items:center;cursor:pointer;min-height:30px}
+#tab-logic .logicMiniCheck input{width:20px;height:20px;margin:0;cursor:pointer}
+#tab-logic .logicStudyFilterControls{margin-top:-2px}
+#tab-logic .logicStudyPanel{margin-top:14px}
+#tab-logic .logicStudyPanelHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+#tab-logic .logicStudyPanelHeader h3{margin:0 0 3px}
+#tab-logic .logicStudyOutline{display:grid;gap:12px}
+#tab-logic .logicStudyNote{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.9)}
+#tab-logic .logicStudyNote h4{margin:0 0 8px;font-size:17px}
+#tab-logic .logicStudyNote p{margin:7px 0;line-height:1.5}
+#tab-logic .logicStudyNote ul,#tab-logic .logicStudyNote ol{margin:7px 0 7px 20px;padding:0;display:grid;gap:5px;line-height:1.45}
+#tab-logic .logicStudyForm{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:rgba(241,245,249,.8);border:1px solid var(--line);border-radius:10px;padding:10px 12px;line-height:1.55}
+#tab-logic .logicStudyEmpty{padding:16px;border:1px dashed var(--line);border-radius:12px;color:var(--muted,#64748b);text-align:center}
+@media(max-width:620px){
+  #tab-logic .logicDualHeader,#tab-logic .logicDualRow{grid-template-columns:minmax(0,1fr) 52px 52px;gap:5px}
+  #tab-logic .logicDualRow{padding:8px}
+  #tab-logic .logicDualTopic{font-size:13px}
+  #tab-logic .logicMiniCheck input{width:22px;height:22px}
+  #tab-logic .logicStudyFilterControls{grid-template-columns:1fr 1fr}
+}
