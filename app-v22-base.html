@@ -1175,26 +1175,36 @@ input:not([type=checkbox]):not([type=radio]):not([type=color]),select,textarea{m
       </div>
 
       <div id="tab-journal" class="hidden">
-        <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2>Journal</h2><div class="sub">Type freely, or record audio while routing your words into different outline headings.</div></div><button id="newEntryBtn">+ New Entry</button></div>
-        <div class="journalLayout">
-          <div class="journalPanel">
-            <h2>Journal Structure</h2>
-            <div class="sub">Create your usual parent / child outline. While recording, tap a heading to send the next words there.</div>
+        <div class="row journalPageHeader" style="justify-content:space-between;align-items:flex-start"><div><h2>Journal</h2><div class="sub">A little guidance for your daily reflection. Speak or write, then mark the topics you covered.</div></div><div class="row"><button id="journalTopicSettingsBtn" aria-expanded="false" aria-controls="journalTopicSettings">Topic settings</button><button id="newEntryBtn">+ New Entry</button></div></div>
+        <section id="journalTopicSettings" class="journalPanel" hidden aria-labelledby="journalSettingsTitle">
+            <div class="row" style="justify-content:space-between"><h2 id="journalSettingsTitle">Topic settings</h2><button id="journalTopicSettingsDoneBtn" class="primary">Done with settings</button></div>
+            <div class="sub">Set up the topics and prompts you want to reflect on. Select a topic to edit it, or organize topics into parents, children, and siblings. Changes save automatically.</div>
             <div class="row"><button class="primary" id="journalAddRootBtn">+ Parent</button><button id="journalAddChildBtn">+ Child</button><button id="journalAddSiblingBtn">+ Sibling</button></div>
             <div class="row" style="margin-top:6px"><button id="journalIndentBtn">Indent</button><button id="journalOutdentBtn">Outdent</button><button id="journalMoveUpBtn">↑</button><button id="journalMoveDownBtn">↓</button></div>
             <div class="row" style="margin-top:6px"><button id="journalRenameHeadingBtn">Rename</button><button class="danger" id="journalDeleteHeadingBtn">Delete</button></div>
             <div id="journalOutlineTree" style="margin-top:10px"></div>
+        </section>
+        <div id="journalWorkspace" class="journalLayout">
+          <div class="journalVoiceControls">
+            <div class="row"><button id="journalVoiceBtn" class="primary voiceBtn">🎤 Record + transcribe</button><button id="journalPauseBtn" disabled>Pause</button><span id="journalVoiceStatus" class="small" role="status">Audio and text will both be saved.</span></div>
+            <div id="journalActiveHeading" class="cloudNotice" aria-live="polite">Choose a topic before or during recording, or speak freely under General.</div>
           </div>
-          <div class="journalPanel">
+          <div class="journalPanel journalGuidePanel">
+            <div class="journalGuideHeading"><div class="journalEyebrow">YOUR REFLECTION GUIDE</div><h2>Your topics</h2><p class="sub">Tap a topic to choose where your next words go. Tap <strong>Covered</strong> when you have talked or written about it.</p></div>
+            <div class="journalProgressRow"><span id="journalTopicProgress" role="status" aria-live="polite">0 of 0 topics covered</span><span class="small">This entry</span></div>
+            <progress id="journalTopicProgressBar" max="1" value="0" aria-label="Topics covered in this entry"></progress>
+            <div id="journalTopicGuide"></div>
+            <p class="journalGuideFootnote">Your checkmarks are saved with this entry when you select Save Entry.</p>
+          </div>
+          <div class="journalPanel journalComposerPanel">
+            <div class="journalEyebrow">MAKE SPACE TO REFLECT</div><h2>Your entry</h2>
             <div class="row"><div style="flex:1"><label class="small">Entry title<input id="journalTitle" placeholder="Today, Weekly Review, Family..." /></label></div><div style="width:170px"><label class="small">Date<input id="journalDate" type="date" /></label></div></div>
-            <div class="row" style="margin:10px 0"><button id="journalVoiceBtn" class="primary voiceBtn">🎤 Record + transcribe</button><button id="journalPauseBtn" disabled>Pause</button><span id="journalVoiceStatus" class="small">Audio and text will both be saved.</span></div>
-            <div id="journalActiveHeading" class="cloudNotice">Choose a heading on the left before or during recording.</div>
             <label class="small">Typed journal text<textarea id="journalBody" placeholder="Type here..."></textarea></label>
             <div id="journalSegments"></div>
             <audio id="journalAudioPlayer" class="audioPlayer" controls style="display:none"></audio>
             <div class="row" style="justify-content:space-between;margin-top:10px"><button class="primary" id="saveEntryBtn">Save Entry</button><button class="danger" id="deleteEntryBtn">Delete Loaded Entry</button></div>
           </div>
-          <div class="journalPanel">
+          <div class="journalPanel journalEntriesPanel">
             <h2>Entries</h2><input id="journalSearch" placeholder="Search date, title, text, headings..." />
             <div id="entriesList" class="list" style="margin-top:10px"></div>
           </div>
@@ -3447,17 +3457,25 @@ Enter 1-5:`);
   renderAll(true);
 }
 
-let journalDraftSegments=[],journalAudioBlob=null,journalAudioUrl=null;
+let journalDraftSegments=[],journalDraftCoveredIds=[],journalAudioBlob=null,journalAudioUrl=null,journalRecordingBusy=false;
+let journalLoadSequence=0;
 const journalHeadingById=id=>(state.journal.headings||[]).find(h=>h.id===id);
 const journalHeadingChildren=pid=>(state.journal.headings||[]).filter(h=>(h.parentId||null)===(pid||null)).sort((a,b)=>(a.order||0)-(b.order||0));
 function journalHeadingPath(id){const names=[];let h=journalHeadingById(id),guard=0;while(h&&guard++<30){names.unshift(h.title);h=journalHeadingById(h.parentId)}return names.join(' › ')||'General';}
+function selectJournalHeading(id){
+  state.journal.selectedHeadingId=journalHeadingById(id)?id:null;
+  document.dispatchEvent(new CustomEvent('journal-topic-selected'));
+  save();renderJournalOutline();renderJournalActiveHeading();
+}
 function renderJournalOutline(){
   if(!journalOutlineTree)return;journalOutlineTree.innerHTML='';
-  const draw=(pid,depth)=>journalHeadingChildren(pid).forEach(h=>{const row=document.createElement('div');row.className='journalOutlineRow'+(h.id===state.journal.selectedHeadingId?' selected recordTarget':'');row.style.marginLeft=(depth*16)+'px';row.innerHTML=`<span>${depth?'↳':'▸'}</span><strong>${escapeHtml(h.title)}</strong>`;row.onclick=()=>{state.journal.selectedHeadingId=h.id;save();renderJournalOutline();renderJournalActiveHeading();};journalOutlineTree.appendChild(row);draw(h.id,depth+1)});draw(null,0);
+  const visited=new Set();
+  const draw=(pid,depth)=>journalHeadingChildren(pid).forEach(h=>{if(visited.has(h.id))return;visited.add(h.id);const row=document.createElement('button');row.type='button';row.className='journalOutlineRow'+(h.id===state.journal.selectedHeadingId?' selected':'');row.dataset.headingId=h.id;row.style.marginLeft=(Math.min(depth,5)*16)+'px';row.innerHTML=`<span>${depth?'↳':'▸'}</span><strong>${escapeHtml(h.title)}</strong>`;row.onclick=()=>selectJournalHeading(h.id);journalOutlineTree.appendChild(row);draw(h.id,depth+1)});draw(null,0);
   if(!state.journal.headings.length)journalOutlineTree.innerHTML='<div class="small">Add a parent heading such as Family, Work, Health, or Gratitude.</div>';
+  window.renderJournalTopicGuide?.();
 }
-function renderJournalActiveHeading(){const h=journalHeadingById(state.journal.selectedHeadingId);journalActiveHeading.innerHTML=h?`Recording destination: <strong>${escapeHtml(journalHeadingPath(h.id))}</strong>`:'Choose a heading on the left before or during recording. Unassigned speech goes to General.';}
-function renderJournalSegments(){journalSegments.innerHTML=journalDraftSegments.map((s,i)=>`<div class="journalSegment"><div class="row" style="justify-content:space-between"><h4>${escapeHtml(journalHeadingPath(s.headingId))}</h4><button class="danger iconBtn" data-jseg-delete="${i}">Remove</button></div><p>${escapeHtml(s.text||'')}</p></div>`).join('');journalSegments.querySelectorAll('[data-jseg-delete]').forEach(b=>b.onclick=()=>{journalDraftSegments.splice(Number(b.dataset.jsegDelete),1);renderJournalSegments()});}
+function renderJournalActiveHeading(){const h=journalHeadingById(state.journal.selectedHeadingId);journalActiveHeading.innerHTML=h?`Current topic: <strong>${escapeHtml(journalHeadingPath(h.id))}</strong>`:'Current topic: <strong>General</strong>. Choose a topic for your next words, or speak freely.';}
+function renderJournalSegments(){journalSegments.innerHTML=journalDraftSegments.map((s,i)=>`<div class="journalSegment"><div class="row" style="justify-content:space-between"><h4>${escapeHtml(journalHeadingPath(s.headingId))}</h4><button class="danger iconBtn" data-jseg-delete="${i}" ${journalRecordingBusy?'disabled':''}>Remove</button></div><p>${escapeHtml(s.text||'')}</p></div>`).join('');journalSegments.querySelectorAll('[data-jseg-delete]').forEach(b=>b.onclick=()=>{if(journalRecordingBusy)return;journalDraftSegments.splice(Number(b.dataset.jsegDelete),1);renderJournalSegments()});}
 function renderJournal(){
   if(journalDate&&!journalDate.value)journalDate.value=todayISO();
   renderJournalOutline();renderJournalActiveHeading();renderJournalSegments();
@@ -3471,11 +3489,12 @@ async function saveJournalAudio(id,blob){const db=await openJournalAudioDB();awa
 async function getJournalAudio(id){if(!id)return null;const db=await openJournalAudioDB(),blob=await new Promise((resolve,reject)=>{const req=db.transaction('recordings').objectStore('recordings').get(id);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)});db.close();return blob}
 async function deleteJournalAudio(id){if(!id)return;const db=await openJournalAudioDB();await new Promise((resolve,reject)=>{const tx=db.transaction('recordings','readwrite');tx.objectStore('recordings').delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}
 async function loadEntry(id){
-  const e=state.journal.entries.find(x=>x.id===id);if(!e)return;state.journal.loadedId=id;journalTitle.value=e.title||'';journalDate.value=e.entryDate||todayISO();journalBody.value=e.body||'';journalDraftSegments=(e.segments||[]).map(s=>({...s}));journalAudioBlob=null;renderJournalSegments();
+  if(journalRecordingBusy)return;
+  const e=state.journal.entries.find(x=>x.id===id);if(!e)return;const sequence=++journalLoadSequence;state.journal.loadedId=id;journalTitle.value=e.title||'';journalDate.value=e.entryDate||todayISO();journalBody.value=e.body||'';journalDraftSegments=(e.segments||[]).map(s=>({...s}));journalDraftCoveredIds=Array.isArray(e.coveredHeadingIds)?[...new Set(e.coveredHeadingIds)]:[];journalAudioBlob=null;renderJournalSegments();window.renderJournalTopicGuide?.();
   if(journalAudioUrl)URL.revokeObjectURL(journalAudioUrl);journalAudioUrl=null;journalAudioPlayer.style.display='none';journalAudioPlayer.removeAttribute('src');
-  const blob=await getJournalAudio(e.audioId);if(blob){journalAudioUrl=URL.createObjectURL(blob);journalAudioPlayer.src=journalAudioUrl;journalAudioPlayer.style.display='block'}save();
+  const blob=await getJournalAudio(e.audioId);if(sequence!==journalLoadSequence)return;if(blob){journalAudioUrl=URL.createObjectURL(blob);journalAudioPlayer.src=journalAudioUrl;journalAudioPlayer.style.display='block'}save();
 }
-function clearEntryEditor(){state.journal.loadedId=null;journalTitle.value='';journalDate.value=todayISO();journalBody.value='';journalDraftSegments=[];journalAudioBlob=null;if(journalAudioUrl)URL.revokeObjectURL(journalAudioUrl);journalAudioUrl=null;journalAudioPlayer.style.display='none';journalAudioPlayer.removeAttribute('src');renderJournalSegments();save();}
+function clearEntryEditor(){if(journalRecordingBusy)return;++journalLoadSequence;state.journal.loadedId=null;state.journal.selectedHeadingId=null;journalTitle.value='';journalDate.value=todayISO();journalBody.value='';journalDraftSegments=[];journalDraftCoveredIds=[];journalAudioBlob=null;if(journalAudioUrl)URL.revokeObjectURL(journalAudioUrl);journalAudioUrl=null;journalAudioPlayer.style.display='none';journalAudioPlayer.removeAttribute('src');renderJournalSegments();renderJournalOutline();renderJournalActiveHeading();save();}
 function addJournalHeading(parentId=null,afterId=null){const title=prompt(parentId?'Child heading:':'Journal heading:','');if(!title||!title.trim())return;const sib=journalHeadingChildren(parentId),after=sib.find(x=>x.id===afterId);const h={id:cryptoId(),title:title.trim(),parentId:parentId||null,order:after?(after.order||0)+.5:sib.length};state.journal.headings.push(h);state.journal.selectedHeadingId=h.id;save();renderJournal()}
 function moveJournalHeading(delta){const h=journalHeadingById(state.journal.selectedHeadingId);if(!h)return alert('Select a heading first.');const sib=journalHeadingChildren(h.parentId),i=sib.findIndex(x=>x.id===h.id),j=i+delta;if(j<0||j>=sib.length)return;const t=sib[j].order;sib[j].order=h.order;h.order=t;save();renderJournal()}
 function indentJournalHeading(){const h=journalHeadingById(state.journal.selectedHeadingId);if(!h)return alert('Select a heading first.');const sib=journalHeadingChildren(h.parentId),i=sib.findIndex(x=>x.id===h.id);if(i<1)return alert('A heading needs a previous sibling before it can be indented.');h.parentId=sib[i-1].id;h.order=journalHeadingChildren(h.parentId).length;save();renderJournal()}
@@ -3893,16 +3912,111 @@ function stopFamilyRealtime(){
 
 
 function initVoice(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!journalVoiceBtn)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!journalVoiceBtn)return;
   if(!SR||!navigator.mediaDevices||!window.MediaRecorder){journalVoiceBtn.disabled=true;journalVoiceStatus.textContent='Recording with transcription requires Chrome or Edge and microphone permission.';return}
-  let recognition=null,recorder=null,stream=null,chunks=[],active=false,paused=false,currentHeading=null,segmentFinal='',segmentInterim='';
-  const commitSegment=()=>{const text=(segmentFinal+' '+segmentInterim).trim();if(text)journalDraftSegments.push({id:cryptoId(),headingId:currentHeading,text,createdAt:nowISO()});segmentFinal='';segmentInterim='';renderJournalSegments()};
-  const startRecognition=()=>{recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.lang='en-US';recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal){segmentFinal+=(segmentFinal?' ':'')+t;segmentInterim=''}else segmentInterim=t}journalVoiceStatus.textContent=`Recording under ${journalHeadingPath(currentHeading)}… ${segmentInterim}`};recognition.onerror=e=>{if(e.error!=='aborted')journalVoiceStatus.textContent='Transcription: '+e.error};recognition.onend=()=>{if(active&&!paused)try{recognition.start()}catch(_){}};recognition.start()};
-  const stopAll=()=>{if(!active)return;active=false;commitSegment();try{recognition.stop()}catch(_){}if(recorder&&recorder.state!=='inactive')recorder.stop();if(stream)stream.getTracks().forEach(t=>t.stop());journalVoiceBtn.classList.remove('listening');journalVoiceBtn.textContent='🎤 Record + transcribe';journalPauseBtn.disabled=true;journalPauseBtn.textContent='Pause';journalVoiceStatus.textContent='Recording stopped. Review the sections, then save the entry.'};
-  journalVoiceBtn.onclick=async()=>{if(active){stopAll();return}try{stream=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onstop=()=>{journalAudioBlob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});if(journalAudioUrl)URL.revokeObjectURL(journalAudioUrl);journalAudioUrl=URL.createObjectURL(journalAudioBlob);journalAudioPlayer.src=journalAudioUrl;journalAudioPlayer.style.display='block'};currentHeading=state.journal.selectedHeadingId||null;active=true;paused=false;recorder.start(1000);startRecognition();journalVoiceBtn.classList.add('listening');journalVoiceBtn.textContent='■ Stop & keep recording';journalPauseBtn.disabled=false;journalVoiceStatus.textContent=`Recording under ${journalHeadingPath(currentHeading)}…`;}catch(e){journalVoiceStatus.textContent='Microphone permission was not available: '+e.message}};
-  journalPauseBtn.onclick=()=>{if(!active)return;if(!paused){commitSegment();paused=true;recorder.pause();try{recognition.stop()}catch(_){}journalPauseBtn.textContent='Resume';journalVoiceStatus.textContent='Paused.'}else{paused=false;recorder.resume();currentHeading=state.journal.selectedHeadingId||null;startRecognition();journalPauseBtn.textContent='Pause'}};
-  journalOutlineTree.addEventListener('click',()=>{if(!active||paused)return;commitSegment();currentHeading=state.journal.selectedHeadingId||null;journalVoiceStatus.textContent=`Recording under ${journalHeadingPath(currentHeading)}…`});
+  let recorder=null,stream=null,chunks=[],active=false,paused=false,recognitionRun=null,audioFinished=null;
+  const pendingRuns=new Set();
+  const setBusy=busy=>{
+    journalRecordingBusy=busy;
+    [saveEntryBtn,newEntryBtn,deleteEntryBtn,document.getElementById('journalTopicSettingsBtn')].forEach(button=>{if(button)button.disabled=busy});
+    entriesList.inert=busy;
+    renderJournalSegments();
+    window.renderJournalTopicGuide?.();
+  };
+  // Each recognition session owns its topic and text. Late final words from an
+  // earlier topic update that section, even after the next topic is selected.
+  const startRecognition=()=>{
+    const recognition=new SR();
+    const run={recognition,headingId:state.journal.selectedHeadingId||null,parts:new Map(),segment:null,closed:false,timer:null};
+    run.done=new Promise(resolve=>{run.resolve=resolve});
+    run.finish=()=>{if(run.closed)return;run.closed=true;clearTimeout(run.timer);pendingRuns.delete(run);run.resolve()};
+    recognitionRun=run;pendingRuns.add(run);
+    recognition.continuous=true;recognition.interimResults=true;recognition.lang='en-US';
+    recognition.onresult=event=>{
+      if(run.closed)return;
+      for(const index of run.parts.keys())if(index>=event.results.length)run.parts.delete(index);
+      for(let i=event.resultIndex;i<event.results.length;i++)run.parts.set(i,event.results[i][0].transcript);
+      const text=[...run.parts.entries()].sort((a,b)=>a[0]-b[0]).map(([,text])=>text.trim()).filter(Boolean).join(' ');
+      if(text){
+        if(!run.segment){run.segment={id:cryptoId(),headingId:run.headingId,text,createdAt:nowISO()};journalDraftSegments.push(run.segment)}
+        else run.segment.text=text;
+      }else if(run.segment){
+        journalDraftSegments=journalDraftSegments.filter(segment=>segment!==run.segment);run.segment=null;
+      }
+      renderJournalSegments();
+      if(run===recognitionRun)journalVoiceStatus.textContent=`Recording under ${journalHeadingPath(run.headingId)}…`;
+    };
+    recognition.onerror=event=>{
+      if(event.error==='not-allowed'||event.error==='service-not-allowed')run.noRestart=true;
+      if(event.error!=='aborted')journalVoiceStatus.textContent='Transcription: '+event.error+'. Audio recording continues.';
+    };
+    recognition.onend=()=>{
+      const restart=run===recognitionRun&&active&&!paused&&!run.noRestart;
+      if(run===recognitionRun)recognitionRun=null;
+      run.finish();
+      if(restart)try{startRecognition()}catch(error){journalVoiceStatus.textContent='Audio is recording; transcription could not restart.'}
+    };
+    try{recognition.start()}catch(error){recognitionRun=null;run.finish();throw error}
+  };
+  const stopRecognition=()=>{
+    const run=recognitionRun;if(!run)return;
+    recognitionRun=null;
+    // Keep the latest interim text if a browser never sends its final event.
+    run.timer=setTimeout(()=>{try{run.recognition.abort()}catch(_){}run.finish()},2000);
+    try{run.recognition.stop()}catch(_){run.finish()}
+  };
+  const stopAll=async()=>{
+    if(!active)return;
+    active=false;paused=false;journalVoiceBtn.disabled=true;journalPauseBtn.disabled=true;
+    journalVoiceStatus.textContent='Finishing the recording…';
+    stopRecognition();
+    const transcripts=[...pendingRuns].map(run=>run.done);
+    if(recorder&&recorder.state!=='inactive')recorder.stop();
+    await Promise.all([audioFinished,...transcripts]);
+    if(stream)stream.getTracks().forEach(track=>track.stop());
+    stream=null;journalVoiceBtn.classList.remove('listening');journalVoiceBtn.disabled=false;
+    journalVoiceBtn.textContent='🎤 Record + transcribe';journalPauseBtn.textContent='Pause';
+    journalVoiceStatus.textContent='Recording stopped. Review your topics and text, then save the entry.';
+    setBusy(false);
+  };
+  journalVoiceBtn.onclick=async()=>{
+    if(active){await stopAll();return}
+    if(journalRecordingBusy)return;
+    setBusy(true);journalVoiceBtn.disabled=true;journalVoiceStatus.textContent='Waiting for microphone permission…';
+    try{
+      ++journalLoadSequence;
+      stream=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];
+      recorder=new MediaRecorder(stream);
+      audioFinished=new Promise(resolve=>{
+        recorder.ondataavailable=event=>{if(event.data.size)chunks.push(event.data)};
+        recorder.onstop=()=>{
+          journalAudioBlob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});
+          if(journalAudioUrl)URL.revokeObjectURL(journalAudioUrl);
+          journalAudioUrl=URL.createObjectURL(journalAudioBlob);journalAudioPlayer.src=journalAudioUrl;journalAudioPlayer.style.display='block';resolve();
+        };
+        recorder.onerror=()=>resolve();
+      });
+      active=true;paused=false;recorder.start(1000);startRecognition();
+      journalVoiceBtn.classList.add('listening');journalVoiceBtn.textContent='■ Stop recording';journalVoiceBtn.disabled=false;
+      journalPauseBtn.disabled=false;journalVoiceStatus.textContent=`Recording under ${journalHeadingPath(state.journal.selectedHeadingId)}…`;
+    }catch(error){
+      if(active&&recorder?.state!=='inactive')await stopAll();
+      else{active=false;stopRecognition();if(stream)stream.getTracks().forEach(track=>track.stop());setBusy(false);journalVoiceBtn.disabled=false}
+      journalVoiceStatus.textContent='Recording could not start: '+error.message;
+    }
+  };
+  journalPauseBtn.onclick=()=>{
+    if(!active)return;
+    if(!paused){paused=true;stopRecognition();recorder.pause();journalPauseBtn.textContent='Resume';journalVoiceStatus.textContent='Paused. You can still choose or mark topics.'}
+    else{paused=false;recorder.resume();try{startRecognition()}catch(_){}journalPauseBtn.textContent='Pause';journalVoiceStatus.textContent=`Recording under ${journalHeadingPath(state.journal.selectedHeadingId)}…`}
+  };
+  document.addEventListener('journal-topic-selected',()=>{
+    if(!active||paused||recognitionRun?.headingId===(state.journal.selectedHeadingId||null))return;
+    stopRecognition();try{startRecognition()}catch(_){journalVoiceStatus.textContent='Audio is recording; transcription could not restart.'}
+  });
 }
+
 function bookById(id){return (state.books.items||[]).find(b=>b.id===id)||null}
 function addBook(prefill={}){const title=prompt('Book title:',prefill.title||'');if(!title||!title.trim())return;const author=prompt('Author:',prefill.author||'')||'';const pages=Math.max(1,Number(prompt('Total pages:',String(prefill.totalPages||prefill.pages||300)))||1);const status=confirm('Add this book to the habit screen now?\nOK = currently reading; Cancel = want to read')?'reading':'want';const b={id:cryptoId(),title:title.trim(),author:author.trim(),totalPages:pages,currentPage:0,status,history:{},greatBookId:prefill.greatBookId||null,createdAt:nowISO(),updatedAt:nowISO()};state.books.items.push(b);save();renderAll(true);toast('Book added',b.title)}
 function updateBookPage(book,iso,page){const p=Math.max(0,Math.min(Number(book.totalPages)||1,Number(page)||0));book.currentPage=p;book.history=book.history||{};book.history[iso]=p;book.updatedAt=nowISO();if(p>=book.totalPages){book.status='finished';if(book.greatBookId){const gb=state.books.greatBooks;gb.completedIds=[...new Set([...(gb.completedIds||[]),book.greatBookId])];if(gb.currentId===book.greatBookId){const idx=GREAT_BOOKS_CATALOG.findIndex(x=>x.id===book.greatBookId);const next=GREAT_BOOKS_CATALOG.slice(idx+1).find(x=>!gb.completedIds.includes(x.id));gb.currentId=next?.id||null;if(next)addGreatBookToHabits(next.id,true)}}}save();renderAll(true)}
@@ -4149,6 +4263,7 @@ addBadBtn.addEventListener("click", () => {
 });
 
 saveEntryBtn.addEventListener("click", async () => {
+  if(journalRecordingBusy)return;
   const title = (journalTitle.value || "").trim() || "Untitled";
   const body = (journalBody.value || "").trim();
   const ts = nowISO();
@@ -4161,11 +4276,13 @@ saveEntryBtn.addEventListener("click", async () => {
   } else {
     entry={id:cryptoId(),title,body,entryDate:journalDate.value||todayISO(),segments:journalDraftSegments.map(s=>({...s})),createdAt:ts,updatedAt:ts};state.journal.entries.push(entry);state.journal.loadedId=entry.id;
   }
+  entry.coveredHeadingIds=[...new Set(journalDraftCoveredIds)];
   if(journalAudioBlob){entry.audioId=entry.audioId||('audio-'+entry.id);await saveJournalAudio(entry.audioId,journalAudioBlob);journalAudioBlob=null}
   save();renderJournal();toast('Journal saved',`${title} — ${new Date(entry.entryDate+'T00:00:00').toLocaleDateString()}`);
 });
 newEntryBtn.addEventListener("click", () => { clearEntryEditor(); renderAll(true); });
 deleteEntryBtn.addEventListener("click", async () => {
+  if(journalRecordingBusy)return;
   const id = state.journal.loadedId;
   if(!id) return alert("No entry loaded.");
   if(!confirm("Delete this entry?")) return;
