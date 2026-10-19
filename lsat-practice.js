@@ -133,13 +133,41 @@
     '<div class="lsat-row"><button class="primary" data-lsat-action="done-edit">Done Editing</button></div></div>';
   }
   function render(){listHTML();renderQuestion();}
-  function show(){
+  async function hydrateImportedQuestions(){
+    if(typeof currentUser==='undefined'||!currentUser||typeof supabaseClient==='undefined')return;
+    try{
+      const {data,error}=await supabaseClient.from('habit_lsat_imports')
+        .select('question_id,question').eq('user_id',currentUser.id);
+      if(error)throw error;
+      const store=getStore();
+      let changed=false;
+      for(const row of data||[]){
+        const item=row.question;
+        if(!item||!item.id||item.id!==row.question_id)continue;
+        if(!store.problems.some(x=>x.id===item.id)){
+          store.problems.unshift(item);
+          changed=true;
+        }
+      }
+      if(changed){
+        const first=store.problems.find(q=>q.id.startsWith('preptest56-s2-q'));
+        if(first&&!store.problems.some(q=>q.id===store.currentId&&q.id.startsWith('preptest56-s2-q')))
+          store.currentId=first.id;
+      }
+    }catch(error){
+      console.error('Could not load imported LSAT questions',error);
+      const header=document.getElementById('lsatStats');
+      if(header)header.textContent='Could not sync imported questions. Try reopening LSAT Practice.';
+    }
+  }
+  async function show(){
     document.querySelectorAll('[id^="tab-"]').forEach(x=>x.classList.add('hidden'));
     document.getElementById('tab-lsat').classList.remove('hidden');
     document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab==='lsat'));
     const label=document.getElementById('currentSectionLabel');if(label)label.textContent='LSAT Practice';
     for(const id of ['globalMenuPanel','menuPanel','tabs']){const el=document.getElementById(id);if(el)el.style.display='none';}
     if(typeof state!=='undefined'){state.ui=state.ui||{};state.ui.activeTab='lsat';}
+    await hydrateImportedQuestions();
     persistNow();render();
     window.scrollTo({top:0,behavior:'smooth'});
   }
