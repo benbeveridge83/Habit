@@ -46,3 +46,9 @@
 #tab-lsat .lsat-empty{padding:30px 10px;color:#64748b;text-align:center}
 #tab-lsat button:focus-visible,#tab-lsat input:focus-visible,#tab-lsat .lsat-editor:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
 @media(max-width:800px){#tab-lsat .lsat-layout{grid-template-columns:1fr}#tab-lsat .lsat-side{position:static}#tab-lsat .lsat-list{max-height:220px}#tab-lsat .lsat-panel{padding:12px}#tab-lsat .lsat-cathead input{max-width:100%}}
+
+#tab-lsat .lsat-pick-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:11px 0}
+#tab-lsat .lsat-pick-row select{min-width:170px;flex:1;width:auto;max-width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:9px;background:#fff}
+#tab-lsat .lsat-pick-row button{white-space:nowrap}
+#tab-lsat .lsat-subname{overflow-wrap:anywhere;padding:7px 0}
+@media(max-width:550px){#tab-lsat .lsat-pick-row select{flex-basis:100%}}
