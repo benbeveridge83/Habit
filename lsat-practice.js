@@ -59,6 +59,7 @@
       if(!Array.isArray(q.choices))q.choices=['','','','',''];
       while(q.choices.length<5)q.choices.push('');
     }
+    if(window.HabitLSATTaxonomy)window.HabitLSATTaxonomy.init(s);
     return s;
   }
   const getProblem=()=>{const s=getStore();return s.problems.find(q=>q.id===s.currentId)||s.problems[0]||null;};
@@ -113,11 +114,20 @@
       '<div class="lsat-choices">'+choices+'</div><div class="lsat-row"><button class="primary" data-lsat-action="check" '+(!q.selected?'disabled':'')+'>Check Answer</button>'+
       '<button data-lsat-action="reset">Try Again</button><span class="lsat-muted">Your answer stays hidden until you check it.</span></div>'+checked)+
       '<h3 class="lsat-section-title">Categorize &amp; analyze this problem</h3><p class="lsat-muted">Rename any of the five headings. Add as many subheadings and rich-text notes as you like under each.</p>'+
-      s.headings.map((h,i)=>'<div class="lsat-cat"><div class="lsat-cathead"><label style="flex:1;min-width:180px"><span class="lsat-muted">Heading '+(i+1)+'</span><input aria-label="Heading '+(i+1)+'" data-lsat-heading="'+i+'" value="'+esc(h)+'"></label>'+
-      '<button data-lsat-add-sub="'+i+'">+ Subheading</button></div>'+
-      (q.categories[i]||[]).map(sub=>'<div class="lsat-subnote"><div class="lsat-row"><input aria-label="Subheading name" style="flex:1;min-width:150px" data-lsat-subtitle="'+esc(sub.id)+'" data-cat="'+i+'" value="'+esc(sub.title)+'"><button data-lsat-remove-sub="'+esc(sub.id)+'" data-cat="'+i+'" title="Remove this subheading">Remove</button></div>'+
-      editor(sub.notes||'','sub',i,sub.id)+'</div>').join('')+
-      '</div>').join('')+
+      s.headings.map((h,i)=>{
+        const used=new Set((q.categories[i]||[]).map(x=>String(x.title||'').trim().toLowerCase()));
+        const options=(s.subheadings?.[i]||[]).filter(title=>!used.has(title.trim().toLowerCase()));
+        return '<div class="lsat-cat"><div class="lsat-cathead"><label style="flex:1;min-width:180px"><span class="lsat-muted">Heading '+(i+1)+'</span><input aria-label="Heading '+(i+1)+'" data-lsat-heading="'+i+'" value="'+esc(h)+'"></label></div>'+
+        '<div class="lsat-pick-row"><select data-lsat-pick="'+i+'" aria-label="Choose subheading for '+esc(h)+'"><option value="">Choose a saved subheading...</option>'+
+        options.map(title=>'<option value="'+esc(title)+'">'+esc(title)+'</option>').join('')+'</select>'+
+        '<button data-lsat-apply="'+i+'" '+(options.length?'':'disabled')+'>Apply</button>'+
+        '<button data-lsat-add-sub="'+i+'">+ New</button></div>'+
+        (q.categories[i]||[]).map(sub=>'<div class="lsat-subnote"><div class="lsat-row"><div class="lsat-subname" style="flex:1;min-width:150px"><strong>'+esc(sub.title)+'</strong></div>'+
+        '<button data-lsat-rename-sub="'+esc(sub.id)+'" data-cat="'+i+'" title="Rename across all problems">Rename</button>'+
+        '<button data-lsat-remove-sub="'+esc(sub.id)+'" data-cat="'+i+'" title="Remove from this problem only">Remove</button></div>'+
+        editor(sub.notes||'','sub',i,sub.id)+'</div>').join('')+
+        '</div>';
+      }).join('')+
       '<h3 class="lsat-section-title">General problem notes</h3>'+editor(q.notes||'','general',null,null,'lsat-general');
     noteFocus=null;
   }
@@ -242,10 +252,6 @@
       persist();return;
     }
     if(t.hasAttribute('data-lsat-option')){q.choices[Number(t.dataset.lsatOption)]=t.value;persist();return;}
-    if(t.hasAttribute('data-lsat-subtitle')){
-      const sub=q.categories[Number(t.dataset.cat)]?.find(x=>x.id===t.dataset.lsatSubtitle);
-      if(sub)sub.title=t.value;persist();return;
-    }
     if(t.hasAttribute('data-lsat-editor')){
       if(t.dataset.lsatEditor==='general')q.notes=safeNotes(t.innerHTML);
       else {const sub=q.categories[Number(t.dataset.cat)]?.find(x=>x.id===t.dataset.sub);if(sub)sub.notes=safeNotes(t.innerHTML);}
@@ -253,7 +259,7 @@
     }
   }
   function handleClicks(e){
-    const t=e.target.closest('[data-lsat-action],[data-lsat-select],[data-lsat-choice],[data-lsat-add-sub],[data-lsat-remove-sub],[data-lsat-format]');
+    const t=e.target.closest('[data-lsat-action],[data-lsat-select],[data-lsat-choice],[data-lsat-add-sub],[data-lsat-remove-sub],[data-lsat-format],[data-lsat-apply],[data-lsat-rename-sub]');
     if(!t)return;
     if(t.hasAttribute('data-lsat-action'))return clickAction(t.dataset.lsatAction);
     if(t.hasAttribute('data-lsat-select')){getStore().currentId=t.dataset.lsatSelect;editing=false;persistNow();render();return;}
@@ -261,12 +267,27 @@
     if(t.hasAttribute('data-lsat-add-sub')){
       const i=Number(t.dataset.lsatAddSub),title=prompt('New subheading name:','My analysis');
       if(!title||!title.trim())return;
-      getProblem().categories[i].push({id:uid(),title:title.trim(),notes:''});
+      window.HabitLSATTaxonomy.attach(getStore(),getProblem(),i,title,uid);
+      persistNow();renderQuestion();return;
+    }
+    if(t.hasAttribute('data-lsat-apply')){
+      const i=Number(t.dataset.lsatApply);
+      const sel=document.querySelector('#tab-lsat [data-lsat-pick="'+i+'"]');
+      if(!sel||!sel.value)return;
+      window.HabitLSATTaxonomy.attach(getStore(),getProblem(),i,sel.value,uid);
+      persistNow();renderQuestion();return;
+    }
+    if(t.hasAttribute('data-lsat-rename-sub')){
+      const i=Number(t.dataset.cat),sub=getProblem().categories[i]?.find(x=>x.id===t.dataset.lsatRenameSub);
+      if(!sub)return;
+      const name=prompt('Rename this subheading on all questions:',sub.title);
+      if(name===null)return;
+      if(!window.HabitLSATTaxonomy.rename(getStore(),i,sub.title,name)){alert('Enter a unique subheading name.');return;}
       persistNow();renderQuestion();return;
     }
     if(t.hasAttribute('data-lsat-remove-sub')){
-      if(!confirm('Delete this subheading and its notes?'))return;
-      const q=getProblem(),i=Number(t.dataset.cat);q.categories[i]=q.categories[i].filter(x=>x.id!==t.dataset.lsatRemoveSub);
+      if(!confirm('Remove this category and its notes from this question? The saved subheading will stay available for other questions.'))return;
+      const q=getProblem(),i=Number(t.dataset.cat);window.HabitLSATTaxonomy.detach(q,i,t.dataset.lsatRemoveSub);
       persistNow();renderQuestion();return;
     }
     if(t.hasAttribute('data-lsat-format')){
