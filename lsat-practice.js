@@ -84,13 +84,14 @@
   }
   function listHTML(){
     const s=getStore();
-    const items=s.problems.filter(q=>{
+    const onlyLR=s.problems.filter(q=>/^preptest56-s[23]-q[0-9]+$/.test(q.id));
+    const items=onlyLR.filter(q=>{
       const matches=(q.title+' '+(q.topic||'')+' '+(q.stem||'')).toLowerCase().includes(filterText.toLowerCase());
       const status=filterMode==='all'||(filterMode==='unanswered'?!q.checked:filterMode==='missed'?q.checked&&q.selected!==q.answer:q.checked&&q.selected===q.answer);
       return matches&&status;
     });
-    const attempts=s.problems.filter(q=>q.checked&&q.answer), correct=attempts.filter(q=>q.selected===q.answer);
-    document.getElementById('lsatStats').textContent=s.problems.length+' questions · '+attempts.length+' checked · '+correct.length+' correct ('+(attempts.length?Math.round(correct.length/attempts.length*100):0)+'%)';
+    const attempts=onlyLR.filter(q=>q.checked&&q.answer), correct=attempts.filter(q=>q.selected===q.answer);
+    document.getElementById('lsatStats').textContent=onlyLR.length+' Logical Reasoning questions · '+attempts.length+' checked · '+correct.length+' correct ('+(attempts.length?Math.round(correct.length/attempts.length*100):0)+'%)';
     document.getElementById('lsatList').innerHTML=items.length?items.map(q=>
       '<button class="lsat-question-item '+(q.id===s.currentId?'active':'')+'" data-lsat-select="'+esc(q.id)+'"><strong>'+esc(q.title)+'</strong><small>'+
       esc(q.topic||q.origin||'Uncategorized')+' · '+(q.checked?(q.selected===q.answer?'✓ Correct':'✕ Review'):'Not checked')+'</small></button>').join(''):
@@ -98,7 +99,7 @@
   }
   function renderQuestion(){
     const s=getStore(),q=getProblem(),wrap=document.getElementById('lsatMain');
-    if(!q){wrap.innerHTML='<div class="lsat-empty">Choose Add New Problem to begin.</div>';return;}
+    if(!q){wrap.innerHTML='<div class="lsat-empty">Choose a Logical Reasoning question to begin.</div>';return;}
     const official=!!q.sourceUrl, haveChoices=q.choices.some(v=>String(v||'').trim());
     const questionLabel=q.stem?'':official?'Official question text is on the LSAC page. Open the source below, read Question '+esc(q.sourceNumber||'')+', then select your answer here.':'Enter the question text using Edit Problem.';
     const choices=LETTERS.map((c,i)=>'<button type="button" class="lsat-choice '+(q.selected===c?'selected':'')+'" data-lsat-choice="'+c+'" aria-pressed="'+(q.selected===c)+'"><span class="lsat-letter">'+c+'</span><span>'+esc(q.choices[i]||'Answer '+c+(official?' (see original question)':''))+'</span></button>').join('');
@@ -159,9 +160,9 @@
           changed=true;
         }
       }
-      if(changed){
-        const first=store.problems.find(q=>q.id.startsWith('preptest56-s2-q'));
-        if(first&&!store.problems.some(q=>q.id===store.currentId&&q.id.startsWith('preptest56-s2-q')))
+      if(changed || !/^preptest56-s[23]-q[0-9]+$/.test(store.currentId)){
+        const first=store.problems.find(q=>/^preptest56-s[23]-q[0-9]+$/.test(q.id));
+        if(first&&!store.problems.some(q=>q.id===store.currentId&&/^preptest56-s[23]-q[0-9]+$/.test(q.id)))
           store.currentId=first.id;
       }
     }catch(error){
@@ -317,11 +318,7 @@
       '<div class="lsat-actions"><button class="primary" data-lsat-action="new">+ Add New Problem</button>'+
       '<button data-lsat-action="import">Import JSON</button><button data-lsat-action="export">Export Notes</button>'+
       '<input type="file" id="lsatImportFile" accept=".json,application/json" hidden></div></div>'+
-      '<div class="lsat-links" style="margin-bottom:14px"><strong>Official questions:</strong> Ten LSAC sample questions are indexed below with verified answer keys. '+
-      'Their copyrighted question text and full explanations remain on <a class="lsat-link" href="'+SOURCE+'" target="_blank" rel="noopener noreferrer">LSAC</a>. '+
-      'More official tests: <a class="lsat-link" href="'+TESTS+'" target="_blank" rel="noopener noreferrer">disclosed exams</a> · '+
-      '<a class="lsat-link" href="'+HUB+'" target="_blank" rel="noopener noreferrer">LawHub</a>. '+
-      'You can also enter a problem or bulk-import questions in JSON.</div>'+
+      '<div class="lsat-links" style="margin-bottom:14px"><strong>PrepTest 56 · Logical Reasoning only.</strong> Section II and Section III. The 10 incomplete sample questions, Logic Games and Reading Comprehension are excluded from this library.</div>'+
       '<div class="lsat-layout"><aside class="lsat-panel lsat-side"><h3 style="margin-top:0">Problem Library</h3>'+
       '<div id="lsatStats" class="lsat-stat"></div><input id="lsatSearch" placeholder="Search problems..." aria-label="Search LSAT problems" style="width:100%;margin-bottom:8px">'+
       '<select id="lsatFilter" aria-label="Filter LSAT problems" style="width:100%;margin-bottom:10px"><option value="all">All problems</option>'+
