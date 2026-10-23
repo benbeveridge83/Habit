@@ -1,0 +1,35 @@
+#lsatMain .lsatBreakNav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 12px;border-bottom:1px solid #cbd5e1;padding-bottom:10px}
+#lsatMain .lsatBreakNav button{border-radius:10px;min-height:42px;padding:9px 13px;font-weight:600;background:#f8fafc;border:1px solid #dbe2ea}
+#lsatMain .lsatBreakNav button.active{background:#eff6ff;border-color:#60a5fa;color:#1d4ed8}
+#lsatMain .lsatBreakPane{display:none;min-width:0}
+#lsatMain.lsat-breakdown-active .lsatBreakPane{display:block}
+#lsatMain.lsat-breakdown-active > :not(.lsat-topline):not(.lsatBreakNav):not(.lsatBreakPane){display:none!important}
+#lsatMain .lsatBreakIntro{line-height:1.55;margin:8px 0 12px;color:#1e293b}
+#lsatMain .lsatBreakIntro p{font-size:13px;color:#64748b;margin:5px 0 0}
+#lsatMain .lsatBreakTopActions{display:flex;flex-wrap:wrap;gap:7px;margin:13px 0}
+#lsatMain .lsatBreakTopActions button{min-height:40px;font-size:13px}
+#lsatMain .lsatBreakColors{position:sticky;top:78px;z-index:7;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin:13px 0;box-shadow:0 2px 6px #0f172a0f}
+#lsatMain .lsatBreakColorsTitle{font-size:12px;color:#475569;font-weight:600;margin-bottom:8px}
+#lsatMain .lsatBreakColorButtons{display:flex;flex-wrap:wrap;gap:6px}
+#lsatMain .lsatBreakColorButtons button{font-size:12px;min-height:40px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px}
+#lsatMain .lsatBreakColor-minor,#lsatMain .lsatBreakMark-minor{background:#dbeafe;color:#1e40af}
+#lsatMain .lsatBreakColor-middle,#lsatMain .lsatBreakMark-middle{background:#fef3c7;color:#92400e}
+#lsatMain .lsatBreakColor-major,#lsatMain .lsatBreakMark-major{background:#dcfce7;color:#166534}
+#lsatMain .lsatBreakMark{border-radius:3px;padding:1px 0;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+#lsatMain .lsatBreakNotice{font-size:12px;color:#64748b;margin:9px 0 14px;min-height:16px}
+#lsatMain .lsatBreakRows{display:grid;gap:12px}
+#lsatMain .lsatBreakRow{padding:12px;border:1px solid #e2e8f0;border-radius:13px;background:#fff;min-width:0}
+#lsatMain .lsatBreakRowHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+#lsatMain .lsatBreakIndex{font-size:12px;font-weight:750;color:#475569}
+#lsatMain .lsatBreakRowActions{display:flex;flex-wrap:wrap;gap:5px}
+#lsatMain .lsatBreakRowActions button{font-size:12px;min-height:34px;min-width:34px;padding:5px 8px;border-radius:8px}
+#lsatMain .lsatBreakRowActions button[data-break-delete]{color:#b91c1c}
+#lsatMain .lsatBreakEdit{padding:11px 12px;min-height:68px;outline:none;border:1px solid #cbd5e1;border-radius:9px;line-height:1.55;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;max-width:100%;user-select:text;-webkit-user-select:text;background:#fcfdff}
+#lsatMain .lsatBreakEdit:focus{border-color:#2563eb;box-shadow:0 0 0 2px #bfdbfe}
+#lsatMain .lsatBreakEdit:empty::before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none}
+#lsatMain .lsatBreakRowFoot{margin-top:10px}
+#lsatMain .lsatBreakRowFoot label{font-size:12px;font-weight:600;color:#475569;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+#lsatMain .lsatBreakRowFoot select{min-width:160px;max-width:100%;padding:8px 9px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#0f172a;font-size:13px}
+#lsatMain .lsatBreakAdd{margin:14px 0;border-style:dashed;border-color:#93c5fd;color:#1d4ed8;background:#eff6ff;min-height:44px;width:100%}
+#lsatMain .lsatBreakEmpty{padding:18px;color:#64748b;border:1px dashed #cbd5e1;border-radius:12px}
+@media(max-width:600px){#lsatMain .lsatBreakTopActions button{flex:1 1 40%;white-space:normal}#lsatMain .lsatBreakRowHead{align-items:flex-start}#lsatMain .lsatBreakRowActions{width:100%}#lsatMain .lsatBreakRowActions button{flex:1;min-width:40px}#lsatMain .lsatBreakColors{top:71px}#lsatMain .lsatBreakColorButtons button{flex:1 1 43%}#lsatMain .lsatBreakNav button{flex:1 1 40%;font-size:13px}#lsatMain .lsatBreakEdit{font-size:16px}}
