@@ -4,6 +4,7 @@
   if(typeof module==='object'&&module.exports) module.exports=api;
   if(root&&root.document) api.init();
 })(typeof window!=='undefined'?window:globalThis,function(core,root){
+  const volumeLabels=typeof module==='object'&&module.exports?require('./great-books-volume-labels.js'):root.HabitGreatBooksVolumeLabels;
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function getSessions(app,id){return app&&app.books&&app.books.greatBooks&&app.books.greatBooks.readingSessions&&app.books.greatBooks.readingSessions[id]||[];}
   function buildGridHtml(app,catalog,q){
@@ -16,7 +17,7 @@
       const groupKey=`${item.part}-${item.collection}`;
       if(groupKey!==lastGroup){lastGroup=groupKey;html+=`<tr class="gbPlanGroupRow"><td colspan="${sessionCols+3}"><strong>Part ${esc(item.part)} - ${esc(item.stageLabel||'')}</strong><span>${esc(item.collectionLabel||'')}</span></td></tr>`;}
       const sessions=getSessions(app,item.id),total=core.totalAssigned(item),read=core.sessionPagesRead(sessions),manual=(gb.completedIds||[]).includes(item.id),complete=manual||(total>0&&read>=total),pct=complete?100:(total?Math.round(read/total*100):0),next=complete?null:core.nextAssignedPage(item,sessions);
-      html+=`<tr class="${complete?'gbCompleteRow':''}" data-gb-log-row="${esc(item.id)}"><td class="gbSessionReading"><strong>${esc(item.title)}</strong><div class="small">${esc(item.author)}${item.volume?` - Vol. ${esc(item.volume)}`:''} - ${item.collection==='gateway'?'Gateway':'Great Books'}</div><div class="small">Assigned: ${esc(item.pageNumbers||'No page range')}${total?` - ${total} pages`:''}</div><div class="gbNextPage">${complete?'Complete':next!=null?`Next: ${next}`:'No page range'}</div><div class="gbSessionRowActions"><button data-gb-log="${esc(item.id)}" ${total?'':'disabled'}>Log pages</button><button data-gb-shared="${esc(item.id)}">Text/Pages</button></div></td>`;
+      html+=`<tr class="${complete?'gbCompleteRow':''}" data-gb-log-row="${esc(item.id)}"><td class="gbSessionReading"><strong>${esc(item.title)}</strong><div class="small">${esc(item.author)}${item.volume?` - Vol. ${esc(item.volume)}`:''}${volumeLabels?` - ${esc(volumeLabels.volumeLabel(item))}`:''}</div><div class="small">Assigned: ${esc(item.pageNumbers||'No page range')}${total?` - ${total} pages`:''}</div><div class="gbNextPage">${complete?'Complete':next!=null?`Next: ${next}`:'No page range'}</div><div class="gbSessionRowActions"><button data-gb-log="${esc(item.id)}" ${total?'':'disabled'}>Log pages</button><button data-gb-shared="${esc(item.id)}">Text/Pages</button></div></td>`;
       for(let i=0;i<sessionCols;i++){
         const s=sessions[i];
         html+=s?`<td class="gbSessionCell"><button class="gbSessionChip" data-gb-session-detail="${esc(item.id)}|${i}">${esc(s.pageLabel)}</button></td>`:`<td class="gbSessionCell gbSessionEmpty"><span>-</span></td>`;
