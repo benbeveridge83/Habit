@@ -82,6 +82,8 @@
     if(sub)attr+=' data-sub="'+esc(sub)+'"';
     return toolbar()+'<div class="lsat-editor '+cls+'" '+attr+' contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write your notes here...">'+safeNotes(html)+'</div>';
   }
+  const localDay = iso => {if(!iso)return '';const d=new Date(iso);if(Number.isNaN(d.getTime()))return '';return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
+  const shortDay = iso => {const d=new Date(iso||'');return Number.isNaN(d.getTime())?'':d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});};
   function listHTML(){
     const s=getStore();
     const onlyLR=s.problems.filter(q=>/^preptest56-s[23]-q[0-9]+$/.test(q.id));
@@ -93,7 +95,7 @@
     const attempts=onlyLR.filter(q=>q.checked&&q.answer), correct=attempts.filter(q=>q.selected===q.answer);
     document.getElementById('lsatStats').textContent=onlyLR.length+' Logical Reasoning questions · '+attempts.length+' checked · '+correct.length+' correct ('+(attempts.length?Math.round(correct.length/attempts.length*100):0)+'%)';
     document.getElementById('lsatList').innerHTML=items.length?items.map(q=>
-      '<button class="lsat-question-item '+(q.id===s.currentId?'active':'')+'" data-lsat-select="'+esc(q.id)+'"><strong>'+esc(q.title)+'</strong><small>'+
+      '<button class="lsat-question-item '+(q.id===s.currentId?'active':'')+'" data-worked-today="'+(localDay(q.lastAnsweredAt)===localDay(new Date().toISOString())?'true':'false')+'" data-lsat-select="'+esc(q.id)+'"><span class="lsat-question-meta"><strong>'+esc(q.title)+'</strong><time datetime="'+esc(q.lastAnsweredAt||'')+'">'+(shortDay(q.lastAnsweredAt)||'—')+'</time></span><small>'+
       esc(q.topic||q.origin||'Uncategorized')+' · '+(q.checked?(q.selected===q.answer?'✓ Correct':'✕ Review'):'Not checked')+'</small></button>').join(''):
       '<div class="lsat-empty">No matching questions.</div>';
   }
@@ -186,12 +188,12 @@
     const s=getStore(),q=newProblem();s.problems.unshift(q);s.currentId=q.id;editing=true;persistNow();render();
   }
   function changeAnswer(letter){
-    const q=getProblem();if(!q)return;q.selected=letter;q.checked=false;persistNow();renderQuestion();
+    const q=getProblem();if(!q)return;q.selected=letter;q.checked=false;q.lastAnsweredAt=new Date().toISOString();persistNow();renderQuestion();listHTML();
   }
   function check(){
     const q=getProblem();if(!q||!q.selected)return;
     if(!q.checked){q.attempts=(Number(q.attempts)||0)+1;if(q.answer===q.selected)q.correctAttempts=(Number(q.correctAttempts)||0)+1;}
-    q.checked=true;persistNow();render();
+    q.checked=true;q.lastAnsweredAt=q.lastAnsweredAt||new Date().toISOString();persistNow();render();
   }
   function normalizeUrl(url){try{const u=new URL(url);return ['https:','http:'].includes(u.protocol)?u.href:'';}catch(e){return '';}}
   function importFile(file){
