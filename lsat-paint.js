@@ -1,1 +1,80 @@
-(function(){'use strict';const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));const palette={red:'#fecaca',yellow:'#fef08a',blue:'#bfdbfe',green:'#bbf7d0',purple:'#e9d5ff'};let color=localStorage.getItem('lsatPaintColor')||'yellow',enabled=false;const question=()=>typeof state!=='undefined'?state.lsat?.problems?.find(q=>q.id===state.lsat.currentId):null;function render(){const q=question(),main=document.getElementById('lsatMain');if(!q||!main)return;const stem=main.querySelector(':scope>.lsat-stem');if(!stem)return;if(!Array.isArray(q.paintMarks))q.paintMarks=[];const text=String(q.stem||'');const marks=q.paintMarks.filter(m=>m.start>=0&&m.end<=text.length&&m.start<m.end).sort((a,b)=>a.start-b.start);let html='',pos=0;for(const m of marks){if(m.start<pos)continue;html+=esc(text.slice(pos,m.start))+'<mark style="background:'+palette[m.color]+'">'+esc(text.slice(m.start,m.end))+'</mark>';pos=m.end;}html+=esc(text.slice(pos));stem.innerHTML=html;}function install(){const main=document.getElementById('lsatMain');if(!main)return;let toolbar=main.querySelector('.lsatPaintBar');const stem=main.querySelector(':scope>.lsat-stem');if(!stem)return;if(!toolbar){toolbar=document.createElement('div');toolbar.className='lsatPaintBar';toolbar.innerHTML='<button type="button" data-paint-toggle>🖍 Color terms</button><div class="lsatPaintOptions" hidden>'+Object.keys(palette).map(c=>'<button type="button" data-paint-color="'+c+'" style="background:'+palette[c]+'" aria-label="'+c+' highlighter">'+c+'</button>').join('')+'<button type="button" data-paint-clear>Clear all</button></div><small>Choose a color, then tap a word, or select a phrase to color it.</small>';stem.insertAdjacentElement('beforebegin',toolbar);toolbar.onclick=e=>{const btn=e.target.closest('button');if(!btn)return;if(btn.hasAttribute('data-paint-toggle')){enabled=!enabled;toolbar.querySelector('.lsatPaintOptions').hidden=!enabled;btn.classList.toggle('active',enabled);}else if(btn.dataset.paintColor){color=btn.dataset.paintColor;localStorage.setItem('lsatPaintColor',color);toolbar.querySelectorAll('[data-paint-color]').forEach(b=>b.classList.toggle('active',b.dataset.paintColor===color));}else if(btn.hasAttribute('data-paint-clear')){const q=question();if(confirm('Clear all colors for this question?')){q.paintMarks=[];save();render();}}};stem.addEventListener('click',e=>{if(!enabled)return;const q=question();const sel=window.getSelection();let start,end;if(sel&&sel.rangeCount&&!sel.isCollapsed&&stem.contains(sel.anchorNode)&&stem.contains(sel.focusNode)){const r=sel.getRangeAt(0),a=document.createRange(),b=document.createRange();a.selectNodeContents(stem);a.setEnd(r.startContainer,r.startOffset);b.selectNodeContents(stem);b.setEnd(r.endContainer,r.endOffset);start=a.toString().length;end=b.toString().length;}else{const full=String(q.stem||'');const range=document.caretRangeFromPoint?.(e.clientX,e.clientY);if(!range)return;const base=document.createRange();base.selectNodeContents(stem);base.setEnd(range.startContainer,range.startOffset);const at=base.toString().length;if(at<0||at>=full.length)return;start=at;end=at;while(start>0&&/[A-Za-z0-9_-]/.test(full[start-1]))start--;while(end<full.length&&/[A-Za-z0-9_-]/.test(full[end]))end++;if(start===end)return;}q.paintMarks=(q.paintMarks||[]).filter(m=>m.end<=start||m.start>=end);q.paintMarks.push({start,end,color});save();render();});}render();}function init(){const main=document.getElementById('lsatMain');if(!main)return;let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;install();});}).observe(main,{childList:true});install();}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();})();
+(function(){'use strict';
+const engine=window.HabitLSATAnnotations;if(!engine)return;
+const palette={red:'#fecaca',yellow:'#fef08a',blue:'#bfdbfe',green:'#bbf7d0',purple:'#e9d5ff'};
+let color=localStorage.getItem('lsatPaintColor')||'yellow';
+let mode='off',last=null;
+const modes={underline:['single','double','bold',null],frame:['circle','square','rounded',null]};
+const label={single:'Single underline',double:'Double underline',bold:'Bold underline',circle:'Circle',square:'Square',rounded:'Rounded square',off:'Off'};
+const question=()=>typeof state!=='undefined'?state.lsat?.problems?.find(q=>q.id===state.lsat.currentId):null;
+const saveNow=()=>{if(typeof save==='function')save();};
+function sourceNode(){return document.querySelector('#lsatMain > .lsat-stem');}
+function repaint(){const q=question(),stem=sourceNode();if(q&&stem)stem.innerHTML=engine.render(q);}
+function updateBar(){
+  const bar=document.querySelector('#lsatMain .lsatInkBar');if(!bar)return;
+  bar.querySelectorAll('[data-ink-mode]').forEach(b=>{const kind=b.dataset.inkMode;b.classList.toggle('active',mode===kind);b.setAttribute('aria-pressed',String(mode===kind));});
+  bar.querySelectorAll('[data-ink-color]').forEach(b=>b.classList.toggle('active',mode==='color'&&b.dataset.inkColor===color));
+  bar.querySelector('[data-ink-mode="underline"]').textContent='Underline'+(last?.type==='underline'&&last?.style?' · '+label[last.style]:'');
+  bar.querySelector('[data-ink-mode="frame"]').textContent='Outline'+(last?.type==='frame'&&last?.style?' · '+label[last.style]:'');
+}
+function position(stem,node,offset){try{const range=document.createRange();range.selectNodeContents(stem);range.setEnd(node,offset);return range.toString().length;}catch(_){return null;}}
+function offsets(e,stem){
+  const sel=window.getSelection();
+  if(sel&&sel.rangeCount&&!sel.isCollapsed&&stem.contains(sel.anchorNode)&&stem.contains(sel.focusNode)){
+    const range=sel.getRangeAt(0),start=position(stem,range.startContainer,range.startOffset),end=position(stem,range.endContainer,range.endOffset);
+    if(start!==null&&end!==null&&start<end)return {start,end};
+  }
+  let point=document.caretPositionFromPoint?.(e.clientX,e.clientY);
+  let node=point?.offsetNode,off=point?.offset;
+  if(!node){const r=document.caretRangeFromPoint?.(e.clientX,e.clientY);node=r?.startContainer;off=r?.startOffset;}
+  if(!node)return null;
+  const at=position(stem,node,off);return at===null?null:{start:at,end:at};
+}
+function applyMark(e){
+ if(mode==='off')return;
+ const q=question(),stem=sourceNode();if(!q||!stem)return;
+ const range=offsets(e,stem);if(!range)return;
+ const text=q.stem||'';
+ let target;
+ if(mode==='underline'){target=engine.sentenceAt(text,range.start);}
+ else if(range.end>range.start){target=range;}
+ else target=engine.wordAt(text,range.start);
+ if(!target)return;
+ if(mode==='color'){
+   engine.setColor(q,target,color);
+ }else{
+   const previous=(q[mode==='underline'?'underlineMarks':'frameMarks']||[]).find(m=>m.start===target.start&&m.end===target.end);
+   const available=modes[mode];
+   const next=previous?available[(available.indexOf(previous.style)+1)%available.length]:available[0];
+   if(mode==='underline')engine.setUnderline(q,target,next);
+   else engine.setFrame(q,target,next);
+   last={type:mode,style:next,start:target.start,end:target.end,question:q.id};
+ }
+ saveNow();repaint();updateBar();
+}
+function mount(){
+ const stem=sourceNode(),q=question();if(!stem||!q)return;
+ if(!stem.previousElementSibling?.classList.contains('lsatInkBar')){
+  const bar=document.createElement('div');bar.className='lsatInkBar';
+  bar.innerHTML='<div class="lsatInkButtons"><button type="button" data-ink-mode="color">🖍 Color</button><button type="button" data-ink-mode="underline">U̲ Underline</button><button type="button" data-ink-mode="frame">◯ Outline</button><button type="button" data-ink-mode="off">Done</button></div><div class="lsatInkPalette">'+Object.entries(palette).map(([key,value])=>'<button type="button" data-ink-color="'+key+'" style="background:'+value+'">'+key+'</button>').join('')+'</div><small>Pick a tool, then tap a word or select a phrase. Underline applies to the entire sentence. Tap the same marked sentence or word again to cycle its style.</small><button type="button" data-ink-clear>Clear annotations</button>';
+  stem.insertAdjacentElement('beforebegin',bar);
+  bar.addEventListener('click',ev=>{
+   const b=ev.target.closest('button');if(!b)return;
+   if(b.dataset.inkColor){mode='color';color=b.dataset.inkColor;localStorage.setItem('lsatPaintColor',color);}
+   else if(b.hasAttribute('data-ink-mode')){mode=b.dataset.inkMode;}
+   else if(b.hasAttribute('data-ink-clear')){
+    if(!confirm('Clear all colors, underlines and outlines for this problem?'))return;
+    const q=question();q.paintMarks=[];q.underlineMarks=[];q.frameMarks=[];saveNow();repaint();
+   }
+   updateBar();
+  });
+  stem.addEventListener('click',applyMark);
+ }
+ repaint();updateBar();
+}
+function init(){
+ const main=document.getElementById('lsatMain');if(!main)return;
+ let pending=false;new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;mount();});}).observe(main,{childList:true});
+ mount();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
