@@ -8,7 +8,7 @@ const label={single:'Single underline',double:'Double underline',bold:'Bold unde
 const question=()=>typeof state!=='undefined'?state.lsat?.problems?.find(q=>q.id===state.lsat.currentId):null;
 const saveNow=()=>{if(typeof save==='function')save();};
 function sourceNode(){return document.querySelector('#lsatMain > .lsat-stem');}
-function repaint(){const q=question(),stem=sourceNode();if(q&&stem)stem.innerHTML=engine.render(q);}
+function repaint(){const q=question(),stem=sourceNode();if(q&&stem){const html=engine.render(q);if(stem.innerHTML!==html)stem.innerHTML=html;}}
 function updateBar(){
   const bar=document.querySelector('#lsatMain .lsatInkBar');if(!bar)return;
   bar.querySelectorAll('[data-ink-mode]').forEach(b=>{const kind=b.dataset.inkMode;b.classList.toggle('active',mode===kind);b.setAttribute('aria-pressed',String(mode===kind));});
@@ -60,7 +60,7 @@ function mount(){
   bar.addEventListener('click',ev=>{
    const b=ev.target.closest('button');if(!b)return;
    if(b.dataset.inkColor){mode='color';color=b.dataset.inkColor;localStorage.setItem('lsatPaintColor',color);}
-   else if(b.hasAttribute('data-ink-mode')){mode=b.dataset.inkMode;}
+   else if(b.hasAttribute('data-ink-mode')){const nextMode=b.dataset.inkMode;if(nextMode===mode&&last?.type===mode&&last.question===question()?.id&&(mode==='underline'||mode==='frame')){const q=question();const values=modes[mode];const marks=q[mode==='underline'?'underlineMarks':'frameMarks']||[];const previous=marks.find(m=>m.start===last.start&&m.end===last.end);if(previous){const next=values[(values.indexOf(previous.style)+1)%values.length];if(mode==='underline')engine.setUnderline(q,last,next);else engine.setFrame(q,last,next);last.style=next;saveNow();repaint();}}mode=nextMode;}
    else if(b.hasAttribute('data-ink-clear')){
     if(!confirm('Clear all colors, underlines and outlines for this problem?'))return;
     const q=question();q.paintMarks=[];q.underlineMarks=[];q.frameMarks=[];saveNow();repaint();
