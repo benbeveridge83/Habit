@@ -30,9 +30,9 @@
         html = html.replace('</head>', '<link rel="stylesheet" href="./lsat-ai-tutor.css?v=20261031-aifix3"><link rel="stylesheet" href="./lsat-practice.css?v=20261031-date1"></head>');
         html = html.replace('</body>', '<script src="./lsat-ai-tutor.js?v=20261031-aifix3"><\/script></body>');
         html = html.replace('</head>', '<style>#tab-lsat .lsatPaintBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:9px 0 12px}#tab-lsat .lsatPaintOptions{display:flex;gap:5px;flex-wrap:wrap}#tab-lsat .lsatPaintOptions[hidden]{display:none}#tab-lsat .lsatPaintOptions button{min-height:34px;border:1px solid #94a3b8;border-radius:8px;padding:4px 9px}#tab-lsat .lsatPaintBar button.active{outline:2px solid #2563eb}#tab-lsat .lsatPaintBar small{color:#64748b}#tab-lsat .lsat-stem mark{border-radius:3px}</style></head>');
-        html = html.replace('</body>', '<script src="./lsat-paint.js?v=20261031-annotation1"><\/script></body>');
+        html = html.replace('</body>', '<script src="./lsat-annotations-core.js?v=20261031-annotation2"><\/script><script src="./lsat-paint.js?v=20261031-annotation2"><\/script></body>');
         html = html.replace('</head>', '<link rel="stylesheet" href="./lsat-annotations.css?v=20261031-annotation1"></head>');
-        html = html.replace('</body>', '<script src="./lsat-annotations-core.js?v=20261031-annotation1"><\/script></body>');
+
         html = html.replace('</body>', '<script src="./ancient-writings-nav.js?v=20261101-1"><\/script></body>');
         document.open();
         document.write(html);
