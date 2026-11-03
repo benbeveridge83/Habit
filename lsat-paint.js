@@ -3,8 +3,8 @@ const engine=window.HabitLSATAnnotations;if(!engine)return;
 const palette={red:'#fecaca',yellow:'#fef08a',blue:'#bfdbfe',green:'#bbf7d0',purple:'#e9d5ff'};
 let color=localStorage.getItem('lsatPaintColor')||'yellow';
 let mode='off',last=null;
-const modes={underline:['single','double','bold',null],frame:['circle','square','rounded',null]};
-const label={single:'Single underline',double:'Double underline',bold:'Bold underline',circle:'Circle',square:'Square',rounded:'Rounded square',off:'Off'};
+const modes={underline:['single','double','bold',null],frame:['circle','square','rounded',null],sentence:['yellow','blue','green','pink','purple',null]};
+const label={single:'Single underline',double:'Double underline',bold:'Bold underline',circle:'Circle',square:'Square',rounded:'Rounded square',pink:'Pink',purple:'Purple',yellow:'Yellow',blue:'Blue',green:'Green',off:'Off'};
 const question=()=>typeof state!=='undefined'?state.lsat?.problems?.find(q=>q.id===state.lsat.currentId):null;
 const saveNow=()=>{if(typeof save==='function')save();};
 function sourceNode(){return document.querySelector('#lsatMain > .lsat-stem');}
@@ -35,17 +35,18 @@ function applyMark(e){
  const range=offsets(e,stem);if(!range)return;
  const text=q.stem||'';
  let target;
- if(mode==='underline'){target=engine.sentenceAt(text,range.start);}
+ if(mode==='underline'||mode==='sentence'){target=engine.sentenceAt(text,range.start);}
  else if(range.end>range.start){target=range;}
  else target=engine.wordAt(text,range.start);
  if(!target)return;
  if(mode==='color'){
    engine.setColor(q,target,color);
  }else{
-   const previous=(q[mode==='underline'?'underlineMarks':'frameMarks']||[]).find(m=>m.start===target.start&&m.end===target.end);
+   const previous=(q[mode==='underline'?'underlineMarks':mode==='sentence'?'sentenceShadeMarks':'frameMarks']||[]).find(m=>m.start===target.start&&m.end===target.end);
    const available=modes[mode];
    const next=previous?available[(available.indexOf(previous.style)+1)%available.length]:available[0];
    if(mode==='underline')engine.setUnderline(q,target,next);
+   else if(mode==='sentence')engine.setSentenceShade(q,target,next);
    else engine.setFrame(q,target,next);
    last={type:mode,style:next,start:target.start,end:target.end,question:q.id};
  }
