@@ -45,7 +45,7 @@ function applyMark(e){
  }else{
    const previous=(q[mode==='underline'?'underlineMarks':mode==='sentence'?'sentenceShadeMarks':'frameMarks']||[]).find(m=>m.start===target.start&&m.end===target.end);
    const available=modes[mode];
-   const next=previous?available[(available.indexOf(previous.style)+1)%available.length]:available[0];
+   const next=previous?available[(available.indexOf(mode==='sentence'?previous.color:previous.style)+1)%available.length]:available[0];
    if(mode==='underline')engine.setUnderline(q,target,next);
    else if(mode==='sentence')engine.setSentenceShade(q,target,next);
    else engine.setFrame(q,target,next);
@@ -62,7 +62,7 @@ function mount(){
   bar.addEventListener('click',ev=>{
    const b=ev.target.closest('button');if(!b)return;
    if(b.dataset.inkColor){mode='color';color=b.dataset.inkColor;localStorage.setItem('lsatPaintColor',color);}
-   else if(b.hasAttribute('data-ink-mode')){const nextMode=b.dataset.inkMode;if(nextMode===mode&&last?.type===mode&&last.question===question()?.id&&(mode==='underline'||mode==='frame'||mode==='sentence')){const q=question();const values=modes[mode];const marks=q[mode==='underline'?'underlineMarks':'frameMarks']||[];const previous=marks.find(m=>m.start===last.start&&m.end===last.end);if(previous){const next=values[(values.indexOf(previous.style)+1)%values.length];if(mode==='underline')engine.setUnderline(q,last,next);else if(mode==='sentence')engine.setSentenceShade(q,last,next);else engine.setFrame(q,last,next);last.style=next;saveNow();repaint();}}mode=nextMode;}
+   else if(b.hasAttribute('data-ink-mode')){const nextMode=b.dataset.inkMode;if(nextMode===mode&&last?.type===mode&&last.question===question()?.id&&(mode==='underline'||mode==='frame'||mode==='sentence')){const q=question();const values=modes[mode];const marks=q[mode==='underline'?'underlineMarks':mode==='sentence'?'sentenceShadeMarks':'frameMarks']||[];const previous=marks.find(m=>m.start===last.start&&m.end===last.end);if(previous){const next=values[(values.indexOf(mode==='sentence'?previous.color:previous.style)+1)%values.length];if(mode==='underline')engine.setUnderline(q,last,next);else if(mode==='sentence')engine.setSentenceShade(q,last,next);else engine.setFrame(q,last,next);last.style=next;saveNow();repaint();}}mode=nextMode;}
    else if(b.hasAttribute('data-ink-clear')){
     if(!confirm('Clear all colors, underlines and outlines for this problem?'))return;
     const q=question();q.paintMarks=[];q.underlineMarks=[];q.frameMarks=[];q.sentenceShadeMarks=[];last=null;saveNow();repaint();
