@@ -15,6 +15,7 @@ function updateBar(){
   bar.querySelectorAll('[data-ink-color]').forEach(b=>b.classList.toggle('active',mode==='color'&&b.dataset.inkColor===color));
   bar.querySelector('[data-ink-mode="underline"]').textContent='Underline'+(last?.type==='underline'&&last?.style?' · '+label[last.style]:'');
   bar.querySelector('[data-ink-mode="frame"]').textContent='Outline'+(last?.type==='frame'&&last?.style?' · '+label[last.style]:'');
+  bar.querySelector('[data-ink-mode="sentence"]').textContent='Sentence highlight'+(last?.type==='sentence'&&last?.style?' · '+label[last.style]:'');
 }
 function position(stem,node,offset){try{const range=document.createRange();range.selectNodeContents(stem);range.setEnd(node,offset);return range.toString().length;}catch(_){return null;}}
 function offsets(e,stem){
@@ -56,15 +57,15 @@ function mount(){
  const stem=sourceNode(),q=question();if(!stem||!q)return;
  if(!stem.previousElementSibling?.classList.contains('lsatInkBar')){
   const bar=document.createElement('div');bar.className='lsatInkBar';
-  bar.innerHTML='<div class="lsatInkButtons"><button type="button" data-ink-mode="color">🖍 Color</button><button type="button" data-ink-mode="underline">U̲ Underline</button><button type="button" data-ink-mode="frame">◯ Outline</button><button type="button" data-ink-mode="off">Done</button></div><div class="lsatInkPalette">'+Object.entries(palette).map(([key,value])=>'<button type="button" data-ink-color="'+key+'" style="background:'+value+'">'+key+'</button>').join('')+'</div><small>Pick a tool, then tap a word or select a phrase. Underline applies to the entire sentence. Tap the same marked sentence or word again to cycle its style.</small><button type="button" data-ink-clear>Clear annotations</button>';
+  bar.innerHTML='<div class="lsatInkButtons"><button type="button" data-ink-mode="color">🖍 Color</button><button type="button" data-ink-mode="underline">U̲ Underline</button><button type="button" data-ink-mode="sentence">Sentence highlight</button><button type="button" data-ink-mode="frame">◯ Outline</button><button type="button" data-ink-mode="off">Done</button></div><div class="lsatInkPalette">'+Object.entries(palette).map(([key,value])=>'<button type="button" data-ink-color="'+key+'" style="background:'+value+'">'+key+'</button>').join('')+'</div><small>Pick a tool, then tap a word or select a phrase. Underline and faint sentence shading apply to a whole sentence. Tap again to cycle colors; word colors stay vivid.</small><button type="button" data-ink-clear>Clear annotations</button>';
   stem.insertAdjacentElement('beforebegin',bar);
   bar.addEventListener('click',ev=>{
    const b=ev.target.closest('button');if(!b)return;
    if(b.dataset.inkColor){mode='color';color=b.dataset.inkColor;localStorage.setItem('lsatPaintColor',color);}
-   else if(b.hasAttribute('data-ink-mode')){const nextMode=b.dataset.inkMode;if(nextMode===mode&&last?.type===mode&&last.question===question()?.id&&(mode==='underline'||mode==='frame')){const q=question();const values=modes[mode];const marks=q[mode==='underline'?'underlineMarks':'frameMarks']||[];const previous=marks.find(m=>m.start===last.start&&m.end===last.end);if(previous){const next=values[(values.indexOf(previous.style)+1)%values.length];if(mode==='underline')engine.setUnderline(q,last,next);else engine.setFrame(q,last,next);last.style=next;saveNow();repaint();}}mode=nextMode;}
+   else if(b.hasAttribute('data-ink-mode')){const nextMode=b.dataset.inkMode;if(nextMode===mode&&last?.type===mode&&last.question===question()?.id&&(mode==='underline'||mode==='frame'||mode==='sentence')){const q=question();const values=modes[mode];const marks=q[mode==='underline'?'underlineMarks':'frameMarks']||[];const previous=marks.find(m=>m.start===last.start&&m.end===last.end);if(previous){const next=values[(values.indexOf(previous.style)+1)%values.length];if(mode==='underline')engine.setUnderline(q,last,next);else if(mode==='sentence')engine.setSentenceShade(q,last,next);else engine.setFrame(q,last,next);last.style=next;saveNow();repaint();}}mode=nextMode;}
    else if(b.hasAttribute('data-ink-clear')){
     if(!confirm('Clear all colors, underlines and outlines for this problem?'))return;
-    const q=question();q.paintMarks=[];q.underlineMarks=[];q.frameMarks=[];saveNow();repaint();
+    const q=question();q.paintMarks=[];q.underlineMarks=[];q.frameMarks=[];q.sentenceShadeMarks=[];last=null;saveNow();repaint();
    }
    updateBar();
   });
