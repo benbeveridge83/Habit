@@ -8,6 +8,7 @@
   const COLORS=['red','yellow','blue','green','purple'];
   const UNDERLINES=['single','double','bold'];
   const FRAMES=['circle','square','rounded'];
+  const SENTENCE_SHADES=['yellow','blue','green','pink','purple'];
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function sentences(source){
     const text=String(source||'');
@@ -48,10 +49,12 @@
   const setUnderline=(q,range,style)=>assign(q,'underlineMarks',range,style,UNDERLINES,'style');
   const setFrame=(q,range,style)=>assign(q,'frameMarks',range,style,FRAMES,'style');
   const setColor=(q,range,color)=>assign(q,'paintMarks',range,color,COLORS,'color');
+  const setSentenceShade=(q,range,color)=>assign(q,'sentenceShadeMarks',range,color,SENTENCE_SHADES,'color');
   function render(q){
     const text=String(q?.stem||'');
     if(!text)return '';
     const layers=[
+      {key:'sentenceShadeMarks',styles:SENTENCE_SHADES,kind:'color',prefix:'lsatInkSentence'},
       {key:'underlineMarks',styles:UNDERLINES,kind:'style',prefix:'lsatInkUnderline'},
       {key:'frameMarks',styles:FRAMES,kind:'style',prefix:'lsatInkFrame'},
       {key:'paintMarks',styles:COLORS,kind:'color',prefix:'lsatInkColor'}
@@ -66,7 +69,7 @@
         if(b<=a)continue;
         if(a>pos)html+=draw(pos,a,level+1);
         const classname=spec.prefix+'--'+m[spec.kind];
-        const tag=level===2?'mark':'span';
+        const tag=spec.key==='paintMarks'?'mark':'span';
         html+='<'+tag+' class="'+classname+'">'+draw(a,b,level+1)+'</'+tag+'>';
         pos=b;
       }
@@ -75,5 +78,5 @@
     }
     return draw(0,text.length,0);
   }
-  return {COLORS,UNDERLINES,FRAMES,sentences,sentenceAt,wordAt,setUnderline,setFrame,setColor,render};
+  return {COLORS,UNDERLINES,FRAMES,SENTENCE_SHADES,sentences,sentenceAt,wordAt,setUnderline,setFrame,setColor,setSentenceShade,render};
 });
