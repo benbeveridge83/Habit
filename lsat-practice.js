@@ -187,6 +187,13 @@
   function add(){
     const s=getStore(),q=newProblem();s.problems.unshift(q);s.currentId=q.id;editing=true;persistNow();render();
   }
+  function toggleEliminated(letter){
+    if(!LETTERS.includes(letter))return;
+    const q=getProblem();if(!q)return;
+    const removed=new Set(Array.isArray(q.eliminatedChoices)?q.eliminatedChoices:[]);
+    if(removed.has(letter))removed.delete(letter);else removed.add(letter);
+    q.eliminatedChoices=[...removed];persistNow();renderQuestion();
+  }
   function changeAnswer(letter){
     const q=getProblem();if(!q)return;q.selected=letter;q.checked=false;q.lastAnsweredAt=new Date().toISOString();persistNow();renderQuestion();listHTML();
   }
@@ -266,6 +273,7 @@
     if(!t)return;
     if(t.hasAttribute('data-lsat-action'))return clickAction(t.dataset.lsatAction);
     if(t.hasAttribute('data-lsat-select')){getStore().currentId=t.dataset.lsatSelect;editing=false;persistNow();render();return;}
+    if(t.hasAttribute('data-lsat-eliminate'))return toggleEliminated(t.dataset.lsatEliminate);
     if(t.hasAttribute('data-lsat-choice'))return changeAnswer(t.dataset.lsatChoice);
     if(t.hasAttribute('data-lsat-add-sub')){
       const i=Number(t.dataset.lsatAddSub),title=prompt('New subheading name:','My analysis');
