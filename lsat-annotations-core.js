@@ -76,7 +76,16 @@
       if(pos<end)html+=draw(pos,end,level+1);
       return html;
     }
-    return draw(0,text.length,0);
+    const regions=sentences(text);
+    if(!regions.length)return draw(0,text.length,0);
+    let out='',pos=0;
+    for(const region of regions){
+      if(region.start>pos)out+=draw(pos,region.start,0);
+      out+='<span class="lsatInkSentenceRegion" data-ink-sentence-start="'+region.start+'" data-ink-sentence-end="'+region.end+'">'+draw(region.start,region.end,0)+'</span>';
+      pos=region.end;
+    }
+    if(pos<text.length)out+=draw(pos,text.length,0);
+    return out;
   }
   return {COLORS,UNDERLINES,FRAMES,SENTENCE_SHADES,sentences,sentenceAt,wordAt,setUnderline,setFrame,setColor,setSentenceShade,render};
 });
