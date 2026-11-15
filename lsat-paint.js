@@ -45,10 +45,14 @@ function applyMark(e,selectedStem,letter){
  if(mode==='off')return;
  const q=question(),stem=selectedStem||sourceNode();if(!q||!stem)return;
  const targetQuestion=letter?answerProxy(q,letter):q;
- const range=offsets(e,stem);if(!range)return;
+ const isSentenceTool=mode==='underline'||mode==='sentence';
+ const markedRegion=isSentenceTool?e.target.closest?.('[data-ink-sentence-start]'):null;
+ const markedRange=markedRegion&&stem.contains(markedRegion)?{start:Number(markedRegion.dataset.inkSentenceStart),end:Number(markedRegion.dataset.inkSentenceEnd)}:null;
+ const range=markedRange||offsets(e,stem);
+ if(!range)return;
  const text=targetQuestion.stem||'';
  let target;
- if(mode==='underline'||mode==='sentence'){target=engine.sentenceAt(text,range.start);}
+ if(isSentenceTool){target=markedRange||engine.sentenceAt(text,range.start);}
  else if(range.end>range.start){target=range;}
  else target=engine.wordAt(text,range.start);
  if(!target)return;
