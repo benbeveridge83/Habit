@@ -18,7 +18,7 @@
     ['Headlights and collision rates','Resolve paradox','C','Drivers who voluntarily use headlights may already be unusually careful.'],
     ['Carpaccio and red pigment','Parallel flaw','D','The argument confuses most A being B with a particular B probably being A.']
   ];
-  let filterText='', filterMode='all', editing=false, noteFocus=null, saveDelay=null;
+  let filterText='', filterMode='all', selectedTypes=null, editing=false, noteFocus=null, saveDelay=null;
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
   const uid=()=>typeof cryptoId==='function'?cryptoId():Math.random().toString(36).slice(2)+Date.now();
   function safeNotes(html){
@@ -84,16 +84,46 @@
   }
   const localDay = iso => {if(!iso)return '';const d=new Date(iso);if(Number.isNaN(d.getTime()))return '';return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
   const shortDay = iso => {const d=new Date(iso||'');return Number.isNaN(d.getTime())?'':d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});};
+  const typeNames=q=>[...new Set((Array.isArray(q.categories?.[0])?q.categories[0]:[])
+    .map(entry=>String(entry?.title||'').trim()).filter(Boolean))];
+  const typeKey=value=>String(value||'').trim().toLocaleLowerCase();
+  const typeKeys=q=>typeNames(q).length?typeNames(q).map(typeKey):['__unclassified__'];
+  function typeOptions(problems){
+    const all=new Map();
+    for(const q of problems){
+      const names=typeNames(q);
+      for(const name of names.length?names:['Unclassified']){
+        const key=names.length?typeKey(name):'__unclassified__';
+        if(!all.has(key))all.set(key,{key,name,count:0});
+        all.get(key).count++;
+      }
+    }
+    return [...all.values()].sort((a,b)=>a.name.localeCompare(b.name));
+  }
+  function matchesQuestionType(q){
+    return selectedTypes===null||typeKeys(q).some(key=>selectedTypes.has(key));
+  }
+  function renderTypeFilters(problems){
+    const host=document.getElementById('lsatTypeFilters');if(!host)return;
+    const types=typeOptions(problems);
+    const active=selectedTypes===null?types.length:types.filter(t=>selectedTypes.has(t.key)).length;
+    const title=document.getElementById('lsatTypeSummary');
+    if(title)title.textContent=selectedTypes===null?'Question type: All':active===0?'Question type: None':'Question type: '+active+' selected';
+    host.innerHTML='<div class="lsat-type-controls"><button type="button" data-lsat-type-action="all">All</button><button type="button" data-lsat-type-action="none">None</button></div>'+
+      (types.length?types.map(t=>'<label class="lsat-type-option"><input type="checkbox" data-lsat-type="'+esc(t.key)+'" '+(selectedTypes===null||selectedTypes.has(t.key)?'checked':'')+'><span>'+esc(t.name)+'</span><small>'+t.count+'</small></label>').join(''):'<div class="lsat-muted">Categorize problems under Heading 1 to filter them here.</div>');
+  }
   function listHTML(){
     const s=getStore();
     const onlyLR=s.problems.filter(q=>/^preptest56-s[23]-q[0-9]+$/.test(q.id));
+    renderTypeFilters(onlyLR);
     const items=onlyLR.filter(q=>{
       const matches=(q.title+' '+(q.topic||'')+' '+(q.stem||'')).toLowerCase().includes(filterText.toLowerCase());
       const status=filterMode==='all'||(filterMode==='unanswered'?!q.checked:filterMode==='missed'?q.checked&&q.selected!==q.answer:q.checked&&q.selected===q.answer);
-      return matches&&status;
+      return matches&&status&&matchesQuestionType(q);
     });
     const attempts=onlyLR.filter(q=>q.checked&&q.answer), correct=attempts.filter(q=>q.selected===q.answer);
     document.getElementById('lsatStats').textContent=onlyLR.length+' Logical Reasoning questions · '+attempts.length+' checked · '+correct.length+' correct ('+(attempts.length?Math.round(correct.length/attempts.length*100):0)+'%)';
+    const count=document.getElementById('lsatShownCount');if(count)count.textContent=items.length+' of '+onlyLR.length+' problems shown';
     document.getElementById('lsatList').innerHTML=items.length?items.map(q=>
       '<button class="lsat-question-item '+(q.id===s.currentId?'active':'')+'" data-worked-today="'+(localDay(q.lastAnsweredAt)===localDay(new Date().toISOString())?'true':'false')+'" data-lsat-select="'+esc(q.id)+'"><span class="lsat-question-meta"><strong>'+esc(q.title)+'</strong><time datetime="'+esc(q.lastAnsweredAt||'')+'">'+(shortDay(q.lastAnsweredAt)||'—')+'</time></span><small>'+
       esc(q.topic||q.origin||'Uncategorized')+' · '+(q.checked?(q.selected===q.answer?'✓ Correct':'✕ Review'):'Not checked')+'</small></button>').join(''):
@@ -269,8 +299,9 @@
     }
   }
   function handleClicks(e){
-    const t=e.target.closest('[data-lsat-action],[data-lsat-select],[data-lsat-choice],[data-lsat-eliminate],[data-lsat-add-sub],[data-lsat-remove-sub],[data-lsat-format],[data-lsat-apply],[data-lsat-rename-sub]');
+    const t=e.target.closest('[data-lsat-type-action],[data-lsat-action],[data-lsat-select],[data-lsat-choice],[data-lsat-eliminate],[data-lsat-add-sub],[data-lsat-remove-sub],[data-lsat-format],[data-lsat-apply],[data-lsat-rename-sub]');
     if(!t)return;
+    if(t.hasAttribute('data-lsat-type-action')){selectedTypes=t.dataset.lsatTypeAction==='all'?null:new Set();listHTML();return;}
     if(t.hasAttribute('data-lsat-action'))return clickAction(t.dataset.lsatAction);
     if(t.hasAttribute('data-lsat-select')){getStore().currentId=t.dataset.lsatSelect;editing=false;persistNow();render();return;}
     if(t.hasAttribute('data-lsat-eliminate'))return toggleEliminated(t.dataset.lsatEliminate);
@@ -333,12 +364,23 @@
       '<div id="lsatStats" class="lsat-stat"></div><input id="lsatSearch" placeholder="Search problems..." aria-label="Search LSAT problems" style="width:100%;margin-bottom:8px">'+
       '<select id="lsatFilter" aria-label="Filter LSAT problems" style="width:100%;margin-bottom:10px"><option value="all">All problems</option>'+
       '<option value="unanswered">Not checked</option><option value="missed">Missed</option><option value="correct">Correct</option></select>'+
+      '<details class="lsat-type-picker"><summary id="lsatTypeSummary">Question type: All</summary><div id="lsatTypeFilters" class="lsat-type-filter-list"></div></details>'+
+      '<div id="lsatShownCount" class="lsat-muted" aria-live="polite" style="margin:8px 0"></div>'+
       '<div id="lsatList" class="lsat-list"></div></aside>'+
       '<section class="lsat-panel" id="lsatMain" aria-live="polite"></section></div>';
     ref.parentElement.insertBefore(sec,ref);
     sec.addEventListener('click',handleClicks);
     sec.addEventListener('input',handleInput);
-    sec.addEventListener('change',e=>{if(e.target.id==='lsatImportFile')importFile(e.target.files?.[0]);else handleInput(e);});
+    sec.addEventListener('change',e=>{
+      if(e.target.matches('[data-lsat-type]')){
+        const key=e.target.dataset.lsatType;
+        const allTypes=typeOptions(getStore().problems.filter(q=>/^preptest56-s[23]-q[0-9]+$/.test(q.id))).map(t=>t.key);
+        if(selectedTypes===null)selectedTypes=new Set(allTypes);
+        if(e.target.checked)selectedTypes.add(key);else selectedTypes.delete(key);
+        listHTML();return;
+      }
+      if(e.target.id==='lsatImportFile')importFile(e.target.files?.[0]);else handleInput(e);
+    });
     sec.addEventListener('focusin',e=>{if(e.target.classList?.contains('lsat-editor'))noteFocus=e.target;});
     sec.addEventListener('keyup',e=>{if(e.target.classList?.contains('lsat-editor')){const sel=window.getSelection();if(sel.rangeCount)savedRange=sel.getRangeAt(0).cloneRange();}});
     sec.addEventListener('mouseup',e=>{if(e.target.closest('.lsat-editor')){const sel=window.getSelection();if(sel.rangeCount)savedRange=sel.getRangeAt(0).cloneRange();}});
