@@ -62,7 +62,33 @@
     if(window.HabitLSATTaxonomy)window.HabitLSATTaxonomy.init(s);
     return s;
   }
-  const getProblem=()=>{const s=getStore();return s.problems.find(q=>q.id===s.currentId)||s.problems[0]||null;};
+  const prepTestOf=q=>{const m=String(q?.id||'').match(/^preptest(\d+)-s(\d+)-q\d+$/);return m?m[1]:null;};
+  const isLogicalReasoning=q=>{
+    const m=String(q?.id||'').match(/^preptest(\d+)-s(\d+)-q\d+$/);
+    if(!m)return false;
+    if(q.sectionType==='Logical Reasoning'||/Logical Reasoning/i.test(q.origin||''))return true;
+    return (m[1]==='56'&&(m[2]==='2'||m[2]==='3'))||(m[1]==='55'&&(m[2]==='1'||m[2]==='3'));
+  };
+  const testId=q=>prepTestOf(q)||(q?.id?'custom':null);
+  function availableTests(s){
+    const ids=[...new Set(s.problems.filter(isLogicalReasoning).map(prepTestOf))];
+    ids.sort((a,b)=>Number(b)-Number(a));
+    if(s.problems.some(q=>!prepTestOf(q)))ids.push('custom');
+    return ids;
+  }
+  function prepareSelectedTest(s){
+    const tests=availableTests(s);
+    if(!tests.length)return;
+    if(!tests.includes(String(s.selectedPrepTest||'')))s.selectedPrepTest=tests.includes('56')?'56':tests[0];
+    const isCurrent=q=>q&&testId(q)===s.selectedPrepTest&&(s.selectedPrepTest==='custom'||isLogicalReasoning(q));
+    const current=s.problems.find(q=>q.id===s.currentId);
+    if(!isCurrent(current)){
+      const remembered=s.problems.find(q=>q.id===s.lsatLastByTest?.[s.selectedPrepTest]);
+      const first=remembered&&isCurrent(remembered)?remembered:s.problems.find(isCurrent);
+      if(first)s.currentId=first.id;
+    }
+  }
+  const getProblem=()=>{const s=getStore();prepareSelectedTest(s);return s.problems.find(q=>q.id===s.currentId)||null;};
   function persist(){clearTimeout(saveDelay);saveDelay=setTimeout(()=>{try{save();}catch(e){console.error(e);}},300);}
   function persistNow(){clearTimeout(saveDelay);save();}
   function newProblem(){
@@ -114,7 +140,15 @@
   }
   function listHTML(){
     const s=getStore();
-    const onlyLR=s.problems.filter(q=>/^preptest56-s[23]-q[0-9]+$/.test(q.id));
+    prepareSelectedTest(s);
+    const testSelect=document.getElementById('lsatTestSelect');
+    if(testSelect){
+      const tests=availableTests(s);
+      const options=tests.map(id=>'<option value="'+esc(id)+'">'+(id==='custom'?'My questions':'PrepTest '+esc(id))+'</option>').join('');
+      if(testSelect.innerHTML!==options)testSelect.innerHTML=options;
+      testSelect.value=String(s.selectedPrepTest||'56');
+    }
+    const onlyLR=s.problems.filter(q=>testId(q)===s.selectedPrepTest&&(s.selectedPrepTest==='custom'||isLogicalReasoning(q)));
     renderTypeFilters(onlyLR);
     const items=onlyLR.filter(q=>{
       const matches=(q.title+' '+(q.topic||'')+' '+(q.stem||'')).toLowerCase().includes(filterText.toLowerCase());
@@ -122,7 +156,7 @@
       return matches&&status&&matchesQuestionType(q);
     });
     const attempts=onlyLR.filter(q=>q.checked&&q.answer), correct=attempts.filter(q=>q.selected===q.answer);
-    document.getElementById('lsatStats').textContent=onlyLR.length+' Logical Reasoning questions · '+attempts.length+' checked · '+correct.length+' correct ('+(attempts.length?Math.round(correct.length/attempts.length*100):0)+'%)';
+    document.getElementById('lsatStats').textContent=(s.selectedPrepTest==='custom'?'My questions':'PrepTest '+s.selectedPrepTest)+' · '+onlyLR.length+' Logical Reasoning questions · '+attempts.length+' checked · '+correct.length+' correct ('+(attempts.length?Math.round(correct.length/attempts.length*100):0)+'%)';
     const count=document.getElementById('lsatShownCount');if(count)count.textContent=items.length+' of '+onlyLR.length+' problems shown';
     document.getElementById('lsatList').innerHTML=items.length?items.map(q=>
       '<button class="lsat-question-item '+(q.id===s.currentId?'active':'')+'" data-worked-today="'+(localDay(q.lastAnsweredAt)===localDay(new Date().toISOString())?'true':'false')+'" data-lsat-select="'+esc(q.id)+'"><span class="lsat-question-meta"><strong>'+esc(q.title)+'</strong><time datetime="'+esc(q.lastAnsweredAt||'')+'">'+(shortDay(q.lastAnsweredAt)||'—')+'</time></span><small>'+
@@ -192,11 +226,7 @@
           changed=true;
         }
       }
-      if(changed || !/^preptest56-s[23]-q[0-9]+$/.test(store.currentId)){
-        const first=store.problems.find(q=>/^preptest56-s[23]-q[0-9]+$/.test(q.id));
-        if(first&&!store.problems.some(q=>q.id===store.currentId&&/^preptest56-s[23]-q[0-9]+$/.test(q.id)))
-          store.currentId=first.id;
-      }
+      prepareSelectedTest(store);
     }catch(error){
       console.error('Could not load imported LSAT questions',error);
       const header=document.getElementById('lsatStats');
@@ -215,7 +245,7 @@
     window.scrollTo({top:0,behavior:'smooth'});
   }
   function add(){
-    const s=getStore(),q=newProblem();s.problems.unshift(q);s.currentId=q.id;editing=true;persistNow();render();
+    const s=getStore(),q=newProblem();s.problems.unshift(q);s.selectedPrepTest='custom';s.currentId=q.id;editing=true;persistNow();render();
   }
   function toggleEliminated(letter){
     if(!LETTERS.includes(letter))return;
@@ -303,7 +333,7 @@
     if(!t)return;
     if(t.hasAttribute('data-lsat-type-action')){selectedTypes=t.dataset.lsatTypeAction==='all'?null:new Set();listHTML();return;}
     if(t.hasAttribute('data-lsat-action'))return clickAction(t.dataset.lsatAction);
-    if(t.hasAttribute('data-lsat-select')){getStore().currentId=t.dataset.lsatSelect;editing=false;persistNow();render();return;}
+    if(t.hasAttribute('data-lsat-select')){const s=getStore();s.currentId=t.dataset.lsatSelect;s.lsatLastByTest=s.lsatLastByTest||{};s.lsatLastByTest[s.selectedPrepTest]=s.currentId;editing=false;persistNow();render();return;}
     if(t.hasAttribute('data-lsat-eliminate'))return toggleEliminated(t.dataset.lsatEliminate);
     if(t.hasAttribute('data-lsat-choice'))return changeAnswer(t.dataset.lsatChoice);
     if(t.hasAttribute('data-lsat-add-sub')){
@@ -359,8 +389,9 @@
       '<div class="lsat-actions"><button class="primary" data-lsat-action="new">+ Add New Problem</button>'+
       '<button data-lsat-action="import">Import JSON</button><button data-lsat-action="export">Export Notes</button>'+
       '<input type="file" id="lsatImportFile" accept=".json,application/json" hidden></div></div>'+
-      '<div class="lsat-links" style="margin-bottom:14px"><strong>PrepTest 56 · Logical Reasoning only.</strong> Section II and Section III. The 10 incomplete sample questions, Logic Games and Reading Comprehension are excluded from this library.</div>'+
+      '<div class="lsat-links" style="margin-bottom:14px">Choose a PrepTest below. Only Logical Reasoning questions from the selected test appear; other tests and sections remain separate.</div>'+
       '<div class="lsat-layout"><aside class="lsat-panel lsat-side"><h3 style="margin-top:0">Problem Library</h3>'+
+      '<label class="lsat-test-picker">PrepTest<select id="lsatTestSelect" aria-label="Choose PrepTest"></select></label>'+ 
       '<div id="lsatStats" class="lsat-stat"></div><input id="lsatSearch" placeholder="Search problems..." aria-label="Search LSAT problems" style="width:100%;margin-bottom:8px">'+
       '<select id="lsatFilter" aria-label="Filter LSAT problems" style="width:100%;margin-bottom:10px"><option value="all">All problems</option>'+
       '<option value="unanswered">Not checked</option><option value="missed">Missed</option><option value="correct">Correct</option></select>'+
@@ -374,10 +405,19 @@
     sec.addEventListener('change',e=>{
       if(e.target.matches('[data-lsat-type]')){
         const key=e.target.dataset.lsatType;
-        const allTypes=typeOptions(getStore().problems.filter(q=>/^preptest56-s[23]-q[0-9]+$/.test(q.id))).map(t=>t.key);
+        const s=getStore();const allTypes=typeOptions(s.problems.filter(q=>testId(q)===s.selectedPrepTest&&(s.selectedPrepTest==='custom'||isLogicalReasoning(q)))).map(t=>t.key);
         if(selectedTypes===null)selectedTypes=new Set(allTypes);
         if(e.target.checked)selectedTypes.add(key);else selectedTypes.delete(key);
         listHTML();return;
+      }
+      if(e.target.id==='lsatTestSelect'){
+        const s=getStore(),newTest=e.target.value;
+        if(!availableTests(s).includes(newTest))return;
+        s.lsatLastByTest=s.lsatLastByTest||{};
+        s.lsatLastByTest[s.selectedPrepTest||'56']=s.currentId;
+        s.selectedPrepTest=newTest;
+        selectedTypes=null;editing=false;
+        prepareSelectedTest(s);persistNow();render();return;
       }
       if(e.target.id==='lsatImportFile')importFile(e.target.files?.[0]);else handleInput(e);
     });
